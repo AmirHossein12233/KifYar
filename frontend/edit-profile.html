@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>KifYar - ویرایش پروفایل</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <style>
+        .edit-card {
+            margin-top: 20px;
+            padding: 22px;
+            border-radius: 22px;
+            background: #ffffff;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .edit-card h2 {
+            margin-bottom: 18px;
+            font-size: 19px;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .field input {
+            width: 100%;
+            height: 47px;
+            padding: 0 13px;
+            box-sizing: border-box;
+            border: 1px solid #dce3eb;
+            border-radius: 12px;
+            outline: none;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .field input:focus {
+            border-color: #1769ff;
+        }
+
+        .field input:disabled {
+            background: #f4f6f8;
+            color: #7d8792;
+            cursor: not-allowed;
+        }
+
+        .save-button {
+            width: 100%;
+            min-height: 48px;
+            border: none;
+            border-radius: 13px;
+            background: #1769ff;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .save-button:active {
+            transform: scale(0.98);
+        }
+
+        .save-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .back-button {
+            width: 100%;
+            min-height: 46px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 13px;
+            background: #eef2f6;
+            color: #374151;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .back-button:active {
+            transform: scale(0.98);
+        }
+
+        .message {
+            min-height: 24px;
+            margin-top: 13px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .success {
+            color: #15945a;
+        }
+
+        .error {
+            color: #d94848;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="logo">
+            ک
+        </div>
+
+        <div>
+            <h1>KifYar</h1>
+            <span>ویرایش پروفایل</span>
+        </div>
+
+    </div>
+
+    <button
+        class="profile-btn"
+        id="profileButton"
+        type="button"
+    >
+        👤
+    </button>
+
+</header>
+
+
+<main>
+
+    <section class="edit-card">
+
+        <h2>
+            اطلاعات پروفایل
+        </h2>
+
+
+        <div class="field">
+
+            <label for="nameInput">
+                نام نمایشی
+            </label>
+
+            <input
+                id="nameInput"
+                type="text"
+                placeholder="نام خود را وارد کنید"
+                maxlength="50"
+                autocomplete="name"
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="usernameInput">
+                نام کاربری
+            </label>
+
+            <input
+                id="usernameInput"
+                type="text"
+                disabled
+                autocomplete="username"
+            >
+
+        </div>
+
+
+        <button
+            class="save-button"
+            id="saveButton"
+            type="button"
+        >
+            ذخیره تغییرات
+        </button>
+
+
+        <button
+            class="back-button"
+            id="backButton"
+            type="button"
+        >
+            بازگشت به پروفایل
+        </button>
+
+
+        <div
+            class="message"
+            id="message"
+        ></div>
+
+    </section>
+
+</main>
+
+
+<script>
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+
+const TOKEN_KEY =
+    "kifyar_token";
+
+
+const USER_KEY =
+    "kifyar_user";
+
+
+const nameInput =
+    document.getElementById(
+        "nameInput"
+    );
+
+
+const usernameInput =
+    document.getElementById(
+        "usernameInput"
+    );
+
+
+const saveButton =
+    document.getElementById(
+        "saveButton"
+    );
+
+
+const backButton =
+    document.getElementById(
+        "backButton"
+    );
+
+
+const profileButton =
+    document.getElementById(
+        "profileButton"
+    );
+
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+
+function getToken() {
+
+    return localStorage.getItem(
+        TOKEN_KEY
+    );
+
+}
+
+
+function clearSession() {
+
+    localStorage.removeItem(
+        TOKEN_KEY
+    );
+
+    localStorage.removeItem(
+        USER_KEY
+    );
+
+}
+
+
+function showMessage(
+    text,
+    type
+) {
+
+    message.textContent =
+        text;
+
+    message.className =
+        "message";
+
+    if (type) {
+
+        message.classList.add(
+            type
+        );
+
+    }
+
+}
+
+
+function goProfile() {
+
+    window.location.href =
+        "/frontend/profile.html";
+
+}
+
+
+function goLogin() {
+
+    clearSession();
+
+    window.location.replace(
+        "/frontend/login.html"
+    );
+
+}
+
+
+async function loadCurrentUser() {
+
+    const token =
+        getToken();
+
+
+    if (!token) {
+
+        goLogin();
+
+        return false;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/me",
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Authorization":
+                            "Bearer " +
+                            token
+                    },
+
+                    cache: "no-store"
+                }
+            );
+
+
+        if (
+            response.status ===
+            401
+        ) {
+
+            goLogin();
+
+            return false;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "server error"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const user =
+            data.user ||
+            data;
+
+
+        if (!user) {
+
+            throw new Error(
+                "user not found"
+            );
+
+        }
+
+
+        nameInput.value =
+            user.name || "";
+
+
+        usernameInput.value =
+            user.username || "";
+
+
+        localStorage.setItem(
+            USER_KEY,
+            JSON.stringify(
+                user
+            )
+        );
+
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "loadCurrentUser:",
+            error
+        );
+
+
+        const savedUser =
+            localStorage.getItem(
+                USER_KEY
+            );
+
+
+        if (savedUser) {
+
+            try {
+
+                const user =
+                    JSON.parse(
+                        savedUser
+                    );
+
+
+                nameInput.value =
+                    user.name || "";
+
+
+                usernameInput.value =
+                    user.username || "";
+
+
+                return true;
+
+            } catch (parseError) {
+
+                console.error(
+                    parseError
+                );
+
+            }
+
+        }
+
+
+        showMessage(
+            "دریافت اطلاعات حساب ناموفق بود.",
+            "error"
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+async function saveProfile() {
+
+    const name =
+        nameInput.value.trim();
+
+
+    if (name === "") {
+
+        showMessage(
+            "نام را وارد کنید.",
+            "error"
+        );
+
+        nameInput.focus();
+
+        return;
+
+    }
+
+
+    if (name.length < 2) {
+
+        showMessage(
+            "نام باید حداقل ۲ کاراکتر باشد.",
+            "error"
+        );
+
+        nameInput.focus();
+
+        return;
+
+    }
+
+
+    const token =
+        getToken();
+
+
+    if (!token) {
+
+        goLogin();
+
+        return;
+
+    }
+
+
+    saveButton.disabled =
+        true;
+
+
+    saveButton.textContent =
+        "در حال ذخیره...";
+
+
+    showMessage(
+        "",
+        ""
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/profile",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            "Bearer " +
+                            token
+                    },
+
+                    body:
+                        JSON.stringify({
+                            name: name
+                        }),
+
+                    cache: "no-store"
+                }
+            );
+
+
+        if (
+            response.status ===
+            401
+        ) {
+
+            goLogin();
+
+            return;
+
+        }
+
+
+        let data = null;
+
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch (error) {
+
+            data = null;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data?.detail ||
+                data?.message ||
+                "خطا در ذخیره اطلاعات."
+            );
+
+        }
+
+
+        if (
+            data &&
+            data.success === false
+        ) {
+
+            showMessage(
+                data.message ||
+                "ذخیره انجام نشد.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        let updatedUser =
+            data?.user || null;
+
+
+        if (!updatedUser) {
+
+            const meResponse =
+                await fetch(
+                    API_URL +
+                    "/api/me",
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Authorization":
+                                "Bearer " +
+                                token
+                        },
+
+                        cache: "no-store"
+                    }
+                );
+
+
+            if (
+                meResponse.status ===
+                401
+            ) {
+
+                goLogin();
+
+                return;
+
+            }
+
+
+            if (meResponse.ok) {
+
+                const meData =
+                    await meResponse.json();
+
+
+                updatedUser =
+                    meData.user ||
+                    meData;
+
+            }
+
+        }
+
+
+        if (updatedUser) {
+
+            localStorage.setItem(
+                USER_KEY,
+                JSON.stringify(
+                    updatedUser
+                )
+            );
+
+        } else {
+
+            const savedUser =
+                localStorage.getItem(
+                    USER_KEY
+                );
+
+
+            if (savedUser) {
+
+                try {
+
+                    const user =
+                        JSON.parse(
+                            savedUser
+                        );
+
+
+                    user.name =
+                        name;
+
+
+                    localStorage.setItem(
+                        USER_KEY,
+                        JSON.stringify(
+                            user
+                        )
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        error
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        showMessage(
+            "نام با موفقیت ذخیره شد.",
+            "success"
+        );
+
+
+        saveButton.textContent =
+            "ذخیره شد";
+
+
+        setTimeout(
+            function () {
+
+                saveButton.textContent =
+                    "ذخیره تغییرات";
+
+            },
+            1500
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "saveProfile:",
+            error
+        );
+
+
+        showMessage(
+            error.message ||
+            "اتصال به سرور برقرار نشد.",
+            "error"
+        );
+
+
+        saveButton.textContent =
+            "ذخیره تغییرات";
+
+    } finally {
+
+        saveButton.disabled =
+            false;
+
+    }
+
+}
+
+
+async function initializePage() {
+
+    if (!getToken()) {
+
+        goLogin();
+
+        return;
+
+    }
+
+
+    await loadCurrentUser();
+
+}
+
+
+saveButton.addEventListener(
+    "click",
+    saveProfile
+);
+
+
+backButton.addEventListener(
+    "click",
+    goProfile
+);
+
+
+profileButton.addEventListener(
+    "click",
+    goProfile
+);
+
+
+nameInput.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            event.key ===
+            "Enter"
+        ) {
+
+            saveProfile();
+
+        }
+
+    }
+);
+
+
+initializePage();
+
+</script>
+
+</body>
+
+</html>

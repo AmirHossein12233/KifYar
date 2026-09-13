@@ -1,0 +1,987 @@
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>گزارش مالی | KifYar</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .message {
+            display: none;
+            padding: 13px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .message.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat {
+            padding: 18px;
+            border-radius: 14px;
+            text-align: center;
+        }
+
+        .balance {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .income {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .expense {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .count {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .chart {
+            margin-top: 15px;
+        }
+
+        .bar-row {
+            margin-bottom: 18px;
+        }
+
+        .bar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 7px;
+            font-size: 14px;
+        }
+
+        .bar-background {
+            width: 100%;
+            height: 20px;
+            background: #eeeeee;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            width: 0;
+            border-radius: 20px;
+            transition: width 0.5s ease;
+        }
+
+        .income-bar {
+            background: #43a047;
+        }
+
+        .expense-bar {
+            background: #e53935;
+        }
+
+        .info {
+            line-height: 2;
+            color: #555;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 10px;
+            font-family: inherit;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #refreshButton {
+            background: #1976d2;
+            color: white;
+        }
+
+        #backButton {
+            background: #eeeeee;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 12px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h1>📊 گزارش مالی</h1>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div class="card">
+
+        <h2>خلاصه مالی</h2>
+
+        <div class="stats">
+
+            <div class="stat balance">
+
+                <div class="stat-title">
+                    💰 موجودی فعلی
+                </div>
+
+                <div
+                    id="balance"
+                    class="stat-value"
+                >
+                    در حال دریافت...
+                </div>
+
+            </div>
+
+
+            <div class="stat income">
+
+                <div class="stat-title">
+                    🟢 مجموع درآمد
+                </div>
+
+                <div
+                    id="totalIncome"
+                    class="stat-value"
+                >
+                    در حال دریافت...
+                </div>
+
+            </div>
+
+
+            <div class="stat expense">
+
+                <div class="stat-title">
+                    🔴 مجموع هزینه
+                </div>
+
+                <div
+                    id="totalExpense"
+                    class="stat-value"
+                >
+                    در حال دریافت...
+                </div>
+
+            </div>
+
+
+            <div class="stat count">
+
+                <div class="stat-title">
+                    🧾 تعداد تراکنش‌ها
+                </div>
+
+                <div
+                    id="transactionCount"
+                    class="stat-value"
+                >
+                    در حال دریافت...
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>📈 نمودار درآمد و هزینه</h2>
+
+        <div id="chart" class="chart">
+
+            <div class="loading">
+                در حال محاسبه...
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>ℹ️ توضیحات</h2>
+
+        <div
+            id="info"
+            class="info"
+        >
+            در حال دریافت اطلاعات...
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <button
+            type="button"
+            id="refreshButton"
+        >
+            🔄 بروزرسانی گزارش
+        </button>
+
+        <button
+            type="button"
+            id="backButton"
+        >
+            🔙 بازگشت
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+const TOKEN_KEY =
+    "kifyar_token";
+
+
+const messageElement =
+    document.getElementById("message");
+
+const balanceElement =
+    document.getElementById("balance");
+
+const totalIncomeElement =
+    document.getElementById("totalIncome");
+
+const totalExpenseElement =
+    document.getElementById("totalExpense");
+
+const transactionCountElement =
+    document.getElementById("transactionCount");
+
+const chartElement =
+    document.getElementById("chart");
+
+const infoElement =
+    document.getElementById("info");
+
+const refreshButton =
+    document.getElementById("refreshButton");
+
+const backButton =
+    document.getElementById("backButton");
+
+
+function getToken() {
+
+    return localStorage.getItem(
+        TOKEN_KEY
+    );
+
+}
+
+
+function showMessage(text, type) {
+
+    messageElement.textContent =
+        text;
+
+    messageElement.className =
+        "message " + type;
+
+}
+
+
+function hideMessage() {
+
+    messageElement.textContent =
+        "";
+
+    messageElement.className =
+        "message";
+
+}
+
+
+function formatMoney(value) {
+
+    const number =
+        Number(value) || 0;
+
+    return (
+        number.toLocaleString("fa-IR") +
+        " تومان"
+    );
+
+}
+
+
+function formatNumber(value) {
+
+    const number =
+        Number(value) || 0;
+
+    return number.toLocaleString("fa-IR");
+
+}
+
+
+function checkLogin() {
+
+    const token =
+        getToken();
+
+    if (!token) {
+
+        window.location.href =
+            "/frontend/login.html";
+
+        return false;
+    }
+
+    return true;
+
+}
+
+
+async function readJSON(response) {
+
+    const text =
+        await response.text();
+
+    if (!text) {
+        return {};
+    }
+
+    try {
+
+        return JSON.parse(text);
+
+    } catch {
+
+        return {
+            detail: text
+        };
+
+    }
+
+}
+
+
+async function loadBalance(token) {
+
+    const response =
+        await fetch(
+            API_URL + "/api/balance",
+            {
+                method: "GET",
+
+                headers: {
+                    "Authorization":
+                        "Bearer " + token
+                },
+
+                cache: "no-store"
+            }
+        );
+
+
+    if (response.status === 401) {
+
+        throw new Error(
+            "SESSION_EXPIRED"
+        );
+
+    }
+
+
+    const data =
+        await readJSON(response);
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.detail ||
+            data.message ||
+            "دریافت موجودی ناموفق بود."
+        );
+
+    }
+
+
+    let balance = 0;
+
+
+    if (
+        typeof data.balance !==
+        "undefined"
+    ) {
+
+        balance =
+            Number(data.balance) || 0;
+
+    } else if (
+        data.data &&
+        typeof data.data.balance !==
+        "undefined"
+    ) {
+
+        balance =
+            Number(data.data.balance) || 0;
+
+    }
+
+
+    return balance;
+
+}
+
+
+async function loadTransactions(token) {
+
+    const response =
+        await fetch(
+            API_URL +
+            "/api/transactions",
+            {
+                method: "GET",
+
+                headers: {
+                    "Authorization":
+                        "Bearer " + token
+                },
+
+                cache: "no-store"
+            }
+        );
+
+
+    if (response.status === 401) {
+
+        throw new Error(
+            "SESSION_EXPIRED"
+        );
+
+    }
+
+
+    const data =
+        await readJSON(response);
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.detail ||
+            data.message ||
+            "دریافت تراکنش‌ها ناموفق بود."
+        );
+
+    }
+
+
+    return Array.isArray(
+        data.transactions
+    )
+        ? data.transactions
+        : [];
+
+}
+
+
+function calculateReport(
+    transactions
+) {
+
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+
+    transactions.forEach(
+        function (transaction) {
+
+            const amount =
+                Number(
+                    transaction.amount
+                ) || 0;
+
+
+            if (
+                transaction.type ===
+                "income"
+            ) {
+
+                totalIncome +=
+                    amount;
+
+            } else {
+
+                totalExpense +=
+                    amount;
+
+            }
+
+        }
+    );
+
+
+    return {
+        totalIncome,
+        totalExpense
+    };
+
+}
+
+
+function renderChart(
+    totalIncome,
+    totalExpense
+) {
+
+    const total =
+        totalIncome +
+        totalExpense;
+
+
+    if (total <= 0) {
+
+        chartElement.innerHTML =
+            '<div class="loading">هنوز درآمد یا هزینه‌ای ثبت نشده است.</div>';
+
+        return;
+
+    }
+
+
+    const incomePercent =
+        (
+            totalIncome /
+            total
+        ) * 100;
+
+
+    const expensePercent =
+        (
+            totalExpense /
+            total
+        ) * 100;
+
+
+    chartElement.innerHTML = `
+
+        <div class="bar-row">
+
+            <div class="bar-header">
+
+                <span>
+                    🟢 درآمد
+                </span>
+
+                <strong>
+                    ${formatNumber(
+                        incomePercent.toFixed(1)
+                    )}٪
+                </strong>
+
+            </div>
+
+            <div class="bar-background">
+
+                <div
+                    class="bar income-bar"
+                    style="width: ${incomePercent}%"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="bar-row">
+
+            <div class="bar-header">
+
+                <span>
+                    🔴 هزینه
+                </span>
+
+                <strong>
+                    ${formatNumber(
+                        expensePercent.toFixed(1)
+                    )}٪
+                </strong>
+
+            </div>
+
+            <div class="bar-background">
+
+                <div
+                    class="bar expense-bar"
+                    style="width: ${expensePercent}%"
+                ></div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+function renderInfo(
+    balance,
+    totalIncome,
+    totalExpense,
+    transactionCount
+) {
+
+    const difference =
+        totalIncome -
+        totalExpense;
+
+
+    let statusText;
+
+
+    if (difference > 0) {
+
+        statusText =
+            "درآمد ثبت‌شده بیشتر از هزینه‌های ثبت‌شده است.";
+
+    } else if (difference < 0) {
+
+        statusText =
+            "هزینه‌های ثبت‌شده بیشتر از درآمدهای ثبت‌شده است.";
+
+    } else {
+
+        statusText =
+            "مجموع درآمد و هزینه برابر است.";
+
+    }
+
+
+    infoElement.innerHTML = `
+
+        <div>
+            💰 موجودی فعلی:
+            <strong>
+                ${formatMoney(balance)}
+            </strong>
+        </div>
+
+        <div>
+            🟢 مجموع درآمد:
+            <strong>
+                ${formatMoney(totalIncome)}
+            </strong>
+        </div>
+
+        <div>
+            🔴 مجموع هزینه:
+            <strong>
+                ${formatMoney(totalExpense)}
+            </strong>
+        </div>
+
+        <div>
+            🧾 تعداد تراکنش:
+            <strong>
+                ${formatNumber(transactionCount)}
+            </strong>
+        </div>
+
+        <div>
+            📊 خالص درآمد:
+            <strong>
+                ${formatMoney(difference)}
+            </strong>
+        </div>
+
+        <div>
+            ℹ️ ${statusText}
+        </div>
+
+    `;
+
+}
+
+
+async function loadReport() {
+
+    const token =
+        getToken();
+
+    if (!token) {
+        return;
+    }
+
+
+    hideMessage();
+
+
+    balanceElement.textContent =
+        "در حال دریافت...";
+
+    totalIncomeElement.textContent =
+        "در حال دریافت...";
+
+    totalExpenseElement.textContent =
+        "در حال دریافت...";
+
+    transactionCountElement.textContent =
+        "در حال دریافت...";
+
+
+    try {
+
+        const balance =
+            await loadBalance(
+                token
+            );
+
+
+        const transactions =
+            await loadTransactions(
+                token
+            );
+
+
+        const report =
+            calculateReport(
+                transactions
+            );
+
+
+        balanceElement.textContent =
+            formatMoney(
+                balance
+            );
+
+
+        totalIncomeElement.textContent =
+            formatMoney(
+                report.totalIncome
+            );
+
+
+        totalExpenseElement.textContent =
+            formatMoney(
+                report.totalExpense
+            );
+
+
+        transactionCountElement.textContent =
+            formatNumber(
+                transactions.length
+            );
+
+
+        renderChart(
+            report.totalIncome,
+            report.totalExpense
+        );
+
+
+        renderInfo(
+            balance,
+            report.totalIncome,
+            report.totalExpense,
+            transactions.length
+        );
+
+
+    } catch (error) {
+
+        if (
+            error.message ===
+            "SESSION_EXPIRED"
+        ) {
+
+            localStorage.removeItem(
+                TOKEN_KEY
+            );
+
+            localStorage.removeItem(
+                "kifyar_user"
+            );
+
+            window.location.href =
+                "/frontend/login.html";
+
+            return;
+
+        }
+
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+
+        chartElement.innerHTML =
+            '<div class="loading">گزارش قابل دریافت نیست.</div>';
+
+
+        infoElement.textContent =
+            "خطا در دریافت اطلاعات گزارش.";
+
+    }
+
+}
+
+
+refreshButton.addEventListener(
+    "click",
+    async function () {
+
+        refreshButton.disabled =
+            true;
+
+        try {
+
+            await loadReport();
+
+            if (
+                messageElement.className ===
+                "message"
+            ) {
+
+                showMessage(
+                    "گزارش با موفقیت بروزرسانی شد.",
+                    "success"
+                );
+
+            }
+
+        } finally {
+
+            refreshButton.disabled =
+                false;
+
+        }
+
+    }
+);
+
+
+backButton.addEventListener(
+    "click",
+    function () {
+
+        window.location.href =
+            "/frontend/index.html";
+
+    }
+);
+
+
+if (checkLogin()) {
+
+    loadReport();
+
+}
+
+</script>
+
+</body>
+</html>
+```

@@ -1,0 +1,807 @@
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>کارت‌های بانکی - کیف‌یار</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <header class="page-header">
+
+        <h1>💳 کارت‌های بانکی</h1>
+
+        <a href="index.html">
+            بازگشت
+        </a>
+
+    </header>
+
+
+    <!-- افزودن کارت -->
+
+    <section class="card">
+
+        <h2>➕ افزودن کارت بانکی</h2>
+
+        <p>
+            اطلاعات کارت خودت را برای استفاده در کیف‌یار ثبت کن.
+        </p>
+
+
+        <label for="holderName">
+            نام صاحب کارت
+        </label>
+
+        <input
+            id="holderName"
+            type="text"
+            maxlength="100"
+            placeholder="نام و نام خانوادگی"
+        >
+
+
+        <label for="bankName">
+            نام بانک
+        </label>
+
+        <input
+            id="bankName"
+            type="text"
+            maxlength="100"
+            placeholder="مثلاً بانک ملی"
+        >
+
+
+        <label for="cardNumber">
+            شماره کارت
+        </label>
+
+        <input
+            id="cardNumber"
+            type="text"
+            inputmode="numeric"
+            maxlength="19"
+            placeholder="6037-xxxx-xxxx-xxxx"
+        >
+
+
+        <button
+            id="addCardButton"
+            type="button"
+        >
+            افزودن کارت
+        </button>
+
+
+        <div
+            id="addMessage"
+            class="message"
+        ></div>
+
+    </section>
+
+
+    <!-- کارت‌ها -->
+
+    <section class="card">
+
+        <h2>💳 کارت‌های من</h2>
+
+        <div id="cardsList">
+            در حال دریافت کارت‌ها...
+        </div>
+
+    </section>
+
+
+</div>
+
+
+<script>
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+
+function getToken() {
+
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("access_token") ||
+        ""
+    );
+
+}
+
+
+function authHeaders() {
+
+    return {
+
+        "Content-Type":
+            "application/json",
+
+        "Authorization":
+            "Bearer " + getToken()
+
+    };
+
+}
+
+
+function showMessage(
+    element,
+    message,
+    success = false
+) {
+
+    element.textContent =
+        message;
+
+    element.className =
+        success
+            ? "message success"
+            : "message error";
+
+}
+
+
+function formatCardNumber(
+    value
+) {
+
+    const digits =
+        String(value || "")
+            .replace(/\D/g, "")
+            .slice(0, 16);
+
+    return digits
+        .replace(
+            /(.{4})/g,
+            "$1-"
+        )
+        .replace(
+            /-$/,
+            ""
+        );
+
+}
+
+
+document
+    .getElementById(
+        "cardNumber"
+    )
+    .addEventListener(
+        "input",
+        function () {
+
+            this.value =
+                formatCardNumber(
+                    this.value
+                );
+
+        }
+    );
+
+
+async function loadCards() {
+
+    const list =
+        document.getElementById(
+            "cardsList"
+        );
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/cards",
+                {
+                    headers:
+                        authHeaders()
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "دریافت کارت‌ها انجام نشد."
+            );
+
+        }
+
+
+        if (
+            !data.cards ||
+            data.cards.length === 0
+        ) {
+
+            list.innerHTML = `
+                <div class="message">
+                    هنوز هیچ کارت بانکی ثبت نشده است.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        list.innerHTML = "";
+
+
+        data.cards.forEach(
+            card => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                item.className =
+                    "transaction-item";
+
+
+                const isDefault =
+                    Boolean(
+                        card.is_default
+                    );
+
+
+                item.innerHTML = `
+
+                    <div>
+
+                        <strong>
+                            ${escapeHtml(
+                                card.bank_name ||
+                                "بانک"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        صاحب کارت:
+                        ${escapeHtml(
+                            card.holder_name ||
+                            "-"
+                        )}
+
+                    </div>
+
+
+                    <div>
+
+                        شماره کارت:
+                        <strong>
+                            ${escapeHtml(
+                                card.masked_card_number ||
+                                "****"
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        وضعیت:
+                        ${
+                            isDefault
+                                ? "⭐ کارت پیش‌فرض"
+                                : "کارت عادی"
+                        }
+
+                    </div>
+
+
+                    <div
+                        style="
+                            display:flex;
+                            gap:8px;
+                            flex-wrap:wrap;
+                            margin-top:10px;
+                        "
+                    >
+
+                        ${
+                            !isDefault
+                                ? `
+                                    <button
+                                        type="button"
+                                        data-default="${card.id}"
+                                    >
+                                        ⭐ انتخاب به‌عنوان پیش‌فرض
+                                    </button>
+                                `
+                                : ""
+                        }
+
+
+                        <button
+                            type="button"
+                            data-delete="${card.id}"
+                        >
+                            🗑 حذف کارت
+                        </button>
+
+                    </div>
+
+                `;
+
+
+                list.appendChild(
+                    item
+                );
+
+            }
+        );
+
+
+        document
+            .querySelectorAll(
+                "[data-default]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+
+                            const cardId =
+                                Number(
+                                    this.dataset.default
+                                );
+
+                            setDefaultCard(
+                                cardId
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        document
+            .querySelectorAll(
+                "[data-delete]"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+
+                            const cardId =
+                                Number(
+                                    this.dataset.delete
+                                );
+
+                            deleteCard(
+                                cardId
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        list.innerHTML = `
+            <div class="message error">
+                ${escapeHtml(
+                    error.message ||
+                    "خطا در دریافت کارت‌ها."
+                )}
+            </div>
+        `;
+
+    }
+
+}
+
+
+function escapeHtml(
+    value
+) {
+
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+async function addCard() {
+
+    const holderName =
+        document
+            .getElementById(
+                "holderName"
+            )
+            .value
+            .trim();
+
+
+    const bankName =
+        document
+            .getElementById(
+                "bankName"
+            )
+            .value
+            .trim();
+
+
+    const cardNumber =
+        document
+            .getElementById(
+                "cardNumber"
+            )
+            .value
+            .replace(
+                /\D/g,
+                ""
+            );
+
+
+    const message =
+        document
+            .getElementById(
+                "addMessage"
+            );
+
+
+    const button =
+        document
+            .getElementById(
+                "addCardButton"
+            );
+
+
+    if (!holderName) {
+
+        showMessage(
+            message,
+            "نام صاحب کارت را وارد کنید."
+        );
+
+        return;
+
+    }
+
+
+    if (!bankName) {
+
+        showMessage(
+            message,
+            "نام بانک را وارد کنید."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !/^\d{16}$/.test(
+            cardNumber
+        )
+    ) {
+
+        showMessage(
+            message,
+            "شماره کارت باید دقیقاً ۱۶ رقم باشد."
+        );
+
+        return;
+
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "در حال افزودن...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/cards",
+                {
+                    method: "POST",
+
+                    headers:
+                        authHeaders(),
+
+                    body:
+                        JSON.stringify({
+
+                            holder_name:
+                                holderName,
+
+                            bank_name:
+                                bankName,
+
+                            card_number:
+                                cardNumber
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "افزودن کارت انجام نشد."
+            );
+
+        }
+
+
+        showMessage(
+            message,
+            "کارت با موفقیت اضافه شد.",
+            true
+        );
+
+
+        document
+            .getElementById(
+                "holderName"
+            )
+            .value = "";
+
+
+        document
+            .getElementById(
+                "bankName"
+            )
+            .value = "";
+
+
+        document
+            .getElementById(
+                "cardNumber"
+            )
+            .value = "";
+
+
+        await loadCards();
+
+    }
+    catch (error) {
+
+        showMessage(
+            message,
+            error.message ||
+            "افزودن کارت انجام نشد."
+        );
+
+    }
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "افزودن کارت";
+
+    }
+
+}
+
+
+async function setDefaultCard(
+    cardId
+) {
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/cards/" +
+                cardId +
+                "/default",
+                {
+                    method: "POST",
+
+                    headers:
+                        authHeaders()
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "تغییر کارت پیش‌فرض انجام نشد."
+            );
+
+        }
+
+
+        await loadCards();
+
+    }
+    catch (error) {
+
+        alert(
+            error.message ||
+            "تغییر کارت پیش‌فرض انجام نشد."
+        );
+
+    }
+
+}
+
+
+async function deleteCard(
+    cardId
+) {
+
+    const confirmed =
+        confirm(
+            "آیا از حذف این کارت مطمئن هستید؟"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/cards/" +
+                cardId,
+                {
+                    method: "DELETE",
+
+                    headers:
+                        authHeaders()
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "حذف کارت انجام نشد."
+            );
+
+        }
+
+
+        await loadCards();
+
+    }
+    catch (error) {
+
+        alert(
+            error.message ||
+            "حذف کارت انجام نشد."
+        );
+
+    }
+
+}
+
+
+document
+    .getElementById(
+        "addCardButton"
+    )
+    .addEventListener(
+        "click",
+        addCard
+    );
+
+
+async function init() {
+
+    if (!getToken()) {
+
+        window.location.href =
+            "login.html";
+
+        return;
+
+    }
+
+
+    await loadCards();
+
+}
+
+
+init();
+
+</script>
+
+</body>
+
+</html>
+```

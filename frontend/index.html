@@ -1,0 +1,1502 @@
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>داشبورد - کیف‌یار</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .container {
+            width: min(1100px, 94%);
+            margin: 30px auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 25px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #777;
+        }
+
+        .notification-button {
+            position: relative;
+            background: #eef2ff;
+            color: #1d4ed8;
+            border: none;
+            border-radius: 14px;
+            width: 52px;
+            height: 52px;
+            font-size: 23px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 5px;
+            border-radius: 20px;
+            background: #dc2626;
+            color: white;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        .notification-count.hidden {
+            display: none;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .actions a,
+        .actions button {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 15px;
+            font-family: inherit;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #222;
+        }
+
+        .success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 22px;
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .balance {
+            color: #2563eb;
+        }
+
+        .income {
+            color: #16a34a;
+        }
+
+        .expense {
+            color: #dc2626;
+        }
+
+        .net {
+            color: #7c3aed;
+        }
+
+        .section {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 19px;
+        }
+
+        .section-header a {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .transaction {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            border: 1px solid #eee;
+            border-radius: 13px;
+            padding: 14px;
+        }
+
+        .transaction-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .transaction-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .transaction-date {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .transaction-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 7px;
+        }
+
+        .badge {
+            display: inline-block;
+            border-radius: 20px;
+            padding: 4px 8px;
+            font-size: 10px;
+            background: #eef2f7;
+            color: #555;
+        }
+
+        .income-badge {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .expense-badge {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .wallet-badge {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .transaction-amount.income {
+            color: #16a34a;
+        }
+
+        .transaction-amount.expense {
+            color: #dc2626;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .quick-action {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 17px;
+            text-decoration: none;
+            color: #222;
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .quick-action:hover {
+            background: #eef2ff;
+            transform: translateY(-2px);
+        }
+
+        .quick-icon {
+            display: block;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #888;
+            padding: 30px 15px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            padding: 30px;
+        }
+
+        .error-box {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .refresh-button {
+            background: #eef2ff;
+            color: #1d4ed8;
+            border: none;
+            border-radius: 10px;
+            padding: 9px 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .refresh-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        @media (max-width: 900px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 94%;
+                margin: 15px auto;
+            }
+
+            .header {
+                padding: 18px;
+            }
+
+            .header h1 {
+                font-size: 21px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .transaction {
+                align-items: flex-start;
+            }
+
+            .transaction-amount {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <div class="header-top">
+
+            <div>
+                <h1 id="welcomeText">
+                    داشبورد کیف‌یار
+                </h1>
+
+                <p>
+                    مدیریت ساده و سریع امور مالی
+                </p>
+            </div>
+
+            <a
+                href="notifications.html"
+                class="notification-button"
+                title="اعلان‌ها"
+            >
+                🔔
+
+                <span
+                    id="notificationCount"
+                    class="notification-count hidden"
+                >
+                    0
+                </span>
+            </a>
+
+        </div>
+
+        <div class="actions">
+
+            <a
+                href="transactions.html"
+                class="primary"
+            >
+                ＋ تراکنش جدید
+            </a>
+
+            <a
+                href="wallet.html"
+                class="secondary"
+            >
+                💰 کیف پول
+            </a>
+
+            <a
+                href="cards.html"
+                class="secondary"
+            >
+                💳 کارت‌های بانکی
+            </a>
+
+            <a
+                href="reports.html"
+                class="secondary"
+            >
+                📊 گزارش‌ها
+            </a>
+
+            <a
+                href="profile.html"
+                class="secondary"
+            >
+                👤 پروفایل
+            </a>
+
+            <a
+                href="settings.html"
+                class="secondary"
+            >
+                ⚙️ تنظیمات
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="cards">
+
+        <div class="card">
+
+            <div class="card-title">
+                موجودی فعلی
+            </div>
+
+            <div
+                id="balance"
+                class="card-value balance"
+            >
+                در حال دریافت...
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                مجموع درآمد
+            </div>
+
+            <div
+                id="totalIncome"
+                class="card-value income"
+            >
+                در حال دریافت...
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                مجموع هزینه
+            </div>
+
+            <div
+                id="totalExpense"
+                class="card-value expense"
+            >
+                در حال دریافت...
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                تعداد تراکنش‌ها
+            </div>
+
+            <div
+                id="transactionCount"
+                class="card-value net"
+            >
+                ۰
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <h2>
+                دسترسی سریع
+            </h2>
+
+        </div>
+
+        <div class="quick-actions">
+
+            <a
+                href="wallet.html"
+                class="quick-action"
+            >
+                <span class="quick-icon">
+                    💰
+                </span>
+                کیف پول
+            </a>
+
+
+            <a
+                href="cards.html"
+                class="quick-action"
+            >
+                <span class="quick-icon">
+                    💳
+                </span>
+                کارت‌های بانکی
+            </a>
+
+
+            <a
+                href="transactions.html"
+                class="quick-action"
+            >
+                <span class="quick-icon">
+                    🧾
+                </span>
+                تراکنش‌ها
+            </a>
+
+
+            <a
+                href="reports.html"
+                class="quick-action"
+            >
+                <span class="quick-icon">
+                    📊
+                </span>
+                گزارش‌ها
+            </a>
+
+
+            <a
+                href="notifications.html"
+                class="quick-action"
+            >
+                <span class="quick-icon">
+                    🔔
+                </span>
+
+                اعلان‌ها
+
+                <span
+                    id="quickNotificationCount"
+                    style="
+                        display:none;
+                        color:#dc2626;
+                        font-size:12px;
+                        font-weight:bold;
+                        margin-top:5px;
+                    "
+                >
+                    ۰ اعلان خوانده‌نشده
+                </span>
+
+            </a>
+
+
+            <a
+                href="profile.html"
+                class="quick-action"
+            >
+                <span class="quick-icon">
+                    👤
+                </span>
+                پروفایل
+            </a>
+
+
+            <a
+                href="settings.html"
+                class="quick-action"
+            >
+                <span class="quick-icon">
+                    ⚙️
+                </span>
+                تنظیمات
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <h2>
+                آخرین تراکنش‌ها
+            </h2>
+
+            <div>
+
+                <button
+                    id="refreshButton"
+                    class="refresh-button"
+                    onclick="loadDashboard()"
+                >
+                    ↻ بروزرسانی
+                </button>
+
+                <a
+                    href="transactions.html"
+                    style="margin-right:8px;"
+                >
+                    مشاهده همه
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="transactions"
+            class="transaction-list"
+        >
+
+            <div class="loading">
+                در حال دریافت تراکنش‌ها...
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL = "http://127.0.0.1:8000";
+
+const token =
+    localStorage.getItem("kifyar_token");
+
+if (!token) {
+
+    window.location.href = "login.html";
+
+}
+
+
+const categoryNames = {
+
+    food: "غذا",
+
+    shopping: "خرید",
+
+    transport: "حمل‌ونقل",
+
+    internet: "اینترنت",
+
+    entertainment: "سرگرمی",
+
+    home: "خانه",
+
+    work: "کار",
+
+    education: "آموزش",
+
+    bill: "قبض",
+
+    income: "درآمد",
+
+    other: "سایر"
+
+};
+
+
+function formatMoney(value) {
+
+    return (
+        Number(value || 0).toLocaleString("fa-IR")
+        + " تومان"
+    );
+
+}
+
+
+function formatDate(value) {
+
+    if (!value) {
+        return "بدون تاریخ";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return String(value);
+    }
+
+    return date.toLocaleString(
+        "fa-IR",
+        {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+
+}
+
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+function normalizeTransactionType(type) {
+
+    const value =
+        String(type || "")
+            .toLowerCase()
+            .trim();
+
+    if (
+        value === "income" ||
+        value === "deposit" ||
+        value === "credit"
+    ) {
+        return "income";
+    }
+
+    if (
+        value === "expense" ||
+        value === "withdraw" ||
+        value === "debit"
+    ) {
+        return "expense";
+    }
+
+    return value;
+
+}
+
+
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+
+    const headers = {
+        ...(options.headers || {}),
+        "Authorization":
+            `Bearer ${token}`
+    };
+
+    const response =
+        await fetch(
+            `${API_URL}${endpoint}`,
+            {
+                ...options,
+                headers
+            }
+        );
+
+    if (response.status === 401) {
+
+        localStorage.removeItem(
+            "kifyar_token"
+        );
+
+        window.location.href =
+            "login.html";
+
+        throw new Error(
+            "جلسه ورود منقضی شده است."
+        );
+
+    }
+
+    return response;
+
+}
+
+
+async function loadProfile() {
+
+    try {
+
+        const response =
+            await apiRequest(
+                "/api/profile"
+            );
+
+        if (!response.ok) {
+            return;
+        }
+
+        const data =
+            await response.json();
+
+        const user =
+            data.user || data;
+
+        if (user.name) {
+
+            document.getElementById(
+                "welcomeText"
+            ).textContent =
+                `سلام ${user.name} 👋`;
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Profile error:",
+            error
+        );
+
+    }
+
+}
+
+
+async function loadBalance() {
+
+    const response =
+        await apiRequest(
+            "/api/balance"
+        );
+
+    if (!response.ok) {
+
+        throw new Error(
+            "دریافت موجودی ناموفق بود."
+        );
+
+    }
+
+    const data =
+        await response.json();
+
+    const balance =
+        Number(
+            data.balance ??
+            data.amount ??
+            0
+        );
+
+    document.getElementById(
+        "balance"
+    ).textContent =
+        formatMoney(balance);
+
+}
+
+
+async function loadTransactions() {
+
+    const response =
+        await apiRequest(
+            "/api/transactions"
+        );
+
+    if (!response.ok) {
+
+        throw new Error(
+            "دریافت تراکنش‌ها ناموفق بود."
+        );
+
+    }
+
+    const data =
+        await response.json();
+
+    let transactions = [];
+
+    if (Array.isArray(data)) {
+
+        transactions = data;
+
+    } else if (
+        Array.isArray(data.transactions)
+    ) {
+
+        transactions =
+            data.transactions;
+
+    }
+
+    /*
+     * جدیدترین تراکنش را اول قرار می‌دهیم.
+     * این باعث می‌شود برداشت تازه کیف پول
+     * در ابتدای لیست نمایش داده شود.
+     */
+    transactions.sort(
+        (a, b) => {
+
+            const dateA =
+                new Date(
+                    a.created_at ||
+                    a.createdAt ||
+                    a.date ||
+                    0
+                ).getTime();
+
+            const dateB =
+                new Date(
+                    b.created_at ||
+                    b.createdAt ||
+                    b.date ||
+                    0
+                ).getTime();
+
+            return dateB - dateA;
+
+        }
+    );
+
+    calculateSummary(
+        transactions
+    );
+
+    renderLatestTransactions(
+        transactions
+    );
+
+}
+
+
+function calculateSummary(
+    transactions
+) {
+
+    let income = 0;
+    let expense = 0;
+
+    transactions.forEach(
+        transaction => {
+
+            const amount =
+                Number(
+                    transaction.amount || 0
+                );
+
+            const type =
+                normalizeTransactionType(
+                    transaction.transaction_type ??
+                    transaction.type
+                );
+
+            if (type === "income") {
+
+                income += amount;
+
+            } else if (type === "expense") {
+
+                expense += amount;
+
+            }
+
+        }
+    );
+
+
+    document.getElementById(
+        "totalIncome"
+    ).textContent =
+        formatMoney(income);
+
+
+    document.getElementById(
+        "totalExpense"
+    ).textContent =
+        formatMoney(expense);
+
+
+    document.getElementById(
+        "transactionCount"
+    ).textContent =
+        transactions.length.toLocaleString(
+            "fa-IR"
+        );
+
+}
+
+
+function isWalletWithdrawal(
+    transaction
+) {
+
+    const title =
+        String(
+            transaction.title || ""
+        ).toLowerCase();
+
+    return (
+        title.includes("برداشت") ||
+        title.includes("کیف پول") ||
+        title.includes("withdraw")
+    );
+
+}
+
+
+function renderLatestTransactions(
+    transactions
+) {
+
+    const container =
+        document.getElementById(
+            "transactions"
+        );
+
+    if (
+        !transactions ||
+        transactions.length === 0
+    ) {
+
+        container.innerHTML = `
+            <div class="empty">
+
+                هنوز تراکنشی ثبت نشده است.
+
+                <br><br>
+
+                <a
+                    href="transactions.html"
+                    class="primary"
+                    style="
+                        display:inline-block;
+                        color:white;
+                        text-decoration:none;
+                        padding:10px 15px;
+                        border-radius:10px;
+                    "
+                >
+                    افزودن اولین تراکنش
+                </a>
+
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const latest =
+        transactions.slice(0, 5);
+
+
+    container.innerHTML =
+        latest.map(
+            transaction => {
+
+                const type =
+                    normalizeTransactionType(
+                        transaction.transaction_type ??
+                        transaction.type
+                    );
+
+                const isIncome =
+                    type === "income";
+
+                const category =
+                    transaction.category ||
+                    "other";
+
+                const categoryName =
+                    categoryNames[
+                        category
+                    ] || "سایر";
+
+                const amount =
+                    Number(
+                        transaction.amount || 0
+                    );
+
+                const walletWithdrawal =
+                    !isIncome &&
+                    isWalletWithdrawal(
+                        transaction
+                    );
+
+
+                return `
+                    <div class="transaction">
+
+                        <div class="transaction-info">
+
+                            <div class="transaction-title">
+                                ${escapeHtml(
+                                    transaction.title ||
+                                    "بدون عنوان"
+                                )}
+                            </div>
+
+                            <div class="transaction-date">
+                                ${escapeHtml(
+                                    formatDate(
+                                        transaction.created_at ||
+                                        transaction.createdAt ||
+                                        transaction.date
+                                    )
+                                )}
+                            </div>
+
+                            <div class="transaction-meta">
+
+                                <span
+                                    class="badge ${
+                                        isIncome
+                                            ? "income-badge"
+                                            : "expense-badge"
+                                    }"
+                                >
+                                    ${
+                                        isIncome
+                                            ? "درآمد"
+                                            : "هزینه"
+                                    }
+                                </span>
+
+                                <span class="badge">
+                                    ${escapeHtml(
+                                        categoryName
+                                    )}
+                                </span>
+
+                                ${
+                                    walletWithdrawal
+                                        ? `
+                                            <span class="badge wallet-badge">
+                                                برداشت کیف پول
+                                            </span>
+                                          `
+                                        : ""
+                                }
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="transaction-amount ${
+                                isIncome
+                                    ? "income"
+                                    : "expense"
+                            }"
+                        >
+                            ${
+                                isIncome
+                                    ? "+"
+                                    : "-"
+                            }
+
+                            ${formatMoney(
+                                amount
+                            )}
+                        </div>
+
+                    </div>
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+function getUnreadNotificationCount() {
+
+    try {
+
+        const saved =
+            localStorage.getItem(
+                "kifyar_notifications"
+            );
+
+        if (!saved) {
+            return 0;
+        }
+
+        const notifications =
+            JSON.parse(saved);
+
+        if (
+            !Array.isArray(
+                notifications
+            )
+        ) {
+
+            return 0;
+        }
+
+        return notifications.filter(
+            item =>
+                item &&
+                item.read !== true
+        ).length;
+
+    } catch (error) {
+
+        console.error(
+            "Notification error:",
+            error
+        );
+
+        return 0;
+
+    }
+
+}
+
+
+function updateNotificationBadge() {
+
+    const count =
+        getUnreadNotificationCount();
+
+
+    const badge =
+        document.getElementById(
+            "notificationCount"
+        );
+
+
+    const quickBadge =
+        document.getElementById(
+            "quickNotificationCount"
+        );
+
+
+    if (count > 0) {
+
+        badge.textContent =
+            count > 99
+                ? "۹۹+"
+                : count.toLocaleString(
+                    "fa-IR"
+                );
+
+        badge.classList.remove(
+            "hidden"
+        );
+
+
+        quickBadge.textContent =
+            count.toLocaleString(
+                "fa-IR"
+            ) +
+            " اعلان خوانده‌نشده";
+
+
+        quickBadge.style.display =
+            "block";
+
+    } else {
+
+        badge.classList.add(
+            "hidden"
+        );
+
+        quickBadge.style.display =
+            "none";
+
+    }
+
+}
+
+
+async function loadDashboard() {
+
+    const transactionBox =
+        document.getElementById(
+            "transactions"
+        );
+
+
+    const refreshButton =
+        document.getElementById(
+            "refreshButton"
+        );
+
+
+    transactionBox.innerHTML = `
+        <div class="loading">
+            در حال دریافت اطلاعات...
+        </div>
+    `;
+
+
+    if (refreshButton) {
+
+        refreshButton.disabled = true;
+        refreshButton.textContent =
+            "↻ در حال بروزرسانی...";
+
+    }
+
+
+    try {
+
+        /*
+         * هر سه اطلاعات مستقیماً از API خوانده می‌شوند.
+         * بنابراین بعد از برداشت یا واریز،
+         * داشبورد مقدار قدیمی را نگه نمی‌دارد.
+         */
+
+        await Promise.all([
+            loadProfile(),
+            loadBalance(),
+            loadTransactions()
+        ]);
+
+
+        updateNotificationBadge();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        transactionBox.innerHTML = `
+            <div class="error-box">
+
+                دریافت اطلاعات داشبورد
+                با خطا مواجه شد.
+
+                <br><br>
+
+                <button
+                    class="primary"
+                    onclick="loadDashboard()"
+                    style="
+                        border:none;
+                        border-radius:10px;
+                        padding:10px 15px;
+                        cursor:pointer;
+                        font-family:inherit;
+                    "
+                >
+                    تلاش دوباره
+                </button>
+
+            </div>
+        `;
+
+    } finally {
+
+        if (refreshButton) {
+
+            refreshButton.disabled = false;
+
+            refreshButton.textContent =
+                "↻ بروزرسانی";
+
+        }
+
+    }
+
+}
+
+
+/*
+ * وقتی از wallet.html یا صفحه دیگری
+ * به داشبورد برمی‌گردیم، اطلاعات تازه
+ * دوباره دریافت می‌شود.
+ */
+window.addEventListener(
+    "pageshow",
+    function() {
+
+        loadDashboard();
+
+    }
+);
+
+
+/*
+ * اگر اطلاعات اعلان‌ها در تب دیگری
+ * تغییر کند، نشان اعلان هم تازه می‌شود.
+ */
+window.addEventListener(
+    "storage",
+    function(event) {
+
+        if (
+            event.key ===
+            "kifyar_notifications"
+        ) {
+
+            updateNotificationBadge();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "visibilitychange",
+    function() {
+
+        if (
+            document.visibilityState ===
+            "visible"
+        ) {
+
+            updateNotificationBadge();
+
+            /*
+             * با برگشت دوباره به تب،
+             * موجودی و تراکنش‌ها تازه می‌شوند.
+             */
+            loadDashboard();
+
+        }
+
+    }
+);
+
+
+/*
+ * بارگذاری اولیه داشبورد
+ */
+loadDashboard();
+
+updateNotificationBadge();
+
+</script>
+
+</body>
+</html>
+```

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>KifYar - پرداخت</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="logo">
+            ک
+        </div>
+
+        <div>
+            <h1>KifYar</h1>
+            <span>پرداخت و خدمات</span>
+        </div>
+
+    </div>
+
+    <button
+        class="profile-btn"
+        type="button"
+        onclick="goProfile()"
+    >
+        👤
+    </button>
+
+</header>
+
+
+<main>
+
+    <section class="balance-card">
+
+        <p>
+            موجودی کیف پول
+        </p>
+
+        <h2 id="balance">
+            ۰ تومان
+        </h2>
+
+    </section>
+
+
+    <section class="services">
+
+        <h2>
+            پرداخت‌ها
+        </h2>
+
+        <div class="service-grid">
+
+            <button
+                class="service-card"
+                type="button"
+                onclick="showMessage('پرداخت قبض در مرحله بعد فعال می‌شود.')"
+            >
+
+                <span>
+                    🧾
+                </span>
+
+                <strong>
+                    قبض
+                </strong>
+
+                <small>
+                    پرداخت قبض
+                </small>
+
+            </button>
+
+
+            <button
+                class="service-card"
+                type="button"
+                onclick="showMessage('خرید شارژ در مرحله بعد فعال می‌شود.')"
+            >
+
+                <span>
+                    📱
+                </span>
+
+                <strong>
+                    شارژ
+                </strong>
+
+                <small>
+                    خرید شارژ
+                </small>
+
+            </button>
+
+
+            <button
+                class="service-card"
+                type="button"
+                onclick="showMessage('بسته اینترنت در مرحله بعد فعال می‌شود.')"
+            >
+
+                <span>
+                    🌐
+                </span>
+
+                <strong>
+                    اینترنت
+                </strong>
+
+                <small>
+                    بسته اینترنت
+                </small>
+
+            </button>
+
+
+            <button
+                class="service-card"
+                type="button"
+                onclick="showMessage('QR پرداخت در مرحله بعد فعال می‌شود.')"
+            >
+
+                <span>
+                    ▣
+                </span>
+
+                <strong>
+                    پرداخت QR
+                </strong>
+
+                <small>
+                    پرداخت با QR
+                </small>
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section class="transactions">
+
+        <div class="section-title">
+
+            <h2>
+                عملیات سریع
+            </h2>
+
+        </div>
+
+        <div class="service-grid">
+
+            <button
+                class="service-card"
+                type="button"
+                onclick="goHome()"
+            >
+
+                <span>
+                    🏠
+                </span>
+
+                <strong>
+                    خانه
+                </strong>
+
+                <small>
+                    بازگشت به صفحه اصلی
+                </small>
+
+            </button>
+
+
+            <button
+                class="service-card"
+                type="button"
+                onclick="goProfile()"
+            >
+
+                <span>
+                    👤
+                </span>
+
+                <strong>
+                    پروفایل
+                </strong>
+
+                <small>
+                    مدیریت حساب
+                </small>
+
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<nav class="bottom-nav">
+
+    <button
+        type="button"
+        onclick="goHome()"
+    >
+        🏠
+        <span>
+            خانه
+        </span>
+    </button>
+
+
+    <button
+        class="active"
+        type="button"
+    >
+        💳
+        <span>
+            پرداخت
+        </span>
+    </button>
+
+
+    <button
+        type="button"
+        onclick="goHome()"
+    >
+        👛
+        <span>
+            کیف پول
+        </span>
+    </button>
+
+
+    <button
+        type="button"
+        onclick="goProfile()"
+    >
+        👤
+        <span>
+            پروفایل
+        </span>
+    </button>
+
+</nav>
+
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+<script>
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+
+function getToken() {
+
+    return localStorage.getItem(
+        "kifyar_token"
+    );
+
+}
+
+
+function checkLogin() {
+
+    const token =
+        getToken();
+
+    if (!token) {
+
+        window.location.replace(
+            "login.html"
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+
+function showMessage(message) {
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    setTimeout(
+        function () {
+
+            toast.classList.remove(
+                "show"
+            );
+
+        },
+        2000
+    );
+}
+
+
+function goHome() {
+
+    window.location.href =
+        "index.html";
+
+}
+
+
+function goProfile() {
+
+    window.location.href =
+        "profile.html";
+
+}
+
+
+async function loadBalance() {
+
+    if (!checkLogin()) {
+        return;
+    }
+
+    const token =
+        getToken();
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/transactions",
+                {
+                    headers: {
+                        "Authorization":
+                            "Bearer " +
+                            token
+                    }
+                }
+            );
+
+        if (response.status === 401) {
+
+            localStorage.removeItem(
+                "kifyar_token"
+            );
+
+            localStorage.removeItem(
+                "kifyar_user"
+            );
+
+            window.location.replace(
+                "login.html"
+            );
+
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                "request failed"
+            );
+        }
+
+        const data =
+            await response.json();
+
+        let balance = 0;
+
+        const items =
+            Array.isArray(
+                data.transactions
+            )
+                ? data.transactions
+                : [];
+
+
+        items.forEach(
+            function (item) {
+
+                if (
+                    item.type ===
+                    "income"
+                ) {
+
+                    balance +=
+                        Number(
+                            item.amount
+                        );
+                }
+
+
+                if (
+                    item.type ===
+                    "expense"
+                ) {
+
+                    balance -=
+                        Number(
+                            item.amount
+                        );
+                }
+
+            }
+        );
+
+
+        document.getElementById(
+            "balance"
+        ).textContent =
+            Number(
+                balance
+            ).toLocaleString(
+                "fa-IR"
+            ) +
+            " تومان";
+
+
+    } catch (error) {
+
+        showMessage(
+            "دریافت موجودی انجام نشد."
+        );
+
+    }
+
+}
+
+
+checkLogin();
+loadBalance();
+
+</script>
+
+</body>
+</html>

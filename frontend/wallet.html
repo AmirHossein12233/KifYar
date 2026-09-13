@@ -1,0 +1,846 @@
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>کیف پول - کیف‌یار</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+
+<div class="container">
+
+    <header class="page-header">
+        <h1>💰 کیف پول</h1>
+
+        <a href="index.html">
+            بازگشت
+        </a>
+    </header>
+
+
+    <!-- موجودی -->
+
+    <section class="card">
+
+        <h2>موجودی فعلی</h2>
+
+        <div
+            id="balance"
+            class="balance"
+        >
+            در حال دریافت...
+        </div>
+
+        <div class="balance-label">
+            تومان
+        </div>
+
+    </section>
+
+
+    <!-- انتقال به کارت -->
+
+    <section class="card">
+
+        <h2>💳 انتقال به کارت بانکی</h2>
+
+        <p>
+            مبلغ موردنظر را از موجودی کیف پول به یکی از کارت‌های ثبت‌شده منتقل کنید.
+        </p>
+
+        <label for="transferCard">
+            کارت مقصد
+        </label>
+
+        <select
+            id="transferCard"
+        >
+            <option value="">
+                در حال دریافت کارت‌ها...
+            </option>
+        </select>
+
+
+        <label for="transferAmount">
+            مبلغ انتقال
+        </label>
+
+        <input
+            id="transferAmount"
+            type="number"
+            min="1"
+            step="1000"
+            placeholder="مثلاً 50000"
+        >
+
+
+        <button
+            id="transferButton"
+            type="button"
+        >
+            انتقال به کارت
+        </button>
+
+
+        <div
+            id="transferMessage"
+            class="message"
+        ></div>
+
+    </section>
+
+
+    <!-- وضعیت آخرین انتقال -->
+
+    <section class="card">
+
+        <h2>📋 آخرین درخواست‌های انتقال</h2>
+
+        <div id="transferList">
+            در حال دریافت...
+        </div>
+
+    </section>
+
+
+    <!-- افزایش موجودی -->
+
+    <section class="card">
+
+        <h2>➕ افزایش موجودی</h2>
+
+        <p>
+            برای افزایش موجودی از کارت بانکی ثبت‌شده استفاده کنید.
+        </p>
+
+        <label for="depositCard">
+            کارت بانکی
+        </label>
+
+        <select
+            id="depositCard"
+        >
+            <option value="">
+                در حال دریافت کارت‌ها...
+            </option>
+        </select>
+
+
+        <label for="depositAmount">
+            مبلغ
+        </label>
+
+        <input
+            id="depositAmount"
+            type="number"
+            min="1"
+            step="1000"
+            placeholder="مثلاً 50000"
+        >
+
+
+        <button
+            id="depositButton"
+            type="button"
+        >
+            افزایش موجودی
+        </button>
+
+
+        <div
+            id="depositMessage"
+            class="message"
+        ></div>
+
+    </section>
+
+</div>
+
+
+<script>
+
+const API_URL = "http://127.0.0.1:8000";
+
+
+function getToken() {
+
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("access_token") ||
+        ""
+    );
+
+}
+
+
+function authHeaders() {
+
+    const token = getToken();
+
+    return {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+    };
+
+}
+
+
+function formatMoney(value) {
+
+    return Number(value || 0).toLocaleString("fa-IR");
+
+}
+
+
+function showMessage(
+    element,
+    message,
+    success = false
+) {
+
+    element.textContent = message;
+
+    element.className =
+        success
+            ? "message success"
+            : "message error";
+
+}
+
+
+async function loadBalance() {
+
+    const balanceElement =
+        document.getElementById("balance");
+
+    try {
+
+        const response = await fetch(
+            API_URL + "/api/wallet/balance",
+            {
+                headers: authHeaders()
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail ||
+                "دریافت موجودی انجام نشد."
+            );
+        }
+
+        balanceElement.textContent =
+            formatMoney(data.balance);
+
+    }
+    catch (error) {
+
+        balanceElement.textContent =
+            "خطا";
+
+        console.error(error);
+
+    }
+
+}
+
+
+async function loadCards() {
+
+    const transferCard =
+        document.getElementById("transferCard");
+
+    const depositCard =
+        document.getElementById("depositCard");
+
+
+    try {
+
+        const response = await fetch(
+            API_URL + "/api/cards",
+            {
+                headers: authHeaders()
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail ||
+                "دریافت کارت‌ها انجام نشد."
+            );
+        }
+
+
+        transferCard.innerHTML = "";
+        depositCard.innerHTML = "";
+
+
+        if (
+            !data.cards ||
+            data.cards.length === 0
+        ) {
+
+            transferCard.innerHTML =
+                `<option value="">
+                    هنوز کارتی ثبت نشده است
+                </option>`;
+
+            depositCard.innerHTML =
+                `<option value="">
+                    هنوز کارتی ثبت نشده است
+                </option>`;
+
+            return;
+
+        }
+
+
+        data.cards.forEach(card => {
+
+            const text =
+                `${card.bank_name} - ${card.masked_card_number || "کارت"}`;
+
+
+            const option1 =
+                document.createElement("option");
+
+            option1.value =
+                card.id;
+
+            option1.textContent =
+                text;
+
+            transferCard.appendChild(
+                option1
+            );
+
+
+            const option2 =
+                document.createElement("option");
+
+            option2.value =
+                card.id;
+
+            option2.textContent =
+                text;
+
+            depositCard.appendChild(
+                option2
+            );
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        transferCard.innerHTML =
+            `<option value="">
+                خطا در دریافت کارت‌ها
+            </option>`;
+
+        depositCard.innerHTML =
+            `<option value="">
+                خطا در دریافت کارت‌ها
+            </option>`;
+
+    }
+
+}
+
+
+async function transferToCard() {
+
+    const cardId =
+        Number(
+            document.getElementById(
+                "transferCard"
+            ).value
+        );
+
+    const amount =
+        Number(
+            document.getElementById(
+                "transferAmount"
+            ).value
+        );
+
+    const message =
+        document.getElementById(
+            "transferMessage"
+        );
+
+    const button =
+        document.getElementById(
+            "transferButton"
+        );
+
+
+    if (!cardId) {
+
+        showMessage(
+            message,
+            "ابتدا کارت مقصد را انتخاب کنید."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showMessage(
+            message,
+            "مبلغ انتقال را صحیح وارد کنید."
+        );
+
+        return;
+
+    }
+
+
+    if (amount > 100000000) {
+
+        showMessage(
+            message,
+            "مبلغ انتقال بیش از حد مجاز است."
+        );
+
+        return;
+
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "در حال ثبت...";
+
+
+    try {
+
+        const requestId =
+            "transfer-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .slice(2);
+
+
+        const response = await fetch(
+            API_URL +
+            "/api/wallet/transfer-to-card",
+            {
+                method: "POST",
+
+                headers: authHeaders(),
+
+                body: JSON.stringify({
+                    card_id: cardId,
+                    amount: amount,
+                    request_id: requestId
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "ثبت انتقال انجام نشد."
+            );
+
+        }
+
+
+        showMessage(
+            message,
+            `درخواست انتقال ${formatMoney(amount)} تومان ثبت شد. وضعیت: ${data.status || "pending"}`,
+            true
+        );
+
+
+        document.getElementById(
+            "transferAmount"
+        ).value = "";
+
+
+        await loadBalance();
+
+        await loadTransfers();
+
+    }
+    catch (error) {
+
+        showMessage(
+            message,
+            error.message ||
+            "خطایی رخ داد."
+        );
+
+    }
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "انتقال به کارت";
+
+    }
+
+}
+
+
+async function loadTransfers() {
+
+    const list =
+        document.getElementById(
+            "transferList"
+        );
+
+
+    try {
+
+        const response = await fetch(
+            API_URL +
+            "/api/wallet/card-transfers",
+            {
+                headers: authHeaders()
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "دریافت انتقال‌ها انجام نشد."
+            );
+
+        }
+
+
+        if (
+            !data.transfers ||
+            data.transfers.length === 0
+        ) {
+
+            list.innerHTML =
+                "<p>هنوز انتقالی ثبت نشده است.</p>";
+
+            return;
+
+        }
+
+
+        list.innerHTML = "";
+
+
+        data.transfers.forEach(
+            transfer => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className =
+                    "transaction-item";
+
+
+                const status =
+                    transfer.status ||
+                    "pending";
+
+
+                let statusText =
+                    "در انتظار پردازش";
+
+
+                if (status === "completed") {
+                    statusText =
+                        "تکمیل شده";
+                }
+
+                else if (
+                    status === "failed"
+                ) {
+                    statusText =
+                        "ناموفق";
+                }
+
+                else if (
+                    status === "cancelled"
+                ) {
+                    statusText =
+                        "لغو شده";
+                }
+
+
+                item.innerHTML = `
+                    <strong>
+                        انتقال به کارت
+                    </strong>
+
+                    <div>
+                        مبلغ:
+                        ${formatMoney(
+                            transfer.amount
+                        )}
+                        تومان
+                    </div>
+
+                    <div>
+                        کارت:
+                        ${transfer.masked_card_number || "-"}
+                    </div>
+
+                    <div>
+                        وضعیت:
+                        ${statusText}
+                    </div>
+
+                    <small>
+                        ${transfer.created_at || ""}
+                    </small>
+                `;
+
+
+                list.appendChild(
+                    item
+                );
+
+            }
+        );
+
+    }
+    catch (error) {
+
+        list.innerHTML =
+            "<p>خطا در دریافت درخواست‌ها.</p>";
+
+        console.error(error);
+
+    }
+
+}
+
+
+async function depositByCard() {
+
+    const cardId =
+        Number(
+            document.getElementById(
+                "depositCard"
+            ).value
+        );
+
+    const amount =
+        Number(
+            document.getElementById(
+                "depositAmount"
+            ).value
+        );
+
+    const message =
+        document.getElementById(
+            "depositMessage"
+        );
+
+    const button =
+        document.getElementById(
+            "depositButton"
+        );
+
+
+    if (!cardId) {
+
+        showMessage(
+            message,
+            "ابتدا کارت را انتخاب کنید."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showMessage(
+            message,
+            "مبلغ را صحیح وارد کنید."
+        );
+
+        return;
+
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "در حال ثبت...";
+
+
+    try {
+
+        const requestId =
+            "deposit-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .slice(2);
+
+
+        const response = await fetch(
+            API_URL +
+            "/api/wallet/deposit",
+            {
+                method: "POST",
+
+                headers: authHeaders(),
+
+                body: JSON.stringify({
+                    card_id: cardId,
+                    amount: amount,
+                    request_id: requestId
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "افزایش موجودی انجام نشد."
+            );
+
+        }
+
+
+        showMessage(
+            message,
+            `مبلغ ${formatMoney(amount)} تومان به کیف پول اضافه شد.`,
+            true
+        );
+
+
+        document.getElementById(
+            "depositAmount"
+        ).value = "";
+
+
+        await loadBalance();
+
+    }
+    catch (error) {
+
+        showMessage(
+            message,
+            error.message ||
+            "خطایی رخ داد."
+        );
+
+    }
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "افزایش موجودی";
+
+    }
+
+}
+
+
+document
+    .getElementById(
+        "transferButton"
+    )
+    .addEventListener(
+        "click",
+        transferToCard
+    );
+
+
+document
+    .getElementById(
+        "depositButton"
+    )
+    .addEventListener(
+        "click",
+        depositByCard
+    );
+
+
+async function init() {
+
+    if (!getToken()) {
+
+        window.location.href =
+            "login.html";
+
+        return;
+
+    }
+
+
+    await loadBalance();
+
+    await loadCards();
+
+    await loadTransfers();
+
+}
+
+
+init();
+
+</script>
+
+</body>
+</html>
+```

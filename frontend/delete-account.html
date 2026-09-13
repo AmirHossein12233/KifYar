@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>حذف حساب - کیف‌یار</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 430px;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            text-align: center;
+            color: #c62828;
+            font-size: 25px;
+        }
+
+        .warning {
+            background: #ffebee;
+            color: #b71c1c;
+            border: 1px solid #ffcdd2;
+            border-radius: 12px;
+            padding: 14px;
+            line-height: 1.8;
+            margin-bottom: 22px;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d0d5da;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            direction: ltr;
+        }
+
+        input:focus {
+            border-color: #c62828;
+        }
+
+        .confirm-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 18px 0;
+            font-size: 14px;
+        }
+
+        .confirm-row input {
+            width: 18px;
+            height: 18px;
+        }
+
+        button {
+            width: 100%;
+            border: 0;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #deleteButton {
+            background: #c62828;
+            color: white;
+        }
+
+        #deleteButton:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .back-button {
+            margin-top: 10px;
+            background: #eeeeee;
+            color: #333;
+        }
+
+        #message {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .error {
+            display: block !important;
+            background: #ffebee;
+            color: #b71c1c;
+        }
+
+        .success {
+            display: block !important;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>حذف حساب کاربری</h1>
+
+    <div class="warning">
+        ⚠️ با حذف حساب، اطلاعات حساب، کیف پول و تراکنش‌های شما حذف می‌شود.
+        این عملیات قابل بازگشت نیست.
+    </div>
+
+    <form id="deleteForm">
+
+        <label for="password">
+            رمز عبور فعلی
+        </label>
+
+        <input
+            id="password"
+            type="password"
+            placeholder="رمز عبور خود را وارد کنید"
+            autocomplete="current-password"
+            required
+        >
+
+        <div class="confirm-row">
+            <input
+                id="confirmDelete"
+                type="checkbox"
+            >
+
+            <label
+                for="confirmDelete"
+                style="margin: 0; font-weight: normal;"
+            >
+                حذف حساب کاربری را تأیید می‌کنم.
+            </label>
+        </div>
+
+        <button
+            id="deleteButton"
+            type="submit"
+            disabled
+        >
+            حذف حساب
+        </button>
+
+    </form>
+
+    <button
+        class="back-button"
+        id="backButton"
+        type="button"
+    >
+        بازگشت
+    </button>
+
+    <div id="message"></div>
+
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8000";
+
+    const TOKEN_KEY = "kifyar_token";
+    const USER_KEY = "kifyar_user";
+
+    const token = localStorage.getItem(TOKEN_KEY);
+
+    if (!token) {
+        window.location.href = "/frontend/login.html";
+    }
+
+    const deleteForm =
+        document.getElementById("deleteForm");
+
+    const passwordInput =
+        document.getElementById("password");
+
+    const confirmDelete =
+        document.getElementById("confirmDelete");
+
+    const deleteButton =
+        document.getElementById("deleteButton");
+
+    const backButton =
+        document.getElementById("backButton");
+
+    const message =
+        document.getElementById("message");
+
+
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = type;
+    }
+
+
+    function updateButton() {
+        const passwordEntered =
+            passwordInput.value.trim().length > 0;
+
+        const confirmed =
+            confirmDelete.checked;
+
+        deleteButton.disabled =
+            !passwordEntered || !confirmed;
+    }
+
+
+    passwordInput.addEventListener(
+        "input",
+        updateButton
+    );
+
+    confirmDelete.addEventListener(
+        "change",
+        updateButton
+    );
+
+
+    backButton.addEventListener(
+        "click",
+        function () {
+            window.location.href =
+                "/frontend/settings.html";
+        }
+    );
+
+
+    deleteForm.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+            if (!passwordInput.value.trim()) {
+                showMessage(
+                    "رمز عبور را وارد کنید.",
+                    "error"
+                );
+                return;
+            }
+
+            if (!confirmDelete.checked) {
+                showMessage(
+                    "لطفاً حذف حساب را تأیید کنید.",
+                    "error"
+                );
+                return;
+            }
+
+            const confirmed =
+                window.confirm(
+                    "آیا مطمئن هستید که می‌خواهید حساب خود را حذف کنید؟"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            deleteButton.disabled = true;
+
+            showMessage(
+                "در حال حذف حساب...",
+                "success"
+            );
+
+            try {
+
+                const response = await fetch(
+                    API_URL + "/api/account",
+                    {
+                        method: "DELETE",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            "Authorization":
+                                "Bearer " + token
+                        },
+
+                        body: JSON.stringify({
+                            password:
+                                passwordInput.value
+                        })
+                    }
+                );
+
+
+                let data = {};
+
+                try {
+                    data = await response.json();
+                } catch {
+                    data = {};
+                }
+
+
+                if (response.status === 401) {
+
+                    localStorage.removeItem(
+                        TOKEN_KEY
+                    );
+
+                    localStorage.removeItem(
+                        USER_KEY
+                    );
+
+                    window.location.href =
+                        "/frontend/login.html";
+
+                    return;
+                }
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.detail ||
+                        "حذف حساب انجام نشد."
+                    );
+                }
+
+
+                localStorage.removeItem(
+                    TOKEN_KEY
+                );
+
+                localStorage.removeItem(
+                    USER_KEY
+                );
+
+
+                showMessage(
+                    data.message ||
+                    "حساب کاربری با موفقیت حذف شد.",
+                    "success"
+                );
+
+
+                setTimeout(
+                    function () {
+                        window.location.href =
+                            "/frontend/login.html";
+                    },
+                    1200
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Delete account error:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    "ارتباط با سرور برقرار نشد.",
+                    "error"
+                );
+
+                updateButton();
+            }
+        }
+    );
+
+    updateButton();
+</script>
+
+</body>
+</html>

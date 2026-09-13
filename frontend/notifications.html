@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>اعلان‌ها - کیف‌یار</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .container {
+            width: min(900px, 94%);
+            margin: 30px auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.05);
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #777;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        button,
+        a {
+            font-family: inherit;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 15px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #222;
+        }
+
+        .success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.05);
+        }
+
+        .summary-card span {
+            display: block;
+            color: #777;
+            margin-bottom: 8px;
+        }
+
+        .summary-card strong {
+            font-size: 25px;
+        }
+
+        .notifications {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .notification {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            border-right: 5px solid #2563eb;
+        }
+
+        .notification.warning {
+            border-right-color: #f59e0b;
+        }
+
+        .notification.danger {
+            border-right-color: #dc2626;
+        }
+
+        .notification.success {
+            border-right-color: #16a34a;
+        }
+
+        .notification-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #eef2ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .notification-message {
+            color: #666;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .notification-actions button {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .empty {
+            background: white;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #777;
+            box-shadow: 0 5px 20px rgba(0,0,0,.05);
+        }
+
+        @media (max-width: 650px) {
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .notification {
+                flex-direction: column;
+            }
+
+            .notification-actions {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>🔔 اعلان‌ها</h1>
+
+        <p>
+            هشدارها و اطلاع‌رسانی‌های مالی کیف‌یار
+        </p>
+
+        <div class="actions">
+
+            <button
+                class="primary"
+                onclick="markAllAsRead()"
+            >
+                خواندن همه
+            </button>
+
+            <button
+                class="danger"
+                onclick="clearNotifications()"
+            >
+                پاک کردن اعلان‌ها
+            </button>
+
+            <a
+                class="secondary"
+                href="index.html"
+            >
+                داشبورد
+            </a>
+
+            <a
+                class="secondary"
+                href="transactions.html"
+            >
+                تراکنش‌ها
+            </a>
+
+            <a
+                class="secondary"
+                href="settings.html"
+            >
+                تنظیمات
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="summary">
+
+        <div class="summary-card">
+            <span>کل اعلان‌ها</span>
+            <strong id="totalCount">۰</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>خوانده‌نشده</span>
+            <strong id="unreadCount">۰</strong>
+        </div>
+
+    </div>
+
+
+    <div
+        id="notificationsContainer"
+        class="notifications"
+    ></div>
+
+</div>
+
+
+<script>
+
+const API_URL = "http://127.0.0.1:8000";
+
+const token = localStorage.getItem("kifyar_token");
+
+if (!token) {
+    window.location.href = "login.html";
+}
+
+
+let notifications = [];
+
+
+function getStorageKey() {
+
+    return "kifyar_notifications";
+
+}
+
+
+function loadSavedNotifications() {
+
+    try {
+
+        const saved =
+            localStorage.getItem(getStorageKey());
+
+        if (!saved) {
+            notifications = [];
+            return;
+        }
+
+        const parsed = JSON.parse(saved);
+
+        notifications =
+            Array.isArray(parsed)
+                ? parsed
+                : [];
+
+    } catch (error) {
+
+        console.error(error);
+
+        notifications = [];
+
+    }
+
+}
+
+
+function saveNotifications() {
+
+    localStorage.setItem(
+        getStorageKey(),
+        JSON.stringify(notifications)
+    );
+
+}
+
+
+function createNotification(
+    title,
+    message,
+    type = "info",
+    icon = "🔔"
+) {
+
+    const notification = {
+
+        id:
+            Date.now() +
+            Math.random(),
+
+        title: title,
+
+        message: message,
+
+        type: type,
+
+        icon: icon,
+
+        read: false,
+
+        created_at:
+            new Date().toISOString()
+
+    };
+
+
+    notifications.unshift(notification);
+
+
+    if (notifications.length > 100) {
+
+        notifications =
+            notifications.slice(0, 100);
+
+    }
+
+
+    saveNotifications();
+
+    renderNotifications();
+
+}
+
+
+function formatDate(value) {
+
+    if (!value) {
+        return "";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
+
+    return date.toLocaleString("fa-IR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+}
+
+
+function formatMoney(value) {
+
+    return (
+        Number(value || 0)
+        .toLocaleString("fa-IR")
+        + " تومان"
+    );
+
+}
+
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+function renderNotifications() {
+
+    const container =
+        document.getElementById(
+            "notificationsContainer"
+        );
+
+
+    const total =
+        notifications.length;
+
+
+    const unread =
+        notifications.filter(
+            item => !item.read
+        ).length;
+
+
+    document.getElementById(
+        "totalCount"
+    ).textContent =
+        total.toLocaleString("fa-IR");
+
+
+    document.getElementById(
+        "unreadCount"
+    ).textContent =
+        unread.toLocaleString("fa-IR");
+
+
+    if (notifications.length === 0) {
+
+        container.innerHTML = `
+            <div class="empty">
+                <div style="font-size:45px;">🔔</div>
+                <br>
+                هنوز اعلانی وجود ندارد.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        notifications.map(item => {
+
+            const typeClass =
+                item.type || "info";
+
+
+            return `
+                <div
+                    class="notification ${escapeHtml(typeClass)}"
+                    style="${
+                        item.read
+                            ? "opacity:.65;"
+                            : ""
+                    }"
+                >
+
+                    <div class="notification-icon">
+                        ${escapeHtml(item.icon || "🔔")}
+                    </div>
+
+
+                    <div class="notification-content">
+
+                        <div class="notification-title">
+                            ${escapeHtml(item.title)}
+                        </div>
+
+                        <div class="notification-message">
+                            ${escapeHtml(item.message)}
+                        </div>
+
+                        <div class="notification-time">
+                            ${formatDate(item.created_at)}
+                        </div>
+
+                    </div>
+
+
+                    <div class="notification-actions">
+
+                        ${
+                            !item.read
+                                ? `
+                                    <button
+                                        class="success"
+                                        onclick="markAsRead('${item.id}')"
+                                    >
+                                        خواندم
+                                    </button>
+                                  `
+                                : ""
+                        }
+
+                        <button
+                            class="danger"
+                            onclick="deleteNotification('${item.id}')"
+                        >
+                            حذف
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+
+}
+
+
+function markAsRead(id) {
+
+    notifications =
+        notifications.map(item => {
+
+            if (String(item.id) === String(id)) {
+
+                return {
+                    ...item,
+                    read: true
+                };
+
+            }
+
+            return item;
+
+        });
+
+
+    saveNotifications();
+
+    renderNotifications();
+
+}
+
+
+function markAllAsRead() {
+
+    notifications =
+        notifications.map(item => ({
+            ...item,
+            read: true
+        }));
+
+
+    saveNotifications();
+
+    renderNotifications();
+
+}
+
+
+function deleteNotification(id) {
+
+    notifications =
+        notifications.filter(
+            item =>
+                String(item.id) !== String(id)
+        );
+
+
+    saveNotifications();
+
+    renderNotifications();
+
+}
+
+
+function clearNotifications() {
+
+    if (notifications.length === 0) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            "آیا می‌خواهید همه اعلان‌ها پاک شوند؟"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    notifications = [];
+
+    saveNotifications();
+
+    renderNotifications();
+
+}
+
+
+async function getBalance() {
+
+    const response =
+        await fetch(
+            `${API_URL}/api/balance`,
+            {
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+    if (response.status === 401) {
+
+        localStorage.removeItem(
+            "kifyar_token"
+        );
+
+        window.location.href =
+            "login.html";
+
+        return null;
+
+    }
+
+
+    if (!response.ok) {
+        throw new Error(
+            "دریافت موجودی ناموفق بود."
+        );
+    }
+
+
+    return await response.json();
+
+}
+
+
+async function getTransactions() {
+
+    const response =
+        await fetch(
+            `${API_URL}/api/transactions`,
+            {
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+    if (response.status === 401) {
+
+        localStorage.removeItem(
+            "kifyar_token"
+        );
+
+        window.location.href =
+            "login.html";
+
+        return [];
+
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            "دریافت تراکنش‌ها ناموفق بود."
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+
+    if (Array.isArray(data.transactions)) {
+        return data.transactions;
+    }
+
+
+    return [];
+
+}
+
+
+function notificationAlreadyExists(key) {
+
+    return notifications.some(
+        item =>
+            item.message_key === key
+    );
+
+}
+
+
+function createOnce(
+    key,
+    title,
+    message,
+    type,
+    icon
+) {
+
+    if (
+        notificationAlreadyExists(key)
+    ) {
+        return;
+    }
+
+
+    const notification = {
+
+        id:
+            Date.now() +
+            Math.random(),
+
+        title: title,
+
+        message: message,
+
+        type: type,
+
+        icon: icon,
+
+        read: false,
+
+        message_key: key,
+
+        created_at:
+            new Date().toISOString()
+
+    };
+
+
+    notifications.unshift(
+        notification
+    );
+
+
+    if (notifications.length > 100) {
+
+        notifications =
+            notifications.slice(0, 100);
+
+    }
+
+
+    saveNotifications();
+
+}
+
+
+async function checkFinancialAlerts() {
+
+    try {
+
+        const balanceData =
+            await getBalance();
+
+
+        if (!balanceData) {
+            return;
+        }
+
+
+        const balance =
+            Number(
+                balanceData.balance ??
+                balanceData.amount ??
+                0
+            );
+
+
+        if (balance <= 0) {
+
+            createOnce(
+                "balance_zero",
+                "موجودی صفر است",
+                "موجودی کیف پول شما صفر یا منفی شده است.",
+                "danger",
+                "🚨"
+            );
+
+        } else if (balance < 100000) {
+
+            createOnce(
+                "balance_low",
+                "موجودی کم",
+                "موجودی کیف پول شما کمتر از ۱۰۰٬۰۰۰ تومان است.",
+                "warning",
+                "⚠️"
+            );
+
+        }
+
+
+        const transactions =
+            await getTransactions();
+
+
+        if (!transactions) {
+            return;
+        }
+
+
+        const today =
+            new Date();
+
+
+        const startToday =
+            new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate()
+            );
+
+
+        const todayExpenses =
+            transactions
+                .filter(item => {
+
+                    if (
+                        item.type !==
+                        "expense"
+                    ) {
+                        return false;
+                    }
+
+
+                    const date =
+                        new Date(
+                            item.created_at
+                        );
+
+
+                    return (
+                        !Number.isNaN(
+                            date.getTime()
+                        ) &&
+                        date >= startToday
+                    );
+
+                })
+                .reduce(
+                    (
+                        total,
+                        item
+                    ) =>
+                        total +
+                        Number(
+                            item.amount || 0
+                        ),
+                    0
+                );
+
+
+        if (
+            todayExpenses >=
+            1000000
+        ) {
+
+            createOnce(
+                "daily_expense_" +
+                startToday
+                    .toISOString()
+                    .slice(0, 10),
+
+                "هزینه امروز زیاد شده",
+                "هزینه‌های امروز شما به " +
+                formatMoney(todayExpenses) +
+                " رسیده است.",
+
+                "warning",
+
+                "💰"
+            );
+
+        }
+
+
+        if (
+            transactions.length > 0
+        ) {
+
+            const latest =
+                transactions[0];
+
+
+            const latestKey =
+                "transaction_" +
+                latest.id;
+
+
+            if (
+                !notificationAlreadyExists(
+                    latestKey
+                )
+            ) {
+
+                const amount =
+                    formatMoney(
+                        latest.amount
+                    );
+
+
+                const isIncome =
+                    latest.type ===
+                    "income";
+
+
+                createOnce(
+                    latestKey,
+
+                    isIncome
+                        ? "درآمد جدید"
+                        : "هزینه جدید",
+
+                    (
+                        isIncome
+                            ? "یک درآمد جدید به مبلغ "
+                            : "یک هزینه جدید به مبلغ "
+                    ) +
+                    amount +
+                    " ثبت شده است.",
+
+                    isIncome
+                        ? "success"
+                        : "info",
+
+                    isIncome
+                        ? "💵"
+                        : "🧾"
+                );
+
+            }
+
+        }
+
+
+        saveNotifications();
+
+        renderNotifications();
+
+    } catch (error) {
+
+        console.error(
+            "Financial alerts error:",
+            error
+        );
+
+    }
+
+}
+
+
+loadSavedNotifications();
+
+renderNotifications();
+
+checkFinancialAlerts();
+
+</script>
+
+</body>
+</html>

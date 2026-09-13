@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111827">
+    <title>پروفایل | KifYar</title>
+
+```
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        font-family: Tahoma, Arial, sans-serif;
+        background: linear-gradient(
+            180deg,
+            #0b1120 0%,
+            #111827 45%,
+            #0f172a 100%
+        );
+        color: #f8fafc;
+    }
+
+    body {
+        min-height: 100vh;
+    }
+
+    button,
+    input,
+    textarea {
+        font: inherit;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    .page {
+        width: 100%;
+        max-width: 1050px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .brand {
+        font-size: 25px;
+        font-weight: 900;
+    }
+
+    .top-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 14px;
+        padding: 11px 16px;
+        color: #fff;
+        transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn:active {
+        transform: scale(.98);
+    }
+
+    .btn-dark {
+        background: #1f2937;
+    }
+
+    .btn-blue {
+        background: #2563eb;
+    }
+
+    .btn-green {
+        background: #16a34a;
+    }
+
+    .btn-red {
+        background: #dc2626;
+    }
+
+    .btn:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 330px 1fr;
+        gap: 18px;
+    }
+
+    .card {
+        background: rgba(15, 23, 42, .92);
+        border: 1px solid rgba(148, 163, 184, .15);
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, .22);
+        backdrop-filter: blur(10px);
+    }
+
+    .profile-card {
+        text-align: center;
+    }
+
+    .avatar {
+        width: 115px;
+        height: 115px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        font-size: 42px;
+        font-weight: 900;
+    }
+
+    .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .display-name {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 900;
+    }
+
+    .username {
+        margin-top: 7px;
+        color: #94a3b8;
+        direction: ltr;
+    }
+
+    .status {
+        margin-top: 15px;
+        color: #cbd5e1;
+        line-height: 1.8;
+    }
+
+    .profile-buttons {
+        display: grid;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .wallet-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .wallet-card::before {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        left: -75px;
+        top: -75px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, .12);
+    }
+
+    .section-title {
+        margin: 0 0 16px;
+        font-size: 20px;
+        font-weight: 900;
+    }
+
+    .balance-box {
+        background: linear-gradient(135deg, #1d4ed8, #4f46e5);
+        border-radius: 22px;
+        padding: 23px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .balance-label {
+        color: rgba(255, 255, 255, .78);
+        font-size: 14px;
+    }
+
+    .balance-number {
+        margin-top: 9px;
+        font-size: 39px;
+        font-weight: 900;
+        letter-spacing: .5px;
+    }
+
+    .balance-unit {
+        font-size: 15px;
+        margin-right: 7px;
+        color: rgba(255, 255, 255, .83);
+    }
+
+    .wallet-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .transactions {
+        margin-top: 22px;
+    }
+
+    .transactions-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .refresh {
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #cbd5e1;
+        border-radius: 11px;
+        padding: 8px 12px;
+    }
+
+    .transaction-list {
+        display: grid;
+        gap: 10px;
+        max-height: 480px;
+        overflow-y: auto;
+    }
+
+    .transaction {
+        display: grid;
+        grid-template-columns: 52px 1fr auto;
+        align-items: center;
+        gap: 11px;
+        padding: 13px;
+        border-radius: 16px;
+        background: #111827;
+        border: 1px solid rgba(148, 163, 184, .12);
+    }
+
+    .transaction-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(22, 163, 74, .15);
+        color: #4ade80;
+        font-size: 21px;
+        font-weight: 900;
+    }
+
+    .transaction-icon.expense {
+        background: rgba(220, 38, 38, .15);
+        color: #f87171;
+    }
+
+    .transaction-title {
+        font-weight: 800;
+    }
+
+    .transaction-description {
+        margin-top: 4px;
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .transaction-date {
+        margin-top: 3px;
+        color: #64748b;
+        font-size: 11px;
+        direction: ltr;
+        text-align: right;
+    }
+
+    .transaction-amount {
+        text-align: left;
+        direction: ltr;
+        color: #4ade80;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .transaction-amount.expense {
+        color: #f87171;
+    }
+
+    .transaction-balance {
+        margin-top: 5px;
+        text-align: left;
+        direction: ltr;
+        color: #64748b;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .empty {
+        padding: 35px 15px;
+        text-align: center;
+        color: #64748b;
+        border: 1px dashed #334155;
+        border-radius: 16px;
+    }
+
+    .loading {
+        padding: 20px;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+    .message {
+        display: none;
+        margin-bottom: 16px;
+        padding: 12px 15px;
+        border-radius: 13px;
+        line-height: 1.7;
+    }
+
+    .message.show {
+        display: block;
+    }
+
+    .message.success {
+        background: rgba(22, 163, 74, .14);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, .2);
+    }
+
+    .message.error {
+        background: rgba(220, 38, 38, .14);
+        color: #fca5a5;
+        border: 1px solid rgba(248, 113, 113, .2);
+    }
+
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .68);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 1000;
+    }
+
+    .modal-backdrop.show {
+        display: flex;
+    }
+
+    .modal {
+        width: 100%;
+        max-width: 430px;
+        background: #111827;
+        border: 1px solid #334155;
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, .45);
+    }
+
+    .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .modal-head h3 {
+        margin: 0;
+        font-size: 20px;
+    }
+
+    .close {
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 11px;
+        background: #1f2937;
+        color: #fff;
+        font-size: 19px;
+    }
+
+    .field {
+        margin-top: 15px;
+    }
+
+    .field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #cbd5e1;
+        font-size: 14px;
+    }
+
+    .field input,
+    .field textarea {
+        width: 100%;
+        border: 1px solid #334155;
+        background: #0b1120;
+        color: #fff;
+        border-radius: 13px;
+        padding: 12px 13px;
+        outline: 0;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+        border-color: #2563eb;
+    }
+
+    .quick-amounts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .quick-amount {
+        border: 1px solid #334155;
+        background: #172033;
+        color: #cbd5e1;
+        border-radius: 11px;
+        padding: 9px 5px;
+    }
+
+    .quick-amount:hover {
+        border-color: #2563eb;
+    }
+
+    .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .profile-info {
+        display: grid;
+        gap: 10px;
+        margin-top: 22px;
+        text-align: right;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 11px 0;
+        border-bottom: 1px solid rgba(148, 163, 184, .1);
+    }
+
+    .info-row:last-child {
+        border-bottom: 0;
+    }
+
+    .info-label {
+        color: #64748b;
+    }
+
+    .info-value {
+        color: #e2e8f0;
+        word-break: break-word;
+        text-align: left;
+    }
+
+    @media (max-width: 800px) {
+        .page {
+            padding: 14px;
+        }
+
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .topbar {
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 470px) {
+        .wallet-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .transaction {
+            grid-template-columns: 45px 1fr;
+        }
+
+        .transaction-amount,
+        .transaction-balance {
+            grid-column: 2;
+            text-align: right;
+        }
+
+        .quick-amounts {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+<div class="page">
+
+```
+<div class="topbar">
+    <div class="brand">KifYar</div>
+
+    <div class="top-actions">
+        <button class="btn btn-dark" id="backButton" type="button">
+            بازگشت
+        </button>
+
+        <button class="btn btn-red" id="logoutButton" type="button">
+            خروج
+        </button>
+    </div>
+</div>
+
+<div id="message" class="message"></div>
+
+<div class="layout">
+
+    <section class="card profile-card">
+
+        <div id="avatar" class="avatar">؟</div>
+
+        <h1 id="displayName" class="display-name">
+            در حال بارگذاری...
+        </h1>
+
+        <div id="username" class="username">
+            @...
+        </div>
+
+        <div id="status" class="status">
+            در حال دریافت اطلاعات...
+        </div>
+
+        <div class="profile-info">
+
+            <div class="info-row">
+                <span class="info-label">شناسه</span>
+                <span id="userId" class="info-value">-</span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">تاریخ عضویت</span>
+                <span id="createdAt" class="info-value">-</span>
+            </div>
+
+        </div>
+
+        <div class="profile-buttons">
+
+            <button class="btn btn-blue" id="editProfileButton" type="button">
+                ویرایش پروفایل
+            </button>
+
+            <button class="btn btn-dark" id="settingsButton" type="button">
+                تنظیمات حساب
+            </button>
+
+        </div>
+
+    </section>
+
+    <section class="card wallet-card">
+
+        <h2 class="section-title">
+            کیف پول
+        </h2>
+
+        <div class="balance-box">
+
+            <div class="balance-label">
+                موجودی فعلی
+            </div>
+
+            <div>
+                <span id="balance" class="balance-number">۰</span>
+                <span class="balance-unit">تومان</span>
+            </div>
+
+        </div>
+
+        <div class="wallet-actions">
+
+            <button id="addBalanceButton" class="btn btn-green" type="button">
+                + افزایش موجودی
+            </button>
+
+            <button id="refreshWalletButton" class="btn btn-dark" type="button">
+                بروزرسانی
+            </button>
+
+        </div>
+
+        <div class="transactions">
+
+            <div class="transactions-head">
+
+                <h2 class="section-title" style="margin:0;">
+                    تراکنش‌ها
+                </h2>
+
+                <button
+                    id="refreshTransactionsButton"
+                    class="refresh"
+                    type="button"
+                >
+                    تازه‌سازی
+                </button>
+
+            </div>
+
+            <div id="transactions" class="transaction-list">
+                <div class="loading">
+                    در حال دریافت تراکنش‌ها...
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+```
+
+</div>
+
+<div id="walletModal" class="modal-backdrop">
+
+```
+<div class="modal">
+
+    <div class="modal-head">
+
+        <h3>افزایش موجودی</h3>
+
+        <button id="closeWalletModal" class="close" type="button">
+            ×
+        </button>
+
+    </div>
+
+    <div id="walletModalMessage" class="message"></div>
+
+    <div class="field">
+
+        <label for="amount">
+            مبلغ
+        </label>
+
+        <input
+            id="amount"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="مثلاً 5000"
+            inputmode="numeric"
+        >
+
+        <div class="quick-amounts">
+
+            <button class="quick-amount" data-amount="5000" type="button">
+                ۵٬۰۰۰
+            </button>
+
+            <button class="quick-amount" data-amount="10000" type="button">
+                ۱۰٬۰۰۰
+            </button>
+
+            <button class="quick-amount" data-amount="20000" type="button">
+                ۲۰٬۰۰۰
+            </button>
+
+            <button class="quick-amount" data-amount="50000" type="button">
+                ۵۰٬۰۰۰
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="field">
+
+        <label for="description">
+            توضیح تراکنش
+        </label>
+
+        <textarea
+            id="description"
+            rows="3"
+            maxlength="200"
+            placeholder="مثلاً شارژ کیف پول"
+        ></textarea>
+
+    </div>
+
+    <div class="modal-actions">
+
+        <button id="cancelWalletButton" class="btn btn-dark" type="button">
+            انصراف
+        </button>
+
+        <button id="submitWalletButton" class="btn btn-green" type="button">
+            ثبت افزایش
+        </button>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<div id="profileModal" class="modal-backdrop">
+
+```
+<div class="modal">
+
+    <div class="modal-head">
+
+        <h3>ویرایش پروفایل</h3>
+
+        <button id="closeProfileModal" class="close" type="button">
+            ×
+        </button>
+
+    </div>
+
+    <div id="profileModalMessage" class="message"></div>
+
+    <div class="field">
+
+        <label for="profileDisplayName">
+            نام نمایشی
+        </label>
+
+        <input
+            id="profileDisplayName"
+            type="text"
+            maxlength="60"
+        >
+
+    </div>
+
+    <div class="modal-actions">
+
+        <button id="cancelProfileButton" class="btn btn-dark" type="button">
+            انصراف
+        </button>
+
+        <button id="saveProfileButton" class="btn btn-blue" type="button">
+            ذخیره
+        </button>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<script>
+"use strict";
+
+/*
+    ==============================
+    KifYar API
+    ==============================
+    Frontend: 127.0.0.1:5500
+    Backend : 127.0.0.1:8000
+*/
+
+const API_BASE = "http://127.0.0.1:8000";
+const TOKEN_KEY = "kifyar_token";
+const USER_KEY = "kifyar_user";
+
+function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+}
+
+function clearSession() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("gapino_token");
+    localStorage.removeItem("gapino_user");
+}
+
+function goToLogin() {
+    clearSession();
+
+    window.location.assign(
+        "/frontend/login.html"
+    );
+}
+
+async function api(url, options = {}) {
+
+    const token = getToken();
+
+    if (!token) {
+        goToLogin();
+        throw new Error("ورود لازم است.");
+    }
+
+    const headers = {
+        "Accept": "application/json",
+        ...(options.headers || {})
+    };
+
+    headers["Authorization"] =
+        `Bearer ${token}`;
+
+    if (
+        options.body &&
+        !headers["Content-Type"]
+    ) {
+        headers["Content-Type"] =
+            "application/json";
+    }
+
+    const response = await fetch(
+        API_BASE + url,
+        {
+            ...options,
+            headers,
+            cache: "no-store"
+        }
+    );
+
+    let data = {};
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+    if (
+        contentType.includes(
+            "application/json"
+        )
+    ) {
+        try {
+            data = await response.json();
+        } catch {
+            data = {};
+        }
+    } else {
+        const text =
+            await response.text();
+
+        data = {
+            detail:
+                text ||
+                "پاسخ نامعتبر از سرور."
+        };
+    }
+
+    if (response.status === 401) {
+
+        clearSession();
+
+        window.location.assign(
+            "/frontend/login.html"
+        );
+
+        throw new Error(
+            "جلسه ورود منقضی شده است."
+        );
+    }
+
+    if (!response.ok) {
+
+        const message =
+            data.detail ||
+            data.message ||
+            data.error ||
+            `خطای سرور: ${response.status}`;
+
+        throw new Error(
+            typeof message === "string"
+                ? message
+                : JSON.stringify(message)
+        );
+    }
+
+    return data;
+}
+
+const messageEl =
+    document.getElementById("message");
+
+const avatarEl =
+    document.getElementById("avatar");
+
+const displayNameEl =
+    document.getElementById("displayName");
+
+const usernameEl =
+    document.getElementById("username");
+
+const statusEl =
+    document.getElementById("status");
+
+const userIdEl =
+    document.getElementById("userId");
+
+const createdAtEl =
+    document.getElementById("createdAt");
+
+const balanceEl =
+    document.getElementById("balance");
+
+const transactionsEl =
+    document.getElementById("transactions");
+
+let currentUser = null;
+
+function showMessage(
+    text,
+    type = "success"
+) {
+    messageEl.textContent =
+        text || "";
+
+    messageEl.className =
+        "message";
+
+    if (!text) {
+        return;
+    }
+
+    messageEl.classList.add(
+        "show",
+        type
+    );
+}
+
+function showWalletMessage(
+    text,
+    type = "error"
+) {
+    const element =
+        document.getElementById(
+            "walletModalMessage"
+        );
+
+    element.textContent =
+        text || "";
+
+    element.className =
+        "message";
+
+    if (!text) {
+        return;
+    }
+
+    element.classList.add(
+        "show",
+        type
+    );
+}
+
+function showProfileMessage(
+    text,
+    type = "error"
+) {
+    const element =
+        document.getElementById(
+            "profileModalMessage"
+        );
+
+    element.textContent =
+        text || "";
+
+    element.className =
+        "message";
+
+    if (!text) {
+        return;
+    }
+
+    element.classList.add(
+        "show",
+        type
+    );
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function formatNumber(value) {
+    return new Intl.NumberFormat(
+        "fa-IR"
+    ).format(
+        Number(value || 0)
+    );
+}
+
+function formatDate(value) {
+
+    if (!value) {
+        return "-";
+    }
+
+    const date =
+        new Date(value);
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+        return String(value);
+    }
+
+    return date.toLocaleString(
+        "fa-IR"
+    );
+}
+
+function renderAvatar(user) {
+
+    avatarEl.innerHTML = "";
+
+    const avatar =
+        String(
+            user?.avatar || ""
+        ).trim();
+
+    if (avatar) {
+
+        const image =
+            document.createElement("img");
+
+        image.src = avatar;
+
+        image.alt =
+            user?.name ||
+            user?.display_name ||
+            user?.username ||
+            "avatar";
+
+        image.onerror =
+            function () {
+
+                this.remove();
+
+                avatarEl.textContent =
+                    (
+                        user?.name ||
+                        user?.display_name ||
+                        user?.username ||
+                        "؟"
+                    ).substring(0, 1);
+            };
+
+        avatarEl.appendChild(image);
+
+        return;
+    }
+
+    avatarEl.textContent =
+        (
+            user?.name ||
+            user?.display_name ||
+            user?.username ||
+            "؟"
+        ).substring(0, 1);
+}
+
+function renderUser(user) {
+
+    currentUser = user;
+
+    renderAvatar(user);
+
+    const name =
+        user.name ||
+        user.display_name ||
+        user.username ||
+        "کاربر";
+
+    displayNameEl.textContent =
+        name;
+
+    usernameEl.textContent =
+        user.username
+            ? "@" + user.username
+            : "@";
+
+    statusEl.textContent =
+        user.status ||
+        "در دسترس";
+
+    userIdEl.textContent =
+        String(user.id ?? "-");
+
+    createdAtEl.textContent =
+        formatDate(
+            user.created_at
+        );
+
+    localStorage.setItem(
+        USER_KEY,
+        JSON.stringify(user)
+    );
+}
+
+async function loadCurrentUser() {
+
+    try {
+
+        if (!getToken()) {
+            goToLogin();
+            return false;
+        }
+
+        const data =
+            await api("/api/me");
+
+        if (
+            !data ||
+            !data.user
+        ) {
+            throw new Error(
+                "اطلاعات کاربر دریافت نشد."
+            );
+        }
+
+        renderUser(
+            data.user
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "ME ERROR:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "دریافت اطلاعات کاربر ناموفق بود.",
+            "error"
+        );
+
+        return false;
+    }
+}
+
+async function loadBalance(
+    silent = false
+) {
+
+    try {
+
+        const data =
+            await api("/api/balance");
+
+        const balance =
+            Number(
+                data.balance || 0
+            );
+
+        balanceEl.textContent =
+            formatNumber(balance);
+
+        return balance;
+
+    } catch (error) {
+
+        console.error(
+            "BALANCE ERROR:",
+            error
+        );
+
+        balanceEl.textContent =
+            "خطا";
+
+        if (!silent) {
+            showMessage(
+                error.message ||
+                "دریافت موجودی ناموفق بود.",
+                "error"
+            );
+        }
+
+        return null;
+    }
+}
+
+async function loadTransactions() {
+
+    transactionsEl.innerHTML = `
+        <div class="loading">
+            در حال دریافت تراکنش‌ها...
+        </div>
+    `;
+
+    try {
+
+        const data =
+            await api("/api/transactions");
+
+        const transactions =
+            Array.isArray(data)
+                ? data
+                : Array.isArray(data.transactions)
+                    ? data.transactions
+                    : [];
+
+        renderTransactions(
+            transactions
+        );
+
+    } catch (error) {
+
+        console.error(
+            "TRANSACTIONS ERROR:",
+            error
+        );
+
+        transactionsEl.innerHTML = `
+            <div class="empty">
+                دریافت تراکنش‌ها ناموفق بود.
+            </div>
+        `;
+
+        showMessage(
+            error.message ||
+            "دریافت تراکنش‌ها ناموفق بود.",
+            "error"
+        );
+    }
+}
+
+function renderTransactions(
+    transactions
+) {
+
+    if (!transactions.length) {
+
+        transactionsEl.innerHTML = `
+            <div class="empty">
+                هنوز تراکنشی ثبت نشده است.
+            </div>
+        `;
+
+        return;
+    }
+
+    transactionsEl.innerHTML =
+        transactions.map(
+            transaction => {
+
+                const amount =
+                    Number(
+                        transaction.amount || 0
+                    );
+
+                const type =
+                    String(
+                        transaction.type || ""
+                    ).toLowerCase();
+
+                const isExpense =
+                    type === "expense" ||
+                    type === "withdraw";
+
+                const icon =
+                    isExpense ? "↑" : "↓";
+
+                const sign =
+                    isExpense ? "-" : "+";
+
+                const title =
+                    transaction.title ||
+                    (
+                        isExpense
+                            ? "پرداخت"
+                            : "افزایش موجودی"
+                    );
+
+                const description =
+                    transaction.description ||
+                    "";
+
+                const balanceAfter =
+                    transaction.balance_after;
+
+                return `
+                    <div class="transaction">
+
+                        <div
+                            class="transaction-icon ${
+                                isExpense
+                                    ? "expense"
+                                    : ""
+                            }"
+                        >
+                            ${icon}
+                        </div>
+
+                        <div>
+
+                            <div class="transaction-title">
+                                ${escapeHtml(title)}
+                            </div>
+
+                            <div class="transaction-description">
+                                ${escapeHtml(description)}
+                            </div>
+
+                            <div class="transaction-date">
+                                ${escapeHtml(
+                                    formatDate(
+                                        transaction.created_at
+                                    )
+                                )}
+                            </div>
+
+                        </div>
+
+                        <div>
+
+                            <div
+                                class="transaction-amount ${
+                                    isExpense
+                                        ? "expense"
+                                        : ""
+                                }"
+                            >
+                                ${sign}${formatNumber(amount)} تومان
+                            </div>
+
+                            ${
+                                balanceAfter !== undefined &&
+                                balanceAfter !== null
+                                    ? `
+                                        <div class="transaction-balance">
+                                            موجودی:
+                                            ${formatNumber(
+                                                balanceAfter
+                                            )}
+                                        </div>
+                                    `
+                                    : ""
+                            }
+
+                        </div>
+
+                    </div>
+                `;
+            }
+        ).join("");
+}
+
+async function refreshWallet() {
+
+    await Promise.all([
+        loadBalance(true),
+        loadTransactions()
+    ]);
+
+    showMessage(
+        "اطلاعات کیف پول بروزرسانی شد.",
+        "success"
+    );
+}
+
+const walletModal =
+    document.getElementById(
+        "walletModal"
+    );
+
+const amountInput =
+    document.getElementById(
+        "amount"
+    );
+
+const descriptionInput =
+    document.getElementById(
+        "description"
+    );
+
+function openWalletModal() {
+
+    showWalletMessage("");
+
+    amountInput.value = "";
+
+    descriptionInput.value =
+        "افزایش موجودی";
+
+    walletModal.classList.add(
+        "show"
+    );
+
+    setTimeout(
+        () => amountInput.focus(),
+        100
+    );
+}
+
+function closeWalletModal() {
+
+    walletModal.classList.remove(
+        "show"
+    );
+}
+
+async function addBalance() {
+
+    showWalletMessage("");
+
+    const amount =
+        Number(
+            amountInput.value
+        );
+
+    const description =
+        String(
+            descriptionInput.value ||
+            "افزایش موجودی"
+        ).trim();
+
+    if (
+        !Number.isInteger(amount) ||
+        amount <= 0
+    ) {
+
+        showWalletMessage(
+            "مبلغ باید یک عدد صحیح بزرگ‌تر از صفر باشد."
+        );
+
+        return;
+    }
+
+    if (amount > 1000000000) {
+
+        showWalletMessage(
+            "مبلغ واردشده بیش از حد مجاز است."
+        );
+
+        return;
+    }
+
+    const button =
+        document.getElementById(
+            "submitWalletButton"
+        );
+
+    button.disabled = true;
+    button.textContent =
+        "در حال ثبت...";
+
+    try {
+
+        const data =
+            await api(
+                "/api/balance/add",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        title:
+                            description ||
+                            "افزایش موجودی"
+                    })
+                }
+            );
+
+        const newBalance =
+            Number(
+                data.balance || 0
+            );
+
+        balanceEl.textContent =
+            formatNumber(newBalance);
+
+        closeWalletModal();
+
+        await loadTransactions();
+
+        showMessage(
+            `موجودی با موفقیت به ${formatNumber(newBalance)} تومان رسید.`,
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "ADD BALANCE ERROR:",
+            error
+        );
+
+        showWalletMessage(
+            error.message ||
+            "افزایش موجودی ناموفق بود."
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent =
+            "ثبت افزایش";
+    }
+}
+
+const profileModal =
+    document.getElementById(
+        "profileModal"
+    );
+
+const profileDisplayName =
+    document.getElementById(
+        "profileDisplayName"
+    );
+
+function openProfileModal() {
+
+    showProfileMessage("");
+
+    profileDisplayName.value =
+        currentUser?.name ||
+        currentUser?.display_name ||
+        "";
+
+    profileModal.classList.add(
+        "show"
+    );
+}
+
+function closeProfileModal() {
+
+    profileModal.classList.remove(
+        "show"
+    );
+}
+
+async function saveProfile() {
+
+    showProfileMessage("");
+
+    const name =
+        profileDisplayName.value.trim();
+
+    if (!name) {
+
+        showProfileMessage(
+            "نام نمی‌تواند خالی باشد."
+        );
+
+        return;
+    }
+
+    if (name.length > 100) {
+
+        showProfileMessage(
+            "نام خیلی طولانی است."
+        );
+
+        return;
+    }
+
+    const button =
+        document.getElementById(
+            "saveProfileButton"
+        );
+
+    button.disabled = true;
+    button.textContent =
+        "در حال ذخیره...";
+
+    try {
+
+        const data =
+            await api(
+                "/api/profile",
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: name
+                    })
+                }
+            );
+
+        if (data.user) {
+            renderUser(data.user);
+        } else {
+            await loadCurrentUser();
+        }
+
+        closeProfileModal();
+
+        showMessage(
+            "پروفایل با موفقیت ذخیره شد.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "PROFILE ERROR:",
+            error
+        );
+
+        showProfileMessage(
+            error.message ||
+            "ذخیره پروفایل ناموفق بود."
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent =
+            "ذخیره";
+    }
+}
+
+async function logout() {
+
+    try {
+
+        await api(
+            "/api/logout",
+            {
+                method: "POST"
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "LOGOUT ERROR:",
+            error
+        );
+    }
+
+    goToLogin();
+}
+
+document
+    .getElementById("backButton")
+    .addEventListener(
+        "click",
+        () => {
+            window.location.assign(
+                "/frontend/index.html"
+            );
+        }
+    );
+
+document
+    .getElementById("logoutButton")
+    .addEventListener(
+        "click",
+        logout
+    );
+
+document
+    .getElementById("addBalanceButton")
+    .addEventListener(
+        "click",
+        openWalletModal
+    );
+
+document
+    .getElementById("refreshWalletButton")
+    .addEventListener(
+        "click",
+        refreshWallet
+    );
+
+document
+    .getElementById("refreshTransactionsButton")
+    .addEventListener(
+        "click",
+        loadTransactions
+    );
+
+document
+    .getElementById("closeWalletModal")
+    .addEventListener(
+        "click",
+        closeWalletModal
+    );
+
+document
+    .getElementById("cancelWalletButton")
+    .addEventListener(
+        "click",
+        closeWalletModal
+    );
+
+document
+    .getElementById("submitWalletButton")
+    .addEventListener(
+        "click",
+        addBalance
+    );
+
+document
+    .querySelectorAll(".quick-amount")
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+                    amountInput.value =
+                        button.dataset.amount;
+                }
+            );
+        }
+    );
+
+document
+    .getElementById("editProfileButton")
+    .addEventListener(
+        "click",
+        openProfileModal
+    );
+
+document
+    .getElementById("settingsButton")
+    .addEventListener(
+        "click",
+        () => {
+            window.location.assign(
+                "/frontend/settings.html"
+            );
+        }
+    );
+
+document
+    .getElementById("closeProfileModal")
+    .addEventListener(
+        "click",
+        closeProfileModal
+    );
+
+document
+    .getElementById("cancelProfileButton")
+    .addEventListener(
+        "click",
+        closeProfileModal
+    );
+
+document
+    .getElementById("saveProfileButton")
+    .addEventListener(
+        "click",
+        saveProfile
+    );
+
+amountInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+            addBalance();
+        }
+    }
+);
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key === "Escape") {
+
+            closeWalletModal();
+            closeProfileModal();
+        }
+    }
+);
+
+walletModal.addEventListener(
+    "click",
+    event => {
+
+        if (
+            event.target === walletModal
+        ) {
+            closeWalletModal();
+        }
+    }
+);
+
+profileModal.addEventListener(
+    "click",
+    event => {
+
+        if (
+            event.target === profileModal
+        ) {
+            closeProfileModal();
+        }
+    }
+);
+
+async function init() {
+
+    const loggedIn =
+        await loadCurrentUser();
+
+    if (!loggedIn) {
+        return;
+    }
+
+    await Promise.all([
+        loadBalance(true),
+        loadTransactions()
+    ]);
+}
+
+init();
+</script>
+
+</body>
+</html>
