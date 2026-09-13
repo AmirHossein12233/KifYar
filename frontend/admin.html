@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>مدیریت KifYar</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f4f6f9;
+            font-family: Tahoma, Arial, sans-serif;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.07);
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 25px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #777;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.07);
+            margin-bottom: 20px;
+        }
+
+        .login-box h2 {
+            margin-top: 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 15px;
+            margin-bottom: 10px;
+            direction: ltr;
+            text-align: left;
+        }
+
+        button {
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            margin: 3px;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .warning {
+            background: #d97706;
+            color: white;
+        }
+
+        .gray {
+            background: #64748b;
+            color: white;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .status.ok {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .toolbar {
+            background: white;
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.07);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .count {
+            font-weight: bold;
+        }
+
+        .list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.07);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .badge {
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .failed,
+        .cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(200px, 1fr)
+            );
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .label {
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .actions {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .empty {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 18px;
+            color: #777;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .simulation {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 10px 14px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 10px;
+            }
+
+            .header,
+            .login-box,
+            .toolbar,
+            .card {
+                border-radius: 14px;
+            }
+
+            button {
+                width: 100%;
+                margin: 4px 0;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>
+            🛠️ مدیریت KifYar
+        </h1>
+
+        <p>
+            مدیریت شبیه‌سازی درخواست‌های انتقال به کارت
+        </p>
+
+        <div class="simulation">
+            این بخش شبیه‌سازی است و انتقال بانکی واقعی انجام نمی‌دهد.
+        </div>
+
+    </div>
+
+
+    <div
+        id="loginBox"
+        class="login-box"
+    >
+
+        <h2>
+            🔐 ورود مدیریت
+        </h2>
+
+        <input
+            id="adminKey"
+            type="password"
+            placeholder="کلید مدیریت"
+            autocomplete="off"
+        >
+
+        <button
+            class="primary"
+            onclick="loginAdmin()"
+        >
+            ورود به پنل
+        </button>
+
+        <div
+            id="loginStatus"
+            class="status"
+        ></div>
+
+    </div>
+
+
+    <div
+        id="panel"
+        class="hidden"
+    >
+
+        <div class="toolbar">
+
+            <div>
+
+                <div class="count">
+                    درخواست‌ها:
+                    <span id="count">0</span>
+                </div>
+
+            </div>
+
+            <div>
+
+                <button
+                    class="primary"
+                    onclick="loadTransfers()"
+                >
+                    🔄 بروزرسانی
+                </button>
+
+                <button
+                    class="gray"
+                    onclick="logoutAdmin()"
+                >
+                    خروج
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="status"
+            class="status"
+        ></div>
+
+
+        <div
+            id="list"
+            class="list"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL =
+    "https://kifyar-api.onrender.com";
+
+let adminKey =
+    localStorage.getItem(
+        "kifyar_admin_key"
+    ) || "";
+
+
+const statusBox =
+    document.getElementById(
+        "status"
+    );
+
+const loginStatus =
+    document.getElementById(
+        "loginStatus"
+    );
+
+
+function showStatus(
+    element,
+    message,
+    type = "ok"
+) {
+
+    element.textContent =
+        message;
+
+    element.className =
+        "status " + type;
+
+}
+
+
+function loginAdmin() {
+
+    const input =
+        document.getElementById(
+            "adminKey"
+        );
+
+    const value =
+        input.value.trim();
+
+    if (!value) {
+
+        showStatus(
+            loginStatus,
+            "کلید مدیریت را وارد کنید.",
+            "error"
+        );
+
+        return;
+    }
+
+    adminKey = value;
+
+    localStorage.setItem(
+        "kifyar_admin_key",
+        adminKey
+    );
+
+    verifyAdmin();
+
+}
+
+
+async function verifyAdmin() {
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/admin/card-transfers",
+                {
+                    method: "GET",
+
+                    headers: {
+                        "X-Admin-Key":
+                            adminKey
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "دسترسی مدیریت رد شد."
+            );
+
+        }
+
+
+        document
+            .getElementById(
+                "loginBox"
+            )
+            .classList
+            .add("hidden");
+
+
+        document
+            .getElementById(
+                "panel"
+            )
+            .classList
+            .remove("hidden");
+
+
+        renderTransfers(
+            data.transfers || []
+        );
+
+
+    } catch (error) {
+
+        localStorage.removeItem(
+            "kifyar_admin_key"
+        );
+
+        adminKey = "";
+
+        showStatus(
+            loginStatus,
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+async function loadTransfers() {
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/admin/card-transfers",
+                {
+                    headers: {
+                        "X-Admin-Key":
+                            adminKey
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "خطا در دریافت درخواست‌ها."
+            );
+
+        }
+
+
+        renderTransfers(
+            data.transfers || []
+        );
+
+
+        showStatus(
+            statusBox,
+            "لیست با موفقیت بروزرسانی شد.",
+            "ok"
+        );
+
+
+    } catch (error) {
+
+        showStatus(
+            statusBox,
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+function statusText(
+    status
+) {
+
+    const values = {
+
+        pending:
+            "در انتظار پردازش",
+
+        completed:
+            "تکمیل شده",
+
+        failed:
+            "ناموفق",
+
+        cancelled:
+            "لغو شده"
+
+    };
+
+    return (
+        values[status] ||
+        status
+    );
+
+}
+
+
+function formatMoney(
+    amount
+) {
+
+    return Number(
+        amount || 0
+    ).toLocaleString(
+        "fa-IR"
+    );
+
+}
+
+
+function renderTransfers(
+    transfers
+) {
+
+    const list =
+        document.getElementById(
+            "list"
+        );
+
+    const count =
+        document.getElementById(
+            "count"
+        );
+
+
+    count.textContent =
+        transfers.length
+            .toLocaleString("fa-IR");
+
+
+    if (!transfers.length) {
+
+        list.innerHTML = `
+            <div class="empty">
+                هیچ درخواست انتقالی وجود ندارد.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    list.innerHTML =
+        transfers.map(
+            transferCard
+        ).join("");
+
+}
+
+
+function transferCard(
+    transfer
+) {
+
+    const status =
+        String(
+            transfer.status ||
+            "pending"
+        ).toLowerCase();
+
+
+    const canProcess =
+        status === "pending";
+
+
+    return `
+
+        <div class="card">
+
+            <div class="card-top">
+
+                <div class="title">
+                    💳 انتقال به کارت
+                </div>
+
+                <div class="badge ${escapeHtml(status)}">
+                    ${escapeHtml(
+                        statusText(status)
+                    )}
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <div class="item">
+
+                    <div class="label">
+                        مبلغ
+                    </div>
+
+                    <div class="value">
+                        ${formatMoney(
+                            transfer.amount
+                        )}
+                        تومان
+                    </div>
+
+                </div>
+
+
+                <div class="item">
+
+                    <div class="label">
+                        کارت
+                    </div>
+
+                    <div class="value">
+                        ${escapeHtml(
+                            transfer.masked_card_number ||
+                            "****"
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="item">
+
+                    <div class="label">
+                        کاربر
+                    </div>
+
+                    <div class="value">
+                        ${escapeHtml(
+                            transfer.name ||
+                            transfer.username ||
+                            "-"
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="item">
+
+                    <div class="label">
+                        شناسه درخواست
+                    </div>
+
+                    <div class="value">
+                        ${escapeHtml(
+                            transfer.request_id ||
+                            "-"
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="item">
+
+                    <div class="label">
+                        زمان ایجاد
+                    </div>
+
+                    <div class="value">
+                        ${escapeHtml(
+                            transfer.created_at ||
+                            "-"
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="item">
+
+                    <div class="label">
+                        آخرین بروزرسانی
+                    </div>
+
+                    <div class="value">
+                        ${escapeHtml(
+                            transfer.updated_at ||
+                            "-"
+                        )}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                ${
+                    canProcess
+                    ? `
+
+                        <button
+                            class="success"
+                            onclick="changeStatus(
+                                ${Number(
+                                    transfer.id
+                                )},
+                                'completed'
+                            )"
+                        >
+                            ✅ تأیید انتقال
+                        </button>
+
+
+                        <button
+                            class="danger"
+                            onclick="changeStatus(
+                                ${Number(
+                                    transfer.id
+                                )},
+                                'failed'
+                            )"
+                        >
+                            ❌ رد انتقال
+                        </button>
+
+
+                        <button
+                            class="warning"
+                            onclick="changeStatus(
+                                ${Number(
+                                    transfer.id
+                                )},
+                                'cancelled'
+                            )"
+                        >
+                            🚫 لغو انتقال
+                        </button>
+
+                    `
+                    : `
+                        <span>
+                            این درخواست قبلاً نهایی شده است.
+                        </span>
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+async function changeStatus(
+    transferId,
+    status
+) {
+
+    const names = {
+
+        completed:
+            "تأیید انتقال",
+
+        failed:
+            "رد انتقال",
+
+        cancelled:
+            "لغو انتقال"
+
+    };
+
+
+    const confirmed =
+        confirm(
+            "آیا مطمئن هستید که می‌خواهید «" +
+            names[status] +
+            "» را انجام دهید؟"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/admin/card-transfers/" +
+                encodeURIComponent(
+                    transferId
+                ) +
+                "/status",
+                {
+                    method: "PATCH",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "X-Admin-Key":
+                            adminKey
+                    },
+
+                    body: JSON.stringify({
+                        status: status
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "تغییر وضعیت انجام نشد."
+            );
+
+        }
+
+
+        showStatus(
+            statusBox,
+            data.message ||
+            "وضعیت با موفقیت تغییر کرد.",
+            "ok"
+        );
+
+
+        await loadTransfers();
+
+    } catch (error) {
+
+        showStatus(
+            statusBox,
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+function logoutAdmin() {
+
+    localStorage.removeItem(
+        "kifyar_admin_key"
+    );
+
+    adminKey = "";
+
+    location.reload();
+
+}
+
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+if (adminKey) {
+
+    verifyAdmin();
+
+}
+
+</script>
+
+</body>
+</html>

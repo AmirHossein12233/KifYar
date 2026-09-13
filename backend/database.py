@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import secrets
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -8,11 +10,17 @@ from typing import Any, Optional
 
 
 # =========================================================
-# PATH
+# DATABASE CONFIG
 # =========================================================
 
 BASE_DIR = Path(__file__).resolve().parent
-DATABASE_PATH = BASE_DIR / "kifyar.db"
+
+DATABASE_PATH = Path(
+    os.getenv(
+        "KIFYAR_DATABASE_PATH",
+        str(BASE_DIR / "kifyar.db"),
+    )
+)
 
 
 # =========================================================
@@ -33,13 +41,17 @@ def get_connection() -> sqlite3.Connection:
     )
 
     connection.execute(
-        "PRAGMA journal_mode = WAL"
+        "PRAGMA busy_timeout = 30000"
     )
 
     return connection
 
 
-def now_iso() -> str:
+# =========================================================
+# TIME
+# =========================================================
+
+def utc_now() -> str:
 
     return datetime.now(
         timezone.utc
@@ -47,16 +59,27 @@ def now_iso() -> str:
 
 
 # =========================================================
-# PASSWORD
+# PASSWORD HELPERS
 # =========================================================
 
 def hash_password(
     password: str,
 ) -> str:
 
-    return hashlib.sha256(
-        password.encode("utf-8")
-    ).hexdigest()
+    salt = secrets.token_bytes(16)
+
+    digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt,
+        120_000,
+    )
+
+    return (
+        salt.hex()
+        + ":"
+        + digest.hex()
+    )
 
 
 def verify_password(
@@ -64,118 +87,304 @@ def verify_password(
     password_hash: str,
 ) -> bool:
 
-    password = str(
-        password
-    )
+    try:
 
-    password_hash = str(
-        password_hash
-    )
+        salt_hex, digest_hex = (
+            password_hash.split(
+                ":",
+                1,
+            )
+        )
 
-    # رمز یک بار هش شده
-    single_hash = hash_password(
-        password
-    )
+        salt = bytes.fromhex(
+            salt_hex
+        )
 
-    if single_hash == password_hash:
-        return True
+        expected = bytes.fromhex(
+            digest_hex
+        )
 
-    # سازگاری با حساب‌های قدیمی که
-    # رمز عبور آنها دوبار هش شده است
-    double_hash = hash_password(
-        single_hash
-    )
+        actual = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt,
+            120_000,
+        )
 
-    if double_hash == password_hash:
-        return True
+        return secrets.compare_digest(
+            actual,
+            expected,
+        )
 
-    return False
+    except Exception:
+
+        return False
 
 
 # =========================================================
-# INITIALIZE DATABASE
+# DATABASE INITIALIZATION
 # =========================================================
 
-def initialize_database() -> None:
+def initialize_database():
+
+    DATABASE_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     connection = get_connection()
 
     try:
 
-        connection.executescript(
+        connection.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT,
-                name TEXT,
+
+                username TEXT UNIQUE NOT NULL,
+
                 email TEXT UNIQUE,
-                password_hash TEXT,
-                created_at TEXT
-            );
 
-            CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                title TEXT DEFAULT '',
-                amount REAL NOT NULL DEFAULT 0,
-                transaction_type TEXT NOT NULL,
-                category TEXT DEFAULT 'other',
-                description TEXT DEFAULT '',
-                created_at TEXT,
-                FOREIGN KEY (user_id)
-                    REFERENCES users(id)
-                    ON DELETE CASCADE
-            );
+                name TEXT NOT NULL DEFAULT '',
 
-            CREATE TABLE IF NOT EXISTS bank_cards (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                holder_name TEXT DEFAULT '',
-                bank_name TEXT DEFAULT '',
-                card_number TEXT NOT NULL,
-                title TEXT DEFAULT '',
-                is_default INTEGER DEFAULT 0,
-                created_at TEXT,
-                FOREIGN KEY (user_id)
-                    REFERENCES users(id)
-                    ON DELETE CASCADE
-            );
+                password_hash TEXT NOT NULL,
 
-            CREATE TABLE IF NOT EXISTS wallet_deposits (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                request_id TEXT UNIQUE NOT NULL,
-                card_id INTEGER,
-                amount REAL NOT NULL,
-                status TEXT DEFAULT 'completed',
-                created_at TEXT,
-                FOREIGN KEY (user_id)
-                    REFERENCES users(id)
-                    ON DELETE CASCADE
-            );
+                is_admin INTEGER NOT NULL DEFAULT 0,
 
-            CREATE TABLE IF NOT EXISTS card_transfers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                request_id TEXT UNIQUE NOT NULL,
-                card_id INTEGER NOT NULL,
-                amount REAL NOT NULL,
-                status TEXT DEFAULT 'pending',
-                created_at TEXT,
-                updated_at TEXT,
-                FOREIGN KEY (user_id)
-                    REFERENCES users(id)
-                    ON DELETE CASCADE,
-                FOREIGN KEY (card_id)
-                    REFERENCES bank_cards(id)
-                    ON DELETE CASCADE
-            );
+                created_at TEXT NOT NULL,
+
+                updated_at TEXT NOT NULL
+            )
             """
         )
 
-        migrate_database(
-            connection
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                user_id INTEGER NOT NULL,
+
+                title TEXT NOT NULL,
+
+                amount REAL NOT NULL,
+
+                transaction_type TEXT NOT NULL,
+
+                category TEXT NOT NULL DEFAULT 'other',
+
+                created_at TEXT NOT NULL,
+
+                FOREIGN KEY (
+                    user_id
+                )
+                REFERENCES users(id)
+                ON DELETE CASCADE
+            )
+            """
         )
+
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS bank_cards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                user_id INTEGER NOT NULL,
+
+                holder_name TEXT NOT NULL,
+
+                bank_name TEXT NOT NULL,
+
+                card_number TEXT NOT NULL,
+
+                is_default INTEGER NOT NULL DEFAULT 0,
+
+                created_at TEXT NOT NULL,
+
+                updated_at TEXT NOT NULL,
+
+                FOREIGN KEY (
+                    user_id
+                )
+                REFERENCES users(id)
+                ON DELETE CASCADE
+            )
+            """
+        )
+
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS wallet_deposits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                user_id INTEGER NOT NULL,
+
+                card_id INTEGER NOT NULL,
+
+                amount REAL NOT NULL,
+
+                request_id TEXT NOT NULL UNIQUE,
+
+                status TEXT NOT NULL DEFAULT 'completed',
+
+                created_at TEXT NOT NULL,
+
+                FOREIGN KEY (
+                    user_id
+                )
+                REFERENCES users(id)
+                ON DELETE CASCADE,
+
+                FOREIGN KEY (
+                    card_id
+                )
+                REFERENCES bank_cards(id)
+                ON DELETE CASCADE
+            )
+            """
+        )
+
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS card_transfers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                user_id INTEGER NOT NULL,
+
+                card_id INTEGER NOT NULL,
+
+                amount REAL NOT NULL,
+
+                request_id TEXT NOT NULL UNIQUE,
+
+                status TEXT NOT NULL DEFAULT 'pending',
+
+                created_at TEXT NOT NULL,
+
+                updated_at TEXT NOT NULL,
+
+                FOREIGN KEY (
+                    user_id
+                )
+                REFERENCES users(id)
+                ON DELETE CASCADE,
+
+                FOREIGN KEY (
+                    card_id
+                )
+                REFERENCES bank_cards(id)
+                ON DELETE CASCADE
+            )
+            """
+        )
+
+
+        # -------------------------------------------------
+        # MIGRATIONS
+        # -------------------------------------------------
+
+        _ensure_column(
+            connection,
+            "users",
+            "is_admin",
+            "INTEGER NOT NULL DEFAULT 0",
+        )
+
+        _ensure_column(
+            connection,
+            "users",
+            "email",
+            "TEXT",
+        )
+
+        _ensure_column(
+            connection,
+            "users",
+            "name",
+            "TEXT NOT NULL DEFAULT ''",
+        )
+
+        _ensure_column(
+            connection,
+            "users",
+            "updated_at",
+            "TEXT",
+        )
+
+
+        # -------------------------------------------------
+        # INDEXES
+        # -------------------------------------------------
+
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_transactions_user
+            ON transactions(user_id)
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_transactions_created
+            ON transactions(created_at)
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_cards_user
+            ON bank_cards(user_id)
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_deposits_user
+            ON wallet_deposits(user_id)
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_card_transfers_user
+            ON card_transfers(user_id)
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_card_transfers_status
+            ON card_transfers(status)
+            """
+        )
+
+
+        # -------------------------------------------------
+        # FIX OLD NULL UPDATED_AT
+        # -------------------------------------------------
+
+        now = utc_now()
+
+        connection.execute(
+            """
+            UPDATE users
+            SET updated_at = ?
+            WHERE updated_at IS NULL
+               OR updated_at = ''
+            """,
+            (now,),
+        )
+
 
         connection.commit()
 
@@ -185,226 +394,70 @@ def initialize_database() -> None:
 
 
 # =========================================================
-# MIGRATION
+# MIGRATION HELPER
 # =========================================================
 
-def migrate_database(
+def _ensure_column(
     connection: sqlite3.Connection,
-) -> None:
+    table_name: str,
+    column_name: str,
+    column_definition: str,
+):
 
-    # -----------------------------------------------------
-    # USERS
-    # -----------------------------------------------------
+    columns = connection.execute(
+        f"PRAGMA table_info({table_name})"
+    ).fetchall()
 
-    user_columns = {
+    existing = {
         row["name"]
-        for row in connection.execute(
-            "PRAGMA table_info(users)"
-        ).fetchall()
+        for row in columns
     }
 
-    required_user_columns = {
-        "username": "TEXT",
-        "name": "TEXT",
-        "email": "TEXT",
-        "password_hash": "TEXT",
-        "created_at": "TEXT",
-    }
+    if column_name not in existing:
 
-    for column, definition in (
-        required_user_columns.items()
-    ):
-
-        if column not in user_columns:
-
-            try:
-
-                connection.execute(
-                    f"""
-                    ALTER TABLE users
-                    ADD COLUMN {column} {definition}
-                    """
-                )
-
-            except sqlite3.OperationalError:
-
-                pass
-
-    # -----------------------------------------------------
-    # TRANSACTIONS
-    # -----------------------------------------------------
-
-    transaction_columns = {
-        row["name"]
-        for row in connection.execute(
-            "PRAGMA table_info(transactions)"
-        ).fetchall()
-    }
-
-    required_transaction_columns = {
-        "title": "TEXT DEFAULT ''",
-        "amount": "REAL DEFAULT 0",
-        "transaction_type": "TEXT DEFAULT 'expense'",
-        "category": "TEXT DEFAULT 'other'",
-        "description": "TEXT DEFAULT ''",
-        "created_at": "TEXT",
-    }
-
-    for column, definition in (
-        required_transaction_columns.items()
-    ):
-
-        if column not in transaction_columns:
-
-            try:
-
-                connection.execute(
-                    f"""
-                    ALTER TABLE transactions
-                    ADD COLUMN {column} {definition}
-                    """
-                )
-
-            except sqlite3.OperationalError:
-
-                pass
-
-    # -----------------------------------------------------
-    # BANK CARDS
-    # -----------------------------------------------------
-
-    card_columns = {
-        row["name"]
-        for row in connection.execute(
-            "PRAGMA table_info(bank_cards)"
-        ).fetchall()
-    }
-
-    required_card_columns = {
-        "holder_name": "TEXT DEFAULT ''",
-        "bank_name": "TEXT DEFAULT ''",
-        "card_number": "TEXT",
-        "title": "TEXT DEFAULT ''",
-        "is_default": "INTEGER DEFAULT 0",
-        "created_at": "TEXT",
-    }
-
-    for column, definition in (
-        required_card_columns.items()
-    ):
-
-        if column not in card_columns:
-
-            try:
-
-                connection.execute(
-                    f"""
-                    ALTER TABLE bank_cards
-                    ADD COLUMN {column} {definition}
-                    """
-                )
-
-            except sqlite3.OperationalError:
-
-                pass
-
-    # -----------------------------------------------------
-    # WALLET DEPOSITS
-    # -----------------------------------------------------
-
-    deposit_columns = {
-        row["name"]
-        for row in connection.execute(
-            "PRAGMA table_info(wallet_deposits)"
-        ).fetchall()
-    }
-
-    required_deposit_columns = {
-        "request_id": "TEXT",
-        "card_id": "INTEGER",
-        "amount": "REAL DEFAULT 0",
-        "status": "TEXT DEFAULT 'completed'",
-        "created_at": "TEXT",
-    }
-
-    for column, definition in (
-        required_deposit_columns.items()
-    ):
-
-        if column not in deposit_columns:
-
-            try:
-
-                connection.execute(
-                    f"""
-                    ALTER TABLE wallet_deposits
-                    ADD COLUMN {column} {definition}
-                    """
-                )
-
-            except sqlite3.OperationalError:
-
-                pass
-
-    # -----------------------------------------------------
-    # CARD TRANSFERS
-    # -----------------------------------------------------
-
-    transfer_columns = {
-        row["name"]
-        for row in connection.execute(
-            "PRAGMA table_info(card_transfers)"
-        ).fetchall()
-    }
-
-    required_transfer_columns = {
-        "request_id": "TEXT",
-        "card_id": "INTEGER",
-        "amount": "REAL DEFAULT 0",
-        "status": "TEXT DEFAULT 'pending'",
-        "created_at": "TEXT",
-        "updated_at": "TEXT",
-    }
-
-    for column, definition in (
-        required_transfer_columns.items()
-    ):
-
-        if column not in transfer_columns:
-
-            try:
-
-                connection.execute(
-                    f"""
-                    ALTER TABLE card_transfers
-                    ADD COLUMN {column} {definition}
-                    """
-                )
-
-            except sqlite3.OperationalError:
-
-                pass
+        connection.execute(
+            f"""
+            ALTER TABLE {table_name}
+            ADD COLUMN {column_name}
+            {column_definition}
+            """
+        )
 
 
 # =========================================================
-# USERS
+# USER HELPERS
 # =========================================================
 
 def create_user(
     username: str,
-    email: str,
     password: str,
-) -> dict[str, Any]:
+    email: Optional[str] = None,
+    name: str = "",
+) -> int:
 
-    username = str(
-        username
-    ).strip()
+    username = username.strip()
 
-    email = str(
-        email
-    ).strip().lower()
+    email = (
+        email.strip().lower()
+        if email
+        else None
+    )
 
-    password = str(
+    name = name.strip()
+
+    if not username:
+        raise ValueError(
+            "نام کاربری الزامی است."
+        )
+
+    if not password:
+        raise ValueError(
+            "رمز عبور الزامی است."
+        )
+
+    now = utc_now()
+
+    password_hash = hash_password(
         password
     )
 
@@ -412,80 +465,40 @@ def create_user(
 
     try:
 
-        created_at = now_iso()
-
         cursor = connection.execute(
             """
-            INSERT INTO users
-            (
+            INSERT INTO users (
                 username,
-                name,
                 email,
+                name,
                 password_hash,
-                created_at
+                is_admin,
+                created_at,
+                updated_at
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, 0, ?, ?)
             """,
             (
                 username,
-                username,
                 email,
-                hash_password(password),
-                created_at,
+                name,
+                password_hash,
+                now,
+                now,
             ),
         )
 
         connection.commit()
 
-        return {
-            "id": cursor.lastrowid,
-            "username": username,
-            "name": username,
-            "email": email,
-            "created_at": created_at,
-        }
+        return int(
+            cursor.lastrowid
+        )
 
-    finally:
+    except sqlite3.IntegrityError as exc:
 
-        connection.close()
-
-
-def find_user(
-    identifier: str,
-) -> Optional[dict[str, Any]]:
-
-    value = str(
-        identifier
-    ).strip()
-
-    if not value:
-
-        return None
-
-    connection = get_connection()
-
-    try:
-
-        row = connection.execute(
-            """
-            SELECT *
-            FROM users
-            WHERE
-                LOWER(email) = LOWER(?)
-                OR LOWER(username) = LOWER(?)
-            LIMIT 1
-            """,
-            (
-                value,
-                value,
-            ),
-        ).fetchone()
-
-        if row is None:
-
-            return None
-
-        return dict(row)
+        raise ValueError(
+            "نام کاربری یا ایمیل قبلاً استفاده شده است."
+        ) from exc
 
     finally:
 
@@ -502,18 +515,22 @@ def find_user_by_id(
 
         row = connection.execute(
             """
-            SELECT *
+            SELECT
+                id,
+                username,
+                email,
+                name,
+                is_admin,
+                created_at,
+                updated_at
             FROM users
             WHERE id = ?
             LIMIT 1
             """,
-            (
-                int(user_id),
-            ),
+            (user_id,),
         ).fetchone()
 
         if row is None:
-
             return None
 
         return dict(row)
@@ -523,27 +540,96 @@ def find_user_by_id(
         connection.close()
 
 
-def get_user_by_id(
-    user_id: int,
+def find_user_by_username(
+    username: str,
 ) -> Optional[dict[str, Any]]:
 
-    return find_user_by_id(
-        user_id
+    connection = get_connection()
+
+    try:
+
+        row = connection.execute(
+            """
+            SELECT *
+            FROM users
+            WHERE username = ?
+            LIMIT 1
+            """,
+            (
+                username.strip(),
+            ),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        return dict(row)
+
+    finally:
+
+        connection.close()
+
+
+def find_user_by_email(
+    email: str,
+) -> Optional[dict[str, Any]]:
+
+    connection = get_connection()
+
+    try:
+
+        row = connection.execute(
+            """
+            SELECT *
+            FROM users
+            WHERE LOWER(email) = LOWER(?)
+            LIMIT 1
+            """,
+            (
+                email.strip(),
+            ),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        return dict(row)
+
+    finally:
+
+        connection.close()
+
+
+def verify_user_password(
+    username: str,
+    password: str,
+) -> Optional[dict[str, Any]]:
+
+    user = find_user_by_username(
+        username
     )
 
+    if user is None:
+        return None
 
-# =========================================================
-# USER NAME
-# =========================================================
+    if not verify_password(
+        password,
+        user["password_hash"],
+    ):
+        return None
+
+    return user
+
 
 def update_user_name(
     user_id: int,
     name: str,
 ) -> bool:
 
-    name = str(
-        name
-    ).strip()
+    name = name.strip()
+
+    if not name:
+        return False
 
     connection = get_connection()
 
@@ -552,14 +638,15 @@ def update_user_name(
         cursor = connection.execute(
             """
             UPDATE users
-            SET name = ?,
-                username = ?
+            SET
+                name = ?,
+                updated_at = ?
             WHERE id = ?
             """,
             (
                 name,
-                name,
-                int(user_id),
+                utc_now(),
+                user_id,
             ),
         )
 
@@ -572,15 +659,11 @@ def update_user_name(
         connection.close()
 
 
-# =========================================================
-# PASSWORD CHANGE
-# =========================================================
-
 def update_user_password(
     user_id: int,
     current_password: str,
     new_password: str,
-) -> bool:
+):
 
     connection = get_connection()
 
@@ -593,51 +676,70 @@ def update_user_password(
             WHERE id = ?
             LIMIT 1
             """,
-            (
-                int(user_id),
-            ),
+            (user_id,),
         ).fetchone()
 
         if row is None:
-
             raise ValueError(
                 "کاربر پیدا نشد."
             )
 
-        current_hash = row["password_hash"]
-
-        if not current_hash:
-
-            raise ValueError(
-                "رمز عبور کاربر ثبت نشده است."
-            )
-
         if not verify_password(
             current_password,
-            current_hash,
+            row["password_hash"],
         ):
-
             raise ValueError(
-                "رمز عبور فعلی اشتباه است."
+                "رمز عبور فعلی نادرست است."
             )
+
+        if len(new_password) < 4:
+            raise ValueError(
+                "رمز عبور جدید باید حداقل ۴ کاراکتر باشد."
+            )
+
+        new_hash = hash_password(
+            new_password
+        )
 
         connection.execute(
             """
             UPDATE users
-            SET password_hash = ?
+            SET
+                password_hash = ?,
+                updated_at = ?
             WHERE id = ?
             """,
             (
-                hash_password(
-                    new_password
-                ),
-                int(user_id),
+                new_hash,
+                utc_now(),
+                user_id,
             ),
         )
 
         connection.commit()
 
-        return True
+    finally:
+
+        connection.close()
+
+
+def delete_user(
+    user_id: int,
+):
+
+    connection = get_connection()
+
+    try:
+
+        connection.execute(
+            """
+            DELETE FROM users
+            WHERE id = ?
+            """,
+            (user_id,),
+        )
+
+        connection.commit()
 
     finally:
 
@@ -645,11 +747,42 @@ def update_user_password(
 
 
 # =========================================================
-# DELETE USER
+# ADMIN HELPERS
 # =========================================================
 
-def delete_user(
+def is_user_admin(
     user_id: int,
+) -> bool:
+
+    connection = get_connection()
+
+    try:
+
+        row = connection.execute(
+            """
+            SELECT is_admin
+            FROM users
+            WHERE id = ?
+            LIMIT 1
+            """,
+            (user_id,),
+        ).fetchone()
+
+        if row is None:
+            return False
+
+        return bool(
+            row["is_admin"]
+        )
+
+    finally:
+
+        connection.close()
+
+
+def set_user_admin(
+    user_id: int,
+    is_admin: bool = True,
 ) -> bool:
 
     connection = get_connection()
@@ -658,11 +791,16 @@ def delete_user(
 
         cursor = connection.execute(
             """
-            DELETE FROM users
+            UPDATE users
+            SET
+                is_admin = ?,
+                updated_at = ?
             WHERE id = ?
             """,
             (
-                int(user_id),
+                1 if is_admin else 0,
+                utc_now(),
+                user_id,
             ),
         )
 
@@ -681,93 +819,62 @@ def delete_user(
 
 def add_transaction(
     user_id: int,
-    title: str = "",
-    amount: float = 0,
-    transaction_type: str = "expense",
+    title: str,
+    amount: float,
+    transaction_type: str,
     category: str = "other",
-    description: str = "",
-    connection: Optional[
-        sqlite3.Connection
-    ] = None,
 ) -> int:
 
-    own_connection = (
-        connection is None
+    if amount <= 0:
+        raise ValueError(
+            "مبلغ باید بیشتر از صفر باشد."
+        )
+
+    transaction_type = (
+        transaction_type
+        .strip()
+        .lower()
     )
 
-    if own_connection:
-
-        connection = get_connection()
-
-    try:
-
-        cursor = connection.execute(
-            """
-            INSERT INTO transactions
-            (
-                user_id,
-                title,
-                amount,
-                transaction_type,
-                category,
-                description,
-                created_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                int(user_id),
-                str(title),
-                float(amount),
-                str(transaction_type),
-                str(category),
-                str(description),
-                now_iso(),
-            ),
+    if transaction_type not in {
+        "income",
+        "expense",
+    }:
+        raise ValueError(
+            "نوع تراکنش نامعتبر است."
         )
-
-        if own_connection:
-
-            connection.commit()
-
-        return int(
-            cursor.lastrowid
-        )
-
-    finally:
-
-        if own_connection:
-
-            connection.close()
-
-
-def get_transactions(
-    user_id: int,
-    limit: int = 200,
-) -> list[dict[str, Any]]:
 
     connection = get_connection()
 
     try:
 
-        rows = connection.execute(
+        cursor = connection.execute(
             """
-            SELECT *
-            FROM transactions
-            WHERE user_id = ?
-            ORDER BY id DESC
-            LIMIT ?
+            INSERT INTO transactions (
+                user_id,
+                title,
+                amount,
+                transaction_type,
+                category,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
-                int(user_id),
-                int(limit),
+                user_id,
+                title.strip(),
+                float(amount),
+                transaction_type,
+                category.strip() or "other",
+                utc_now(),
             ),
-        ).fetchall()
+        )
 
-        return [
-            dict(row)
-            for row in rows
-        ]
+        connection.commit()
+
+        return int(
+            cursor.lastrowid
+        )
 
     finally:
 
@@ -776,25 +883,55 @@ def get_transactions(
 
 def delete_transactions(
     user_id: int,
-) -> int:
+):
 
     connection = get_connection()
 
     try:
 
-        cursor = connection.execute(
+        connection.execute(
             """
             DELETE FROM transactions
             WHERE user_id = ?
             """,
-            (
-                int(user_id),
-            ),
+            (user_id,),
         )
 
         connection.commit()
 
-        return cursor.rowcount
+    finally:
+
+        connection.close()
+
+
+def get_transactions(
+    user_id: int,
+) -> list[dict[str, Any]]:
+
+    connection = get_connection()
+
+    try:
+
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                title,
+                amount,
+                transaction_type,
+                category,
+                created_at
+            FROM transactions
+            WHERE user_id = ?
+            ORDER BY id DESC
+            """,
+            (user_id,),
+        ).fetchall()
+
+        return [
+            dict(row)
+            for row in rows
+        ]
 
     finally:
 
@@ -813,60 +950,32 @@ def get_balance(
 
     try:
 
-        return get_balance_from_connection(
-            connection,
-            user_id,
+        row = connection.execute(
+            """
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'income'
+                            THEN amount
+                            ELSE -amount
+                        END
+                    ),
+                    0
+                ) AS balance
+            FROM transactions
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+
+        return float(
+            row["balance"] or 0
         )
 
     finally:
 
         connection.close()
-
-
-def get_wallet_balance(
-    user_id: int,
-) -> float:
-
-    return get_balance(
-        user_id
-    )
-
-
-def get_balance_from_connection(
-    connection: sqlite3.Connection,
-    user_id: int,
-) -> float:
-
-    row = connection.execute(
-        """
-        SELECT
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN transaction_type
-                            IN ('income', 'deposit')
-                        THEN amount
-
-                        WHEN transaction_type
-                            IN ('expense', 'withdrawal')
-                        THEN -amount
-
-                        ELSE 0
-                    END
-                ),
-                0
-            ) AS balance
-        FROM transactions
-        WHERE user_id = ?
-        """,
-        (
-            int(user_id),
-        ),
-    ).fetchone()
-
-    return float(
-        row["balance"] or 0
-    )
 
 
 # =========================================================
@@ -876,44 +985,58 @@ def get_balance_from_connection(
 def add_wallet_balance_with_transaction(
     user_id: int,
     amount: float,
-    title: str = "افزایش موجودی",
-    category: str = "deposit",
-) -> dict[str, Any]:
-
-    amount = float(
-        amount
-    )
+):
 
     if amount <= 0:
-
         raise ValueError(
-            "مبلغ باید بیشتر از صفر باشد."
+            "مبلغ نامعتبر است."
         )
 
     connection = get_connection()
 
     try:
 
-        transaction_id = add_transaction(
-            user_id=user_id,
-            title=title,
-            amount=amount,
-            transaction_type="income",
-            category=category,
-            connection=connection,
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        cursor = connection.execute(
+            """
+            INSERT INTO transactions (
+                user_id,
+                title,
+                amount,
+                transaction_type,
+                category,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                "افزایش موجودی کیف پول",
+                float(amount),
+                "income",
+                "wallet",
+                utc_now(),
+            ),
+        )
+
+        transaction_id = int(
+            cursor.lastrowid
         )
 
         connection.commit()
 
+        balance = get_balance(
+            user_id
+        )
+
         return {
             "success": True,
             "transaction_id": transaction_id,
-            "amount": amount,
-            "balance":
-                get_balance_from_connection(
-                    connection,
-                    user_id,
-                ),
+            "amount": float(amount),
+            "balance": balance,
         }
 
     except Exception:
@@ -934,55 +1057,89 @@ def add_wallet_balance_with_transaction(
 def subtract_wallet_balance_with_transaction(
     user_id: int,
     amount: float,
-    title: str = "کاهش موجودی",
-    category: str = "expense",
-) -> dict[str, Any]:
-
-    amount = float(
-        amount
-    )
+    title: str = "کاهش موجودی کیف پول",
+    category: str = "wallet",
+):
 
     if amount <= 0:
-
         raise ValueError(
-            "مبلغ باید بیشتر از صفر باشد."
+            "مبلغ نامعتبر است."
         )
 
     connection = get_connection()
 
     try:
 
-        balance = get_balance_from_connection(
-            connection,
-            user_id,
+        connection.execute(
+            "BEGIN IMMEDIATE"
         )
 
-        if balance < amount:
+        row = connection.execute(
+            """
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'income'
+                            THEN amount
+                            ELSE -amount
+                        END
+                    ),
+                    0
+                ) AS balance
+            FROM transactions
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+
+        balance = float(
+            row["balance"] or 0
+        )
+
+        if amount > balance:
 
             raise ValueError(
-                "موجودی کافی نیست."
+                "موجودی کیف پول کافی نیست."
             )
 
-        transaction_id = add_transaction(
-            user_id=user_id,
-            title=title,
-            amount=amount,
-            transaction_type="expense",
-            category=category,
-            connection=connection,
+        cursor = connection.execute(
+            """
+            INSERT INTO transactions (
+                user_id,
+                title,
+                amount,
+                transaction_type,
+                category,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                title,
+                float(amount),
+                "expense",
+                category,
+                utc_now(),
+            ),
+        )
+
+        transaction_id = int(
+            cursor.lastrowid
         )
 
         connection.commit()
 
+        new_balance = get_balance(
+            user_id
+        )
+
         return {
             "success": True,
             "transaction_id": transaction_id,
-            "amount": amount,
-            "balance":
-                get_balance_from_connection(
-                    connection,
-                    user_id,
-                ),
+            "amount": float(amount),
+            "balance": new_balance,
         }
 
     except Exception:
@@ -997,22 +1154,34 @@ def subtract_wallet_balance_with_transaction(
 
 
 # =========================================================
-# BANK CARDS
+# BANK CARD HELPERS
 # =========================================================
 
-def mask_card_number(
+def normalize_card_number(
     card_number: str,
 ) -> str:
 
-    digits = "".join(
+    return "".join(
         ch
         for ch in str(card_number)
         if ch.isdigit()
     )
 
+
+def mask_card_number(
+    card_number: str,
+) -> str:
+
+    digits = normalize_card_number(
+        card_number
+    )
+
     if len(digits) <= 4:
 
-        return "****"
+        return (
+            "**** "
+            + digits
+        )
 
     return (
         "**** **** **** "
@@ -1027,41 +1196,32 @@ def add_bank_card(
     card_number: str,
 ) -> int:
 
-    digits = "".join(
-        ch
-        for ch in str(card_number)
-        if ch.isdigit()
+    holder_name = holder_name.strip()
+
+    bank_name = bank_name.strip()
+
+    card_number = normalize_card_number(
+        card_number
     )
 
-    if len(digits) != 16:
-
+    if not holder_name:
         raise ValueError(
-            "شماره کارت باید 16 رقم باشد."
+            "نام صاحب کارت الزامی است."
+        )
+
+    if not bank_name:
+        raise ValueError(
+            "نام بانک الزامی است."
+        )
+
+    if len(card_number) < 4:
+        raise ValueError(
+            "شماره کارت نامعتبر است."
         )
 
     connection = get_connection()
 
     try:
-
-        existing = connection.execute(
-            """
-            SELECT id
-            FROM bank_cards
-            WHERE user_id = ?
-            AND card_number = ?
-            LIMIT 1
-            """,
-            (
-                int(user_id),
-                digits,
-            ),
-        ).fetchone()
-
-        if existing is not None:
-
-            raise ValueError(
-                "این کارت قبلاً ثبت شده است."
-            )
 
         count_row = connection.execute(
             """
@@ -1069,37 +1229,36 @@ def add_bank_card(
             FROM bank_cards
             WHERE user_id = ?
             """,
-            (
-                int(user_id),
-            ),
+            (user_id,),
         ).fetchone()
 
         is_first = (
             int(count_row["count"]) == 0
         )
 
+        now = utc_now()
+
         cursor = connection.execute(
             """
-            INSERT INTO bank_cards
+            INSERT INTO bank_cards (
+                user_id,
+                holder_name,
+                bank_name,
+                card_number,
+                is_default,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
             (
                 user_id,
                 holder_name,
                 bank_name,
                 card_number,
-                title,
-                is_default,
-                created_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                int(user_id),
-                str(holder_name).strip(),
-                str(bank_name).strip(),
-                digits,
-                str(bank_name).strip(),
                 1 if is_first else 0,
-                now_iso(),
+                now,
+                now,
             ),
         )
 
@@ -1124,16 +1283,21 @@ def get_bank_cards(
 
         rows = connection.execute(
             """
-            SELECT *
+            SELECT
+                id,
+                holder_name,
+                bank_name,
+                card_number,
+                is_default,
+                created_at,
+                updated_at
             FROM bank_cards
             WHERE user_id = ?
             ORDER BY
                 is_default DESC,
                 id DESC
             """,
-            (
-                int(user_id),
-            ),
+            (user_id,),
         ).fetchall()
 
         result = []
@@ -1145,10 +1309,7 @@ def get_bank_cards(
             item[
                 "masked_card_number"
             ] = mask_card_number(
-                item.get(
-                    "card_number",
-                    "",
-                )
+                item["card_number"]
             )
 
             item.pop(
@@ -1156,9 +1317,7 @@ def get_bank_cards(
                 None,
             )
 
-            result.append(
-                item
-            )
+            result.append(item)
 
         return result
 
@@ -1178,20 +1337,27 @@ def get_bank_card(
 
         row = connection.execute(
             """
-            SELECT *
+            SELECT
+                id,
+                user_id,
+                holder_name,
+                bank_name,
+                card_number,
+                is_default,
+                created_at,
+                updated_at
             FROM bank_cards
             WHERE id = ?
-            AND user_id = ?
+              AND user_id = ?
             LIMIT 1
             """,
             (
-                int(card_id),
-                int(user_id),
+                card_id,
+                user_id,
             ),
         ).fetchone()
 
         if row is None:
-
             return None
 
         item = dict(row)
@@ -1199,10 +1365,7 @@ def get_bank_card(
         item[
             "masked_card_number"
         ] = mask_card_number(
-            item.get(
-                "card_number",
-                "",
-            )
+            item["card_number"]
         )
 
         item.pop(
@@ -1226,51 +1389,69 @@ def set_default_bank_card(
 
     try:
 
-        card = connection.execute(
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        exists = connection.execute(
             """
             SELECT id
             FROM bank_cards
             WHERE id = ?
-            AND user_id = ?
+              AND user_id = ?
             LIMIT 1
             """,
             (
-                int(card_id),
-                int(user_id),
+                card_id,
+                user_id,
             ),
         ).fetchone()
 
-        if card is None:
+        if exists is None:
+
+            connection.rollback()
 
             return False
 
         connection.execute(
             """
             UPDATE bank_cards
-            SET is_default = 0
+            SET
+                is_default = 0,
+                updated_at = ?
             WHERE user_id = ?
             """,
             (
-                int(user_id),
+                utc_now(),
+                user_id,
             ),
         )
 
-        connection.execute(
+        cursor = connection.execute(
             """
             UPDATE bank_cards
-            SET is_default = 1
+            SET
+                is_default = 1,
+                updated_at = ?
             WHERE id = ?
-            AND user_id = ?
+              AND user_id = ?
             """,
             (
-                int(card_id),
-                int(user_id),
+                utc_now(),
+                card_id,
+                user_id,
             ),
         )
 
         connection.commit()
 
-        return True
+        return cursor.rowcount > 0
+
+    except Exception:
+
+        connection.rollback()
+
+        raise
 
     finally:
 
@@ -1290,11 +1471,11 @@ def delete_bank_card(
             """
             DELETE FROM bank_cards
             WHERE id = ?
-            AND user_id = ?
+              AND user_id = ?
             """,
             (
-                int(card_id),
-                int(user_id),
+                card_id,
+                user_id,
             ),
         )
 
@@ -1308,7 +1489,7 @@ def delete_bank_card(
 
 
 # =========================================================
-# CARD DEPOSIT
+# DEPOSIT
 # =========================================================
 
 def deposit_by_card_once(
@@ -1316,21 +1497,20 @@ def deposit_by_card_once(
     card_id: int,
     amount: float,
     request_id: str,
-) -> dict[str, Any]:
-
-    amount = float(
-        amount
-    )
+):
 
     if amount <= 0:
-
         raise ValueError(
-            "مبلغ باید بیشتر از صفر باشد."
+            "مبلغ نامعتبر است."
         )
 
     connection = get_connection()
 
     try:
+
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
 
         existing = connection.execute(
             """
@@ -1346,23 +1526,52 @@ def deposit_by_card_once(
 
         if existing is not None:
 
+            balance_row = connection.execute(
+                """
+                SELECT
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN transaction_type = 'income'
+                                THEN amount
+                                ELSE -amount
+                            END
+                        ),
+                        0
+                    ) AS balance
+                FROM transactions
+                WHERE user_id = ?
+                """,
+                (
+                    user_id,
+                ),
+            ).fetchone()
+
+            connection.commit()
+
             return {
                 "success": True,
                 "duplicate": True,
-                "deposit": dict(existing),
+                "deposit_id": existing["id"],
+                "amount": existing["amount"],
+                "status": existing["status"],
+                "balance": float(
+                    balance_row["balance"] or 0
+                ),
             }
+
 
         card = connection.execute(
             """
             SELECT id
             FROM bank_cards
             WHERE id = ?
-            AND user_id = ?
+              AND user_id = ?
             LIMIT 1
             """,
             (
-                int(card_id),
-                int(user_id),
+                card_id,
+                user_id,
             ),
         ).fetchone()
 
@@ -1372,53 +1581,99 @@ def deposit_by_card_once(
                 "کارت بانکی پیدا نشد."
             )
 
-        created_at = now_iso()
 
-        connection.execute(
+        now = utc_now()
+
+        cursor = connection.execute(
             """
-            INSERT INTO wallet_deposits
-            (
+            INSERT INTO wallet_deposits (
                 user_id,
-                request_id,
                 card_id,
                 amount,
+                request_id,
                 status,
                 created_at
             )
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
-                int(user_id),
+                user_id,
+                card_id,
+                float(amount),
                 request_id,
-                int(card_id),
-                amount,
                 "completed",
-                created_at,
+                now,
             ),
         )
 
-        transaction_id = add_transaction(
-            user_id=user_id,
-            title="واریز با کارت",
-            amount=amount,
-            transaction_type="income",
-            category="deposit",
-            connection=connection,
+        deposit_id = int(
+            cursor.lastrowid
         )
+
+
+        transaction_cursor = connection.execute(
+            """
+            INSERT INTO transactions (
+                user_id,
+                title,
+                amount,
+                transaction_type,
+                category,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                "واریز به کیف پول",
+                float(amount),
+                "income",
+                "deposit",
+                now,
+            ),
+        )
+
+        transaction_id = int(
+            transaction_cursor.lastrowid
+        )
+
+
+        balance_row = connection.execute(
+            """
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'income'
+                            THEN amount
+                            ELSE -amount
+                        END
+                    ),
+                    0
+                ) AS balance
+            FROM transactions
+            WHERE user_id = ?
+            """,
+            (
+                user_id,
+            ),
+        ).fetchone()
+
+        balance = float(
+            balance_row["balance"] or 0
+        )
+
 
         connection.commit()
 
         return {
             "success": True,
             "duplicate": False,
-            "request_id": request_id,
+            "deposit_id": deposit_id,
             "transaction_id": transaction_id,
-            "amount": amount,
-            "balance":
-                get_balance_from_connection(
-                    connection,
-                    user_id,
-                ),
+            "amount": float(amount),
+            "status": "completed",
+            "balance": balance,
         }
 
     except Exception:
@@ -1433,7 +1688,7 @@ def deposit_by_card_once(
 
 
 # =========================================================
-# WALLET -> CARD
+# CARD TRANSFER
 # =========================================================
 
 def transfer_wallet_to_card_once(
@@ -1441,21 +1696,25 @@ def transfer_wallet_to_card_once(
     card_id: int,
     amount: float,
     request_id: str,
-) -> dict[str, Any]:
-
-    amount = float(
-        amount
-    )
+):
 
     if amount <= 0:
-
         raise ValueError(
-            "مبلغ باید بیشتر از صفر باشد."
+            "مبلغ نامعتبر است."
         )
 
     connection = get_connection()
 
     try:
+
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+
+        # -------------------------------------------------
+        # DUPLICATE REQUEST
+        # -------------------------------------------------
 
         existing = connection.execute(
             """
@@ -1469,27 +1728,64 @@ def transfer_wallet_to_card_once(
             ),
         ).fetchone()
 
+
         if existing is not None:
+
+            balance_row = connection.execute(
+                """
+                SELECT
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN transaction_type = 'income'
+                                THEN amount
+                                ELSE -amount
+                            END
+                        ),
+                        0
+                    ) AS balance
+                FROM transactions
+                WHERE user_id = ?
+                """,
+                (
+                    user_id,
+                ),
+            ).fetchone()
+
+            connection.commit()
 
             return {
                 "success": True,
                 "duplicate": True,
-                "transfer": dict(existing),
+                "transfer_id": existing["id"],
+                "amount": existing["amount"],
+                "status": existing["status"],
+                "balance": float(
+                    balance_row["balance"] or 0
+                ),
             }
+
+
+        # -------------------------------------------------
+        # CARD CHECK
+        # -------------------------------------------------
 
         card = connection.execute(
             """
-            SELECT id
+            SELECT
+                id,
+                user_id
             FROM bank_cards
             WHERE id = ?
-            AND user_id = ?
+              AND user_id = ?
             LIMIT 1
             """,
             (
-                int(card_id),
-                int(user_id),
+                card_id,
+                user_id,
             ),
         ).fetchone()
+
 
         if card is None:
 
@@ -1497,27 +1793,58 @@ def transfer_wallet_to_card_once(
                 "کارت بانکی پیدا نشد."
             )
 
-        balance = get_balance_from_connection(
-            connection,
-            user_id,
+
+        # -------------------------------------------------
+        # BALANCE CHECK
+        # -------------------------------------------------
+
+        balance_row = connection.execute(
+            """
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'income'
+                            THEN amount
+                            ELSE -amount
+                        END
+                    ),
+                    0
+                ) AS balance
+            FROM transactions
+            WHERE user_id = ?
+            """,
+            (
+                user_id,
+            ),
+        ).fetchone()
+
+
+        balance = float(
+            balance_row["balance"] or 0
         )
 
-        if balance < amount:
+
+        if amount > balance:
 
             raise ValueError(
                 "موجودی کیف پول کافی نیست."
             )
 
-        created_at = now_iso()
+
+        # -------------------------------------------------
+        # CREATE TRANSFER
+        # -------------------------------------------------
+
+        now = utc_now()
 
         cursor = connection.execute(
             """
-            INSERT INTO card_transfers
-            (
+            INSERT INTO card_transfers (
                 user_id,
-                request_id,
                 card_id,
                 amount,
+                request_id,
                 status,
                 created_at,
                 updated_at
@@ -1525,13 +1852,13 @@ def transfer_wallet_to_card_once(
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                int(user_id),
+                user_id,
+                card_id,
+                float(amount),
                 request_id,
-                int(card_id),
-                amount,
                 "pending",
-                created_at,
-                created_at,
+                now,
+                now,
             ),
         )
 
@@ -1539,30 +1866,80 @@ def transfer_wallet_to_card_once(
             cursor.lastrowid
         )
 
-        add_transaction(
-            user_id=user_id,
-            title="انتقال به کارت",
-            amount=amount,
-            transaction_type="expense",
-            category="transfer",
-            description="درخواست انتقال به کارت بانکی",
-            connection=connection,
+
+        # -------------------------------------------------
+        # RESERVE / DEDUCT MONEY
+        # -------------------------------------------------
+
+        transaction_cursor = connection.execute(
+            """
+            INSERT INTO transactions (
+                user_id,
+                title,
+                amount,
+                transaction_type,
+                category,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user_id,
+                "انتقال به کارت",
+                float(amount),
+                "expense",
+                "card_transfer",
+                now,
+            ),
         )
 
+        transaction_id = int(
+            transaction_cursor.lastrowid
+        )
+
+
+        # -------------------------------------------------
+        # NEW BALANCE
+        # -------------------------------------------------
+
+        new_balance_row = connection.execute(
+            """
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'income'
+                            THEN amount
+                            ELSE -amount
+                        END
+                    ),
+                    0
+                ) AS balance
+            FROM transactions
+            WHERE user_id = ?
+            """,
+            (
+                user_id,
+            ),
+        ).fetchone()
+
+
+        new_balance = float(
+            new_balance_row["balance"] or 0
+        )
+
+
         connection.commit()
+
 
         return {
             "success": True,
             "duplicate": False,
             "transfer_id": transfer_id,
-            "request_id": request_id,
-            "amount": amount,
+            "transaction_id": transaction_id,
+            "amount": float(amount),
             "status": "pending",
-            "balance":
-                get_balance_from_connection(
-                    connection,
-                    user_id,
-                ),
+            "balance": new_balance,
         }
 
     except Exception:
@@ -1577,12 +1954,11 @@ def transfer_wallet_to_card_once(
 
 
 # =========================================================
-# CARD TRANSFER GET
+# USER TRANSFER REQUEST
 # =========================================================
 
 def get_card_transfer_requests(
     user_id: int,
-    limit: int = 100,
 ) -> list[dict[str, Any]]:
 
     connection = get_connection()
@@ -1592,22 +1968,33 @@ def get_card_transfer_requests(
         rows = connection.execute(
             """
             SELECT
-                ct.*,
+                ct.id,
+                ct.user_id,
+                ct.card_id,
+                ct.amount,
+                ct.request_id,
+                ct.status,
+                ct.created_at,
+                ct.updated_at,
+
                 bc.holder_name,
                 bc.bank_name,
                 bc.card_number
+
             FROM card_transfers ct
+
             LEFT JOIN bank_cards bc
                 ON bc.id = ct.card_id
+
             WHERE ct.user_id = ?
+
             ORDER BY ct.id DESC
-            LIMIT ?
             """,
             (
-                int(user_id),
-                int(limit),
+                user_id,
             ),
         ).fetchall()
+
 
         result = []
 
@@ -1629,9 +2016,7 @@ def get_card_transfer_requests(
                 None,
             )
 
-            result.append(
-                item
-            )
+            result.append(item)
 
         return result
 
@@ -1652,26 +2037,39 @@ def get_card_transfer_request(
         row = connection.execute(
             """
             SELECT
-                ct.*,
+                ct.id,
+                ct.user_id,
+                ct.card_id,
+                ct.amount,
+                ct.request_id,
+                ct.status,
+                ct.created_at,
+                ct.updated_at,
+
                 bc.holder_name,
                 bc.bank_name,
                 bc.card_number
+
             FROM card_transfers ct
+
             LEFT JOIN bank_cards bc
                 ON bc.id = ct.card_id
+
             WHERE ct.id = ?
-            AND ct.user_id = ?
+              AND ct.user_id = ?
+
             LIMIT 1
             """,
             (
-                int(transfer_id),
-                int(user_id),
+                transfer_id,
+                user_id,
             ),
         ).fetchone()
 
-        if row is None:
 
+        if row is None:
             return None
+
 
         item = dict(row)
 
@@ -1686,7 +2084,7 @@ def get_card_transfer_request(
 
         item.pop(
             "card_number",
-            None,
+            None
         )
 
         return item
@@ -1696,10 +2094,173 @@ def get_card_transfer_request(
         connection.close()
 
 
+# =========================================================
+# ADMIN TRANSFER REQUESTS
+# =========================================================
+
+def get_all_card_transfer_requests(
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+
+    connection = get_connection()
+
+    try:
+
+        rows = connection.execute(
+            """
+            SELECT
+                ct.id,
+                ct.user_id,
+                ct.card_id,
+                ct.amount,
+                ct.request_id,
+                ct.status,
+                ct.created_at,
+                ct.updated_at,
+
+                u.username,
+                u.name,
+                u.email,
+
+                bc.holder_name,
+                bc.bank_name,
+                bc.card_number
+
+            FROM card_transfers ct
+
+            LEFT JOIN users u
+                ON u.id = ct.user_id
+
+            LEFT JOIN bank_cards bc
+                ON bc.id = ct.card_id
+
+            ORDER BY ct.id DESC
+
+            LIMIT ?
+            """,
+            (
+                int(limit),
+            ),
+        ).fetchall()
+
+
+        result = []
+
+        for row in rows:
+
+            item = dict(row)
+
+            item[
+                "masked_card_number"
+            ] = mask_card_number(
+                item.get(
+                    "card_number",
+                    "",
+                )
+            )
+
+            item.pop(
+                "card_number",
+                None
+            )
+
+            result.append(item)
+
+        return result
+
+    finally:
+
+        connection.close()
+
+
+def get_card_transfer_request_by_id(
+    transfer_id: int,
+) -> Optional[dict[str, Any]]:
+
+    connection = get_connection()
+
+    try:
+
+        row = connection.execute(
+            """
+            SELECT
+                ct.id,
+                ct.user_id,
+                ct.card_id,
+                ct.amount,
+                ct.request_id,
+                ct.status,
+                ct.created_at,
+                ct.updated_at,
+
+                u.username,
+                u.name,
+                u.email,
+
+                bc.holder_name,
+                bc.bank_name,
+                bc.card_number
+
+            FROM card_transfers ct
+
+            LEFT JOIN users u
+                ON u.id = ct.user_id
+
+            LEFT JOIN bank_cards bc
+                ON bc.id = ct.card_id
+
+            WHERE ct.id = ?
+
+            LIMIT 1
+            """,
+            (
+                transfer_id,
+            ),
+        ).fetchone()
+
+
+        if row is None:
+            return None
+
+
+        item = dict(row)
+
+        item[
+            "masked_card_number"
+        ] = mask_card_number(
+            item.get(
+                "card_number",
+                "",
+            )
+        )
+
+        item.pop(
+            "card_number",
+            None
+        )
+
+        return item
+
+    finally:
+
+        connection.close()
+
+
+# =========================================================
+# TRANSFER STATUS
+# =========================================================
+
 def update_card_transfer_status(
     transfer_id: int,
     status: str,
 ) -> bool:
+
+    status = (
+        status
+        .strip()
+        .lower()
+    )
+
 
     allowed = {
         "pending",
@@ -1708,9 +2269,6 @@ def update_card_transfer_status(
         "cancelled",
     }
 
-    status = str(
-        status
-    ).strip().lower()
 
     if status not in allowed:
 
@@ -1718,27 +2276,222 @@ def update_card_transfer_status(
             "وضعیت انتقال نامعتبر است."
         )
 
+
     connection = get_connection()
 
     try:
 
-        cursor = connection.execute(
-            """
-            UPDATE card_transfers
-            SET status = ?,
-                updated_at = ?
-            WHERE id = ?
-            """,
-            (
-                status,
-                now_iso(),
-                int(transfer_id),
-            ),
+        connection.execute(
+            "BEGIN IMMEDIATE"
         )
 
-        connection.commit()
 
-        return cursor.rowcount > 0
+        transfer = connection.execute(
+            """
+            SELECT *
+            FROM card_transfers
+            WHERE id = ?
+            LIMIT 1
+            """,
+            (
+                transfer_id,
+            ),
+        ).fetchone()
+
+
+        if transfer is None:
+
+            connection.rollback()
+
+            return False
+
+
+        current_status = (
+            str(
+                transfer["status"]
+            )
+            .strip()
+            .lower()
+        )
+
+
+        # -------------------------------------------------
+        # SAME STATUS
+        # -------------------------------------------------
+
+        if current_status == status:
+
+            connection.commit()
+
+            return True
+
+
+        # -------------------------------------------------
+        # TERMINAL STATUS
+        # -------------------------------------------------
+
+        terminal_statuses = {
+            "completed",
+            "failed",
+            "cancelled",
+        }
+
+
+        if current_status in terminal_statuses:
+
+            raise ValueError(
+                "این درخواست قبلاً نهایی شده و قابل تغییر نیست."
+            )
+
+
+        # -------------------------------------------------
+        # ONLY PENDING CAN MOVE
+        # -------------------------------------------------
+
+        if current_status != "pending":
+
+            raise ValueError(
+                "وضعیت فعلی درخواست قابل تغییر نیست."
+            )
+
+
+        now = utc_now()
+
+
+        # -------------------------------------------------
+        # COMPLETE
+        # -------------------------------------------------
+
+        if status == "completed":
+
+            connection.execute(
+                """
+                UPDATE card_transfers
+                SET
+                    status = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    "completed",
+                    now,
+                    transfer_id,
+                ),
+            )
+
+            connection.commit()
+
+            return True
+
+
+        # -------------------------------------------------
+        # FAILED / CANCELLED
+        #
+        # Money was already deducted when the request
+        # was created.
+        #
+        # Therefore refund it exactly once.
+        # -------------------------------------------------
+
+        if status in {
+            "failed",
+            "cancelled",
+        }:
+
+            amount = float(
+                transfer["amount"]
+            )
+
+            user_id = int(
+                transfer["user_id"]
+            )
+
+
+            # ---------------------------------------------
+            # Check whether refund already exists
+            # ---------------------------------------------
+
+            refund_category = (
+                "card_transfer_refund"
+            )
+
+
+            existing_refund = connection.execute(
+                """
+                SELECT id
+                FROM transactions
+                WHERE user_id = ?
+                  AND category = ?
+                  AND title = ?
+                  AND amount = ?
+                LIMIT 1
+                """,
+                (
+                    user_id,
+                    refund_category,
+                    "بازگشت وجه انتقال کارت",
+                    amount,
+                ),
+            ).fetchone()
+
+
+            if existing_refund is None:
+
+                connection.execute(
+                    """
+                    INSERT INTO transactions (
+                        user_id,
+                        title,
+                        amount,
+                        transaction_type,
+                        category,
+                        created_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        user_id,
+                        "بازگشت وجه انتقال کارت",
+                        amount,
+                        "income",
+                        refund_category,
+                        now,
+                    ),
+                )
+
+
+            connection.execute(
+                """
+                UPDATE card_transfers
+                SET
+                    status = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    status,
+                    now,
+                    transfer_id,
+                ),
+            )
+
+
+            connection.commit()
+
+            return True
+
+
+        connection.rollback()
+
+        raise ValueError(
+            "تغییر وضعیت انجام نشد."
+        )
+
+    except Exception:
+
+        connection.rollback()
+
+        raise
 
     finally:
 
@@ -1746,7 +2499,46 @@ def update_card_transfer_status(
 
 
 # =========================================================
-# START
+# ADMIN USER LIST
 # =========================================================
 
-initialize_database()
+def get_users(
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+
+    connection = get_connection()
+
+    try:
+
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                name,
+                is_admin,
+                created_at,
+                updated_at
+            FROM users
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (
+                int(limit),
+            ),
+        ).fetchall()
+
+        return [
+            dict(row)
+            for row in rows
+        ]
+
+    finally:
+
+        connection.close()
+
+
+# =========================================================
+# END
+# =========================================================

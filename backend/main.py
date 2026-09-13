@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import os
 import uuid
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend.auth import router as auth_router
+
 from backend.database import (
     add_bank_card,
     add_transaction,
@@ -21,7 +23,9 @@ from backend.database import (
     get_bank_card,
     get_bank_cards,
     get_card_transfer_request,
+    get_card_transfer_request_by_id,
     get_card_transfer_requests,
+    get_all_card_transfer_requests,
     get_transactions,
     initialize_database,
     set_default_bank_card,
@@ -31,6 +35,8 @@ from backend.database import (
     update_user_name,
     update_user_password,
 )
+
+
 from backend.session import require_session_user_id
 
 
@@ -75,7 +81,6 @@ app.include_router(
 # =========================================================
 
 class ProfileUpdateRequest(BaseModel):
-
     name: str = Field(
         min_length=1,
         max_length=100,
@@ -83,7 +88,6 @@ class ProfileUpdateRequest(BaseModel):
 
 
 class PasswordChangeRequest(BaseModel):
-
     current_password: str = Field(
         min_length=1,
         max_length=200,
@@ -96,7 +100,6 @@ class PasswordChangeRequest(BaseModel):
 
 
 class TransactionRequest(BaseModel):
-
     title: str = Field(
         min_length=1,
         max_length=200,
@@ -116,7 +119,6 @@ class TransactionRequest(BaseModel):
 
 
 class BankCardRequest(BaseModel):
-
     holder_name: str = Field(
         min_length=1,
         max_length=100,
@@ -134,35 +136,26 @@ class BankCardRequest(BaseModel):
 
 
 class CardDepositRequest(BaseModel):
-
     card_id: int
-
     amount: float
-
     request_id: Optional[str] = None
 
 
 class WalletAmountRequest(BaseModel):
-
     amount: float
 
 
 class WalletWithdrawRequest(BaseModel):
-
     amount: float
 
 
 class WalletCardTransferRequest(BaseModel):
-
     card_id: int
-
     amount: float
-
     request_id: Optional[str] = None
 
 
 class TransferStatusRequest(BaseModel):
-
     status: str
 
 
@@ -175,23 +168,16 @@ def normalize_request_id(
 ) -> str:
 
     if request_id is None:
-
-        return str(
-            uuid.uuid4()
-        )
+        return str(uuid.uuid4())
 
     value = str(
         request_id
     ).strip()
 
     if not value:
-
-        return str(
-            uuid.uuid4()
-        )
+        return str(uuid.uuid4())
 
     if len(value) > 100:
-
         raise HTTPException(
             status_code=400,
             detail="شناسه درخواست نامعتبر است.",
@@ -202,36 +188,64 @@ def normalize_request_id(
 
 def validate_amount(
     amount: float,
-):
+) -> float:
 
     try:
-
-        amount = float(
-            amount
-        )
-
+        amount = float(amount)
     except Exception:
-
         raise HTTPException(
             status_code=400,
             detail="مبلغ نامعتبر است.",
         )
 
     if amount <= 0:
-
         raise HTTPException(
             status_code=400,
             detail="مبلغ باید بیشتر از صفر باشد.",
         )
 
     if amount > 100_000_000:
-
         raise HTTPException(
             status_code=400,
             detail="مبلغ بیشتر از حد مجاز است.",
         )
 
     return amount
+
+
+# =========================================================
+# ADMIN SECURITY
+# =========================================================
+
+def require_admin(
+    x_admin_key: Optional[str] = Header(
+        default=None
+    ),
+):
+    admin_key = os.getenv(
+        "KIFYAR_ADMIN_KEY",
+        "",
+    ).strip()
+
+    if not admin_key:
+        raise HTTPException(
+            status_code=503,
+            detail="کلید مدیریت در سرور تنظیم نشده است.",
+        )
+
+    if not x_admin_key:
+        raise HTTPException(
+            status_code=401,
+            detail="کلید مدیریت ارسال نشده است.",
+        )
+
+    if x_admin_key != admin_key:
+        raise HTTPException(
+            status_code=403,
+            detail="کلید مدیریت نادرست است.",
+        )
+
+    return True
 
 
 # =========================================================
@@ -268,7 +282,6 @@ def root():
 def health():
 
     database_ok = False
-
     frontend_ok = True
 
     try:
@@ -282,10 +295,7 @@ def health():
         database_ok = False
 
     return {
-        "ok": (
-            database_ok
-            and frontend_ok
-        ),
+        "ok": database_ok and frontend_ok,
         "success": True,
         "app": "KifYar",
         "version": "1.0.0",
@@ -531,7 +541,7 @@ def wallet_subtract(
 
 
 # =========================================================
-# CARD DEPOSIT
+# WALLET DEPOSIT
 # =========================================================
 
 @app.post("/api/wallet/deposit")
@@ -665,7 +675,7 @@ def wallet_transfer_to_card(
 
 
 # =========================================================
-# CARD TRANSFER LIST
+# USER CARD TRANSFERS
 # =========================================================
 
 @app.get("/api/wallet/card-transfers")
@@ -684,10 +694,6 @@ def wallet_card_transfers(
         "transfers": transfers,
     }
 
-
-# =========================================================
-# SINGLE CARD TRANSFER
-# =========================================================
 
 @app.get(
     "/api/wallet/card-transfers/{transfer_id}"
@@ -718,65 +724,20 @@ def wallet_card_transfer(
 
 
 # =========================================================
-# UPDATE CARD TRANSFER STATUS
+# IMPORTANT
 # =========================================================
-
-@app.patch(
-    "/api/wallet/card-transfers/{transfer_id}/status"
-)
-def change_card_transfer_status(
-    transfer_id: int,
-    data: TransferStatusRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
-):
-
-    transfer = get_card_transfer_request(
-        user_id=user_id,
-        transfer_id=transfer_id,
-    )
-
-    if transfer is None:
-
-        raise HTTPException(
-            status_code=404,
-            detail="درخواست انتقال پیدا نشد.",
-        )
-
-    status = data.status.strip().lower()
-
-    try:
-
-        updated = update_card_transfer_status(
-            transfer_id=transfer_id,
-            status=status,
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    if not updated:
-
-        raise HTTPException(
-            status_code=404,
-            detail="درخواست انتقال پیدا نشد.",
-        )
-
-    result = get_card_transfer_request(
-        user_id=user_id,
-        transfer_id=transfer_id,
-    )
-
-    return {
-        "success": True,
-        "transfer": result,
-        "message": "وضعیت درخواست بروزرسانی شد.",
-    }
+#
+# وضعیت انتقال دیگر از سمت کاربر عادی قابل تغییر نیست.
+#
+# قبلاً این endpoint وجود داشت:
+#
+# PATCH /api/wallet/card-transfers/{id}/status
+#
+# و یک مشکل امنیتی داشت.
+#
+# تغییر وضعیت فقط از پنل مدیریت انجام می‌شود.
+#
+# =========================================================
 
 
 # =========================================================
@@ -888,13 +849,9 @@ def create_card(
     ),
 ):
 
-    holder_name = (
-        data.holder_name.strip()
-    )
+    holder_name = data.holder_name.strip()
 
-    bank_name = (
-        data.bank_name.strip()
-    )
+    bank_name = data.bank_name.strip()
 
     card_number = "".join(
         ch
@@ -944,11 +901,9 @@ def create_card(
     }
 
 
-# =========================================================
-# DEFAULT CARD
-# =========================================================
-
-@app.put("/api/cards/{card_id}/default")
+@app.put(
+    "/api/cards/{card_id}/default"
+)
 def default_card(
     card_id: int,
     user_id: int = Depends(
@@ -980,11 +935,9 @@ def default_card(
     }
 
 
-# =========================================================
-# DELETE CARD
-# =========================================================
-
-@app.delete("/api/cards/{card_id}")
+@app.delete(
+    "/api/cards/{card_id}"
+)
 def remove_card(
     card_id: int,
     user_id: int = Depends(
@@ -1019,4 +972,125 @@ def remove_card(
     return {
         "success": True,
         "message": "کارت بانکی حذف شد.",
+    }
+
+
+# =========================================================
+# ADMIN
+# =========================================================
+
+@app.get(
+    "/api/admin/card-transfers"
+)
+def admin_card_transfers(
+    _: bool = Depends(
+        require_admin
+    ),
+):
+
+    transfers = get_all_card_transfer_requests()
+
+    return {
+        "success": True,
+        "simulation": True,
+        "transfers": transfers,
+    }
+
+
+@app.get(
+    "/api/admin/card-transfers/{transfer_id}"
+)
+def admin_card_transfer(
+    transfer_id: int,
+    _: bool = Depends(
+        require_admin
+    ),
+):
+
+    transfer = get_card_transfer_request_by_id(
+        transfer_id
+    )
+
+    if transfer is None:
+
+        raise HTTPException(
+            status_code=404,
+            detail="درخواست انتقال پیدا نشد.",
+        )
+
+    return {
+        "success": True,
+        "simulation": True,
+        "transfer": transfer,
+    }
+
+
+@app.patch(
+    "/api/admin/card-transfers/{transfer_id}/status"
+)
+def admin_change_card_transfer_status(
+    transfer_id: int,
+    data: TransferStatusRequest,
+    _: bool = Depends(
+        require_admin
+    ),
+):
+
+    status = (
+        data.status
+        .strip()
+        .lower()
+    )
+
+    if status not in {
+        "pending",
+        "completed",
+        "failed",
+        "cancelled",
+    }:
+
+        raise HTTPException(
+            status_code=400,
+            detail="وضعیت انتقال نامعتبر است.",
+        )
+
+    try:
+
+        updated = update_card_transfer_status(
+            transfer_id=transfer_id,
+            status=status,
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except Exception as exc:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        )
+
+    if not updated:
+
+        raise HTTPException(
+            status_code=404,
+            detail="درخواست انتقال پیدا نشد.",
+        )
+
+    transfer = get_card_transfer_request_by_id(
+        transfer_id
+    )
+
+    return {
+        "success": True,
+        "simulation": True,
+        "transfer": transfer,
+        "message": (
+            "وضعیت درخواست با موفقیت تغییر کرد."
+        ),
     }
