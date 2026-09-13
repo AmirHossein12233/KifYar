@@ -270,9 +270,17 @@ def update_profile(
 
     user_id = require_session_user_id()
 
+    name = payload.name.strip()
+
+    if not name:
+        raise HTTPException(
+            status_code=400,
+            detail="نام نمی‌تواند خالی باشد.",
+        )
+
     ok = update_user_name(
         user_id,
-        payload.name.strip(),
+        name,
     )
 
     if not ok:
@@ -282,9 +290,14 @@ def update_profile(
         )
 
     return {
+        "success": True,
         "message": "پروفایل با موفقیت بروزرسانی شد.",
     }
 
+
+# =========================================================
+# CHANGE PASSWORD
+# =========================================================
 
 @app.put("/api/password")
 def change_password(
@@ -303,21 +316,46 @@ def change_password(
             detail="کاربر پیدا نشد.",
         )
 
-    if not verify_user_password(
+    current_password = payload.current_password
+
+    new_password = payload.new_password
+
+    if not current_password:
+        raise HTTPException(
+            status_code=400,
+            detail="رمز عبور فعلی را وارد کنید.",
+        )
+
+    if current_password == new_password:
+        raise HTTPException(
+            status_code=400,
+            detail="رمز عبور جدید باید با رمز قبلی متفاوت باشد.",
+        )
+
+    verified_user = verify_user_password(
         user["username"],
-        payload.current_password,
-    ):
+        current_password,
+    )
+
+    if verified_user is None:
         raise HTTPException(
             status_code=400,
             detail="رمز عبور فعلی صحیح نیست.",
         )
 
-    update_user_password(
+    ok = update_user_password(
         user_id,
-        payload.new_password,
+        new_password,
     )
 
+    if not ok:
+        raise HTTPException(
+            status_code=500,
+            detail="تغییر رمز عبور انجام نشد.",
+        )
+
     return {
+        "success": True,
         "message": "رمز عبور با موفقیت تغییر کرد.",
     }
 
