@@ -20,21 +20,22 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1250px;
             margin: auto;
         }
 
-        h1 {
-            margin: 0 0 6px;
+        h1,
+        h2 {
+            margin-top: 0;
         }
 
         .subtitle {
             color: #667085;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .card {
-            background: white;
+            background: #fff;
             border-radius: 16px;
             padding: 18px;
             margin-bottom: 18px;
@@ -53,7 +54,7 @@
             padding: 12px;
             border: 1px solid #d0d5dd;
             border-radius: 10px;
-            background: white;
+            background: #fff;
             outline: none;
         }
 
@@ -68,6 +69,11 @@
             padding: 11px 16px;
             cursor: pointer;
             font-weight: bold;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .btn-primary {
@@ -125,11 +131,28 @@
             margin-top: 12px;
         }
 
-        .toolbar {
-            display: grid;
-            grid-template-columns: 1fr 180px auto auto;
-            gap: 10px;
+        .topbar {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .simulation {
+            display: inline-block;
+            background: #ede9fe;
+            color: #5b21b6;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
         }
 
         .stats {
@@ -140,7 +163,7 @@
         }
 
         .stat {
-            background: white;
+            background: #fff;
             border-radius: 14px;
             padding: 16px;
             box-shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
@@ -155,6 +178,13 @@
         .stat-value {
             font-size: 22px;
             font-weight: bold;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: 1fr 180px auto auto;
+            gap: 10px;
+            align-items: center;
         }
 
         .bulk-bar {
@@ -251,6 +281,7 @@
             font-size: 12px;
             direction: ltr;
             text-align: right;
+            word-break: break-all;
         }
 
         .empty {
@@ -265,29 +296,48 @@
             color: #667085;
         }
 
-        .topbar {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 18px;
+            gap: 10px;
+            margin-bottom: 14px;
         }
 
-        .topbar-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+        .section-header h2 {
+            margin-bottom: 0;
         }
 
-        .simulation {
-            display: inline-block;
-            background: #ede9fe;
-            color: #5b21b6;
-            padding: 5px 9px;
-            border-radius: 999px;
-            font-size: 12px;
+        .history-toolbar {
+            display: grid;
+            grid-template-columns: 1fr 180px auto;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .history-action {
             font-weight: bold;
-            margin-top: 5px;
+        }
+
+        .action-approve {
+            color: #166534;
+        }
+
+        .action-reject {
+            color: #991b1b;
+        }
+
+        .action-cancel {
+            color: #92400e;
+        }
+
+        .action-other {
+            color: #475467;
+        }
+
+        .small {
+            color: #667085;
+            font-size: 12px;
         }
 
         .check-cell {
@@ -298,28 +348,40 @@
             width: auto;
         }
 
-        @media (max-width: 800px) {
-            body {
-                padding: 12px;
+        @media (max-width: 900px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .toolbar {
                 grid-template-columns: 1fr;
             }
 
+            .history-toolbar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
             .stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
             }
 
             .topbar {
                 flex-direction: column;
                 align-items: stretch;
             }
-        }
 
-        @media (max-width: 480px) {
-            .stats {
-                grid-template-columns: 1fr;
+            .topbar-actions {
+                width: 100%;
+            }
+
+            .topbar-actions button {
+                flex: 1;
             }
 
             .card {
@@ -332,11 +394,13 @@
 <body>
 
 <div id="loginView" class="login-box">
+
     <div class="card">
+
         <h1>ورود مدیریت</h1>
 
         <div class="subtitle">
-            پنل مدیریت درخواست‌های کیف‌یار
+            پنل مدیریت کیف‌یار
         </div>
 
         <input
@@ -354,29 +418,37 @@
         </button>
 
         <div id="loginMessage"></div>
+
     </div>
+
 </div>
 
 
 <div id="adminView" class="container hidden">
 
     <div class="topbar">
+
         <div>
-            <h1>مدیریت کیف‌یار</h1>
+
+            <h1>
+                مدیریت کیف‌یار
+            </h1>
 
             <div class="subtitle">
-                مدیریت درخواست‌های انتقال به کارت
+                مدیریت انتقال‌های کارت و تاریخچه عملیات
             </div>
 
             <span class="simulation">
                 حالت شبیه‌سازی
             </span>
+
         </div>
 
         <div class="topbar-actions">
+
             <button
                 class="btn-primary"
-                onclick="loadTransfers()"
+                onclick="loadAll()"
             >
                 🔄 بروزرسانی
             </button>
@@ -387,13 +459,20 @@
             >
                 خروج
             </button>
+
         </div>
+
     </div>
 
+
+    <!-- ========================= -->
+    <!-- STATS -->
+    <!-- ========================= -->
 
     <div class="stats">
 
         <div class="stat">
+
             <div class="stat-title">
                 کل درخواست‌ها
             </div>
@@ -404,11 +483,14 @@
             >
                 ۰
             </div>
+
         </div>
 
+
         <div class="stat">
+
             <div class="stat-title">
-                در انتظار پردازش
+                در انتظار
             </div>
 
             <div
@@ -417,9 +499,12 @@
             >
                 ۰
             </div>
+
         </div>
 
+
         <div class="stat">
+
             <div class="stat-title">
                 مبلغ در انتظار
             </div>
@@ -430,39 +515,62 @@
             >
                 ۰ تومان
             </div>
+
         </div>
 
+
         <div class="stat">
+
             <div class="stat-title">
-                نمایش فعلی
+                عملیات ثبت‌شده
             </div>
 
             <div
-                id="visibleCount"
+                id="logCount"
                 class="stat-value"
             >
                 ۰
             </div>
+
         </div>
 
     </div>
 
 
+    <!-- ========================= -->
+    <!-- TRANSFERS -->
+    <!-- ========================= -->
+
     <div class="card">
+
+        <div class="section-header">
+
+            <h2>
+                درخواست‌های انتقال
+            </h2>
+
+            <span class="small">
+                بروزرسانی خودکار هر ۱۵ ثانیه
+            </span>
+
+        </div>
+
 
         <div class="toolbar">
 
             <input
                 id="searchInput"
                 type="text"
-                placeholder="جست‌وجو با شناسه، نام کاربر، ایمیل یا کارت..."
+                placeholder="جست‌وجو با شناسه، نام، ایمیل یا کارت..."
                 oninput="renderTransfers()"
             >
+
 
             <select
                 id="statusFilter"
                 onchange="renderTransfers()"
             >
+
                 <option value="all">
                     همه وضعیت‌ها
                 </option>
@@ -482,21 +590,24 @@
                 <option value="cancelled">
                     لغوشده
                 </option>
+
             </select>
+
 
             <button
                 class="btn-gray"
                 onclick="clearFilters()"
             >
-                پاک کردن فیلتر
+                پاک کردن
             </button>
 
+
             <button
+                id="autoRefreshButton"
                 class="btn-gray"
                 onclick="toggleAutoRefresh()"
-                id="autoRefreshButton"
             >
-                بروزرسانی خودکار: روشن
+                خودکار: روشن
             </button>
 
         </div>
@@ -560,6 +671,7 @@
             <table>
 
                 <thead>
+
                 <tr>
 
                     <th class="check-cell">
@@ -595,9 +707,144 @@
                     </th>
 
                 </tr>
+
                 </thead>
 
                 <tbody id="transfersBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- ADMIN HISTORY -->
+    <!-- ========================= -->
+
+    <div class="card">
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    تاریخچه عملیات مدیر
+                </h2>
+
+                <div class="small">
+                    تمام تغییرات وضعیت انتقال‌ها
+                </div>
+
+            </div>
+
+            <button
+                class="btn-primary"
+                onclick="loadLogs()"
+            >
+                🔄 بروزرسانی گزارش
+            </button>
+
+        </div>
+
+
+        <div class="history-toolbar">
+
+            <input
+                id="logSearchInput"
+                type="text"
+                placeholder="جست‌وجوی شناسه انتقال یا Request ID..."
+                oninput="renderLogs()"
+            >
+
+
+            <select
+                id="logActionFilter"
+                onchange="renderLogs()"
+            >
+
+                <option value="all">
+                    همه عملیات
+                </option>
+
+                <option value="تأیید انتقال">
+                    تأیید انتقال
+                </option>
+
+                <option value="رد انتقال">
+                    رد انتقال
+                </option>
+
+                <option value="لغو انتقال">
+                    لغو انتقال
+                </option>
+
+            </select>
+
+
+            <button
+                class="btn-gray"
+                onclick="clearLogFilters()"
+            >
+                پاک کردن
+            </button>
+
+        </div>
+
+
+        <div
+            id="logsLoading"
+            class="loading hidden"
+        >
+            در حال دریافت تاریخچه...
+        </div>
+
+
+        <div
+            id="logsContainer"
+            class="table-wrap"
+        >
+
+            <table>
+
+                <thead>
+
+                <tr>
+
+                    <th>
+                        عملیات
+                    </th>
+
+                    <th>
+                        انتقال
+                    </th>
+
+                    <th>
+                        وضعیت قبلی
+                    </th>
+
+                    <th>
+                        وضعیت جدید
+                    </th>
+
+                    <th>
+                        مبلغ
+                    </th>
+
+                    <th>
+                        Request ID
+                    </th>
+
+                    <th>
+                        تاریخ
+                    </th>
+
+                </tr>
+
+                </thead>
+
+                <tbody id="logsBody"></tbody>
 
             </table>
 
@@ -610,15 +857,26 @@
 
 <script>
 
-const API_URL = "https://kifyar-api.onrender.com";
+const API_URL =
+    "https://kifyar-api.onrender.com";
 
-const ADMIN_KEY_STORAGE = "kifyar_admin_key";
+const ADMIN_KEY_STORAGE =
+    "kifyar_admin_key";
 
 let adminKey = "";
+
 let transfers = [];
+
+let logs = [];
+
 let autoRefreshEnabled = true;
+
 let autoRefreshTimer = null;
 
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function escapeHtml(value) {
 
@@ -633,7 +891,8 @@ function escapeHtml(value) {
 
 function formatNumber(value) {
 
-    return Number(value || 0).toLocaleString("fa-IR");
+    return Number(value || 0)
+        .toLocaleString("fa-IR");
 }
 
 
@@ -649,13 +908,20 @@ function formatDate(value) {
         return "-";
     }
 
-    const date = new Date(value);
+    const date =
+        new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
         return escapeHtml(value);
     }
 
-    return date.toLocaleString("fa-IR");
+    return date.toLocaleString(
+        "fa-IR"
+    );
 }
 
 
@@ -668,7 +934,7 @@ function statusText(status) {
         cancelled: "لغوشده"
     };
 
-    return map[status] || status;
+    return map[status] || status || "-";
 }
 
 
@@ -678,12 +944,20 @@ function statusClass(status) {
 }
 
 
-function showMessage(text, type = "error") {
+function showMessage(
+    text,
+    type = "error"
+) {
 
-    const element = document.getElementById("message");
+    const element =
+        document.getElementById(
+            "message"
+        );
 
     if (!text) {
+
         element.innerHTML = "";
+
         return;
     }
 
@@ -695,17 +969,21 @@ function showMessage(text, type = "error") {
 
     setTimeout(() => {
 
-        if (element.innerHTML) {
-            element.innerHTML = "";
-        }
+        element.innerHTML = "";
 
     }, 5000);
 }
 
 
-function showLoginMessage(text, type = "error") {
+function showLoginMessage(
+    text,
+    type = "error"
+) {
 
-    const element = document.getElementById("loginMessage");
+    const element =
+        document.getElementById(
+            "loginMessage"
+        );
 
     element.innerHTML = `
         <div class="${type}">
@@ -715,49 +993,74 @@ function showLoginMessage(text, type = "error") {
 }
 
 
-async function apiFetch(path, options = {}) {
+/* =========================================================
+   API
+========================================================= */
+
+async function apiFetch(
+    path,
+    options = {}
+) {
 
     const headers = {
         ...(options.headers || {}),
         "X-Admin-Key": adminKey
     };
 
-    const response = await fetch(
-        API_URL + path,
-        {
-            ...options,
-            headers
-        }
-    );
+    const response =
+        await fetch(
+            API_URL + path,
+            {
+                ...options,
+                headers
+            }
+        );
 
     let data = null;
 
     try {
-        data = await response.json();
+
+        data =
+            await response.json();
+
     } catch {
+
         data = null;
     }
 
+
     if (!response.ok) {
 
-        let message = "خطا در ارتباط با سرور";
+        let message =
+            "خطا در ارتباط با سرور";
 
         if (data?.detail) {
-            message = data.detail;
+            message =
+                data.detail;
         }
 
-        throw new Error(message);
+        throw new Error(
+            message
+        );
     }
 
     return data;
 }
 
 
+/* =========================================================
+   LOGIN
+========================================================= */
+
 async function login() {
 
-    const input = document.getElementById("adminKey");
+    const input =
+        document.getElementById(
+            "adminKey"
+        );
 
-    const key = input.value.trim();
+    const key =
+        input.value.trim();
 
     if (!key) {
 
@@ -782,19 +1085,20 @@ async function login() {
         );
 
         document
-            .getElementById("loginView")
-            .classList.add("hidden");
+            .getElementById(
+                "loginView"
+            )
+            .classList
+            .add("hidden");
 
         document
-            .getElementById("adminView")
-            .classList.remove("hidden");
+            .getElementById(
+                "adminView"
+            )
+            .classList
+            .remove("hidden");
 
-        showMessage(
-            "ورود با موفقیت انجام شد.",
-            "success"
-        );
-
-        await loadTransfers();
+        await loadAll();
 
         startAutoRefresh();
 
@@ -803,7 +1107,8 @@ async function login() {
         adminKey = "";
 
         showLoginMessage(
-            error.message || "کلید مدیریت نادرست است."
+            error.message ||
+            "کلید مدیریت نادرست است."
         );
     }
 }
@@ -820,52 +1125,92 @@ function logout() {
     );
 
     document
-        .getElementById("adminView")
-        .classList.add("hidden");
+        .getElementById(
+            "adminView"
+        )
+        .classList
+        .add("hidden");
 
     document
-        .getElementById("loginView")
-        .classList.remove("hidden");
+        .getElementById(
+            "loginView"
+        )
+        .classList
+        .remove("hidden");
 
     document
-        .getElementById("adminKey")
+        .getElementById(
+            "adminKey"
+        )
         .value = "";
 
     transfers = [];
+
+    logs = [];
 }
 
+
+/* =========================================================
+   LOAD ALL
+========================================================= */
+
+async function loadAll() {
+
+    await Promise.all([
+        loadTransfers(),
+        loadLogs()
+    ]);
+}
+
+
+/* =========================================================
+   TRANSFERS
+========================================================= */
 
 async function loadTransfers() {
 
     const loading =
-        document.getElementById("loading");
+        document.getElementById(
+            "loading"
+        );
 
     const tableContainer =
-        document.getElementById("tableContainer");
+        document.getElementById(
+            "tableContainer"
+        );
 
-    loading.classList.remove("hidden");
-    tableContainer.classList.add("hidden");
+    loading.classList.remove(
+        "hidden"
+    );
+
+    tableContainer.classList.add(
+        "hidden"
+    );
 
     try {
 
-        const data = await apiFetch(
-            "/api/admin/card-transfers"
-        );
+        const data =
+            await apiFetch(
+                "/api/admin/card-transfers"
+            );
 
         transfers =
             Array.isArray(data)
                 ? data
-                : (data?.items || []);
+                : (
+                    data?.items || []
+                );
 
         updateStats();
+
         renderTransfers();
 
     } catch (error) {
 
         if (
-            error.message.includes("401") ||
-            error.message.includes("403") ||
-            error.message.includes("کلید")
+            error.message.includes(
+                "کلید"
+            )
         ) {
 
             logout();
@@ -878,48 +1223,68 @@ async function loadTransfers() {
         }
 
         showMessage(
-            error.message || "دریافت درخواست‌ها ناموفق بود."
+            error.message ||
+            "دریافت درخواست‌ها ناموفق بود."
         );
 
     } finally {
 
-        loading.classList.add("hidden");
-        tableContainer.classList.remove("hidden");
+        loading.classList.add(
+            "hidden"
+        );
+
+        tableContainer.classList.remove(
+            "hidden"
+        );
     }
 }
 
 
 function updateStats() {
 
-    const total =
-        transfers.length;
-
     const pending =
         transfers.filter(
-            item => item.status === "pending"
+            item =>
+                item.status === "pending"
         );
 
     const pendingTotal =
         pending.reduce(
             (sum, item) =>
-                sum + Number(item.amount || 0),
+                sum +
+                Number(
+                    item.amount || 0
+                ),
             0
         );
 
     document.getElementById(
         "totalCount"
     ).textContent =
-        formatNumber(total);
+        formatNumber(
+            transfers.length
+        );
 
     document.getElementById(
         "pendingCount"
     ).textContent =
-        formatNumber(pending.length);
+        formatNumber(
+            pending.length
+        );
 
     document.getElementById(
         "pendingAmount"
     ).textContent =
-        formatAmount(pendingTotal);
+        formatAmount(
+            pendingTotal
+        );
+
+    document.getElementById(
+        "logCount"
+    ).textContent =
+        formatNumber(
+            logs.length
+        );
 }
 
 
@@ -927,61 +1292,65 @@ function getFilteredTransfers() {
 
     const search =
         document
-            .getElementById("searchInput")
+            .getElementById(
+                "searchInput"
+            )
             .value
             .trim()
             .toLowerCase();
 
     const status =
         document
-            .getElementById("statusFilter")
+            .getElementById(
+                "statusFilter"
+            )
             .value;
 
-    return transfers.filter(item => {
+    return transfers.filter(
+        item => {
 
-        if (
-            status !== "all" &&
-            item.status !== status
-        ) {
-            return false;
+            if (
+                status !== "all" &&
+                item.status !== status
+            ) {
+                return false;
+            }
+
+            if (!search) {
+                return true;
+            }
+
+            const text = [
+                item.id,
+                item.transfer_id,
+                item.request_id,
+                item.username,
+                item.name,
+                item.email,
+                item.masked_card_number,
+                item.bank_name
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+            return text.includes(
+                search
+            );
         }
-
-        if (!search) {
-            return true;
-        }
-
-        const text = [
-            item.id,
-            item.transfer_id,
-            item.request_id,
-            item.username,
-            item.name,
-            item.email,
-            item.masked_card_number,
-            item.card_number,
-            item.bank_name
-        ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-
-        return text.includes(search);
-    });
+    );
 }
 
 
 function renderTransfers() {
 
     const body =
-        document.getElementById("transfersBody");
+        document.getElementById(
+            "transfersBody"
+        );
 
     const filtered =
         getFilteredTransfers();
-
-    document.getElementById(
-        "visibleCount"
-    ).textContent =
-        formatNumber(filtered.length);
 
     if (!filtered.length) {
 
@@ -1003,165 +1372,173 @@ function renderTransfers() {
 
 
     body.innerHTML =
-        filtered.map(item => {
+        filtered
+            .map(
+                item => {
 
-            const id =
-                item.id ??
-                item.transfer_id ??
-                "";
+                    const id =
+                        item.id ??
+                        item.transfer_id ??
+                        "";
 
-            const requestId =
-                item.request_id ??
-                "-";
+                    const requestId =
+                        item.request_id ??
+                        "-";
 
-            const userName =
-                item.name ||
-                item.username ||
-                "-";
+                    const userName =
+                        item.name ||
+                        item.username ||
+                        "-";
 
-            const email =
-                item.email ||
-                "";
+                    const email =
+                        item.email ||
+                        "";
 
-            const card =
-                item.masked_card_number ||
-                item.card_number ||
-                "-";
+                    const card =
+                        item.masked_card_number ||
+                        "-";
 
-            const bank =
-                item.bank_name ||
-                "";
+                    const bank =
+                        item.bank_name ||
+                        "";
 
-            const canSelect =
-                item.status === "pending";
+                    const selectable =
+                        item.status ===
+                        "pending";
 
-            return `
-                <tr>
+                    return `
+                        <tr>
 
-                    <td class="check-cell">
+                            <td class="check-cell">
 
-                        ${
-                            canSelect
-                            ? `
-                                <input
-                                    type="checkbox"
-                                    class="transfer-checkbox"
-                                    value="${escapeHtml(id)}"
-                                    onchange="updateSelectedInfo()"
+                                ${
+                                    selectable
+                                    ? `
+                                        <input
+                                            type="checkbox"
+                                            class="transfer-checkbox"
+                                            value="${escapeHtml(id)}"
+                                            onchange="updateSelectedInfo()"
+                                        >
+                                      `
+                                    : ""
+                                }
+
+                            </td>
+
+                            <td>
+
+                                <div>
+                                    #${escapeHtml(id)}
+                                </div>
+
+                                <div class="request-id">
+                                    ${escapeHtml(requestId)}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <strong>
+                                    ${escapeHtml(userName)}
+                                </strong>
+
+                                ${
+                                    email
+                                    ? `
+                                        <div class="small">
+                                            ${escapeHtml(email)}
+                                        </div>
+                                      `
+                                    : ""
+                                }
+
+                            </td>
+
+                            <td>
+
+                                <div>
+                                    ${escapeHtml(card)}
+                                </div>
+
+                                ${
+                                    bank
+                                    ? `
+                                        <div class="small">
+                                            ${escapeHtml(bank)}
+                                        </div>
+                                      `
+                                    : ""
+                                }
+
+                            </td>
+
+                            <td class="amount">
+                                ${formatAmount(item.amount)}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="${statusClass(item.status)}"
                                 >
-                              `
-                            : ""
-                        }
+                                    ${escapeHtml(
+                                        statusText(
+                                            item.status
+                                        )
+                                    )}
+                                </span>
 
-                    </td>
+                            </td>
 
-                    <td>
+                            <td>
+                                ${formatDate(
+                                    item.created_at
+                                )}
+                            </td>
 
-                        <div>
-                            #${escapeHtml(id)}
-                        </div>
+                            <td>
 
-                        <div class="request-id">
-                            ${escapeHtml(requestId)}
-                        </div>
+                                ${
+                                    item.status ===
+                                    "pending"
+                                    ? `
+                                        <div class="actions">
 
-                    </td>
+                                            <button
+                                                class="btn-success"
+                                                onclick="changeStatus('${escapeHtml(id)}', 'completed')"
+                                            >
+                                                تأیید
+                                            </button>
 
-                    <td>
+                                            <button
+                                                class="btn-danger"
+                                                onclick="changeStatus('${escapeHtml(id)}', 'failed')"
+                                            >
+                                                رد
+                                            </button>
 
-                        <strong>
-                            ${escapeHtml(userName)}
-                        </strong>
+                                            <button
+                                                class="btn-warning"
+                                                onclick="changeStatus('${escapeHtml(id)}', 'cancelled')"
+                                            >
+                                                لغو
+                                            </button>
 
-                        ${
-                            email
-                            ? `
-                                <div style="color:#667085;font-size:12px;margin-top:4px;">
-                                    ${escapeHtml(email)}
-                                </div>
-                              `
-                            : ""
-                        }
+                                        </div>
+                                      `
+                                    : "-"
+                                }
 
-                    </td>
+                            </td>
 
-                    <td>
-
-                        <div>
-                            ${escapeHtml(card)}
-                        </div>
-
-                        ${
-                            bank
-                            ? `
-                                <div style="color:#667085;font-size:12px;margin-top:4px;">
-                                    ${escapeHtml(bank)}
-                                </div>
-                              `
-                            : ""
-                        }
-
-                    </td>
-
-                    <td class="amount">
-
-                        ${formatAmount(item.amount)}
-
-                    </td>
-
-                    <td>
-
-                        <span class="${statusClass(item.status)}">
-                            ${escapeHtml(statusText(item.status))}
-                        </span>
-
-                    </td>
-
-                    <td>
-
-                        ${formatDate(item.created_at)}
-
-                    </td>
-
-                    <td>
-
-                        ${
-                            item.status === "pending"
-                            ? `
-                                <div class="actions">
-
-                                    <button
-                                        class="btn-success"
-                                        onclick="changeStatus('${escapeHtml(id)}', 'completed')"
-                                    >
-                                        تأیید
-                                    </button>
-
-                                    <button
-                                        class="btn-danger"
-                                        onclick="changeStatus('${escapeHtml(id)}', 'failed')"
-                                    >
-                                        رد
-                                    </button>
-
-                                    <button
-                                        class="btn-warning"
-                                        onclick="changeStatus('${escapeHtml(id)}', 'cancelled')"
-                                    >
-                                        لغو
-                                    </button>
-
-                                </div>
-                              `
-                            : "-"
-                        }
-
-                    </td>
-
-                </tr>
-            `;
-
-        }).join("");
+                        </tr>
+                    `;
+                }
+            )
+            .join("");
 
     updateSelectedInfo();
 }
@@ -1174,7 +1551,8 @@ function getSelectedIds() {
             ".transfer-checkbox:checked"
         )
     ).map(
-        checkbox => checkbox.value
+        checkbox =>
+            checkbox.value
     );
 }
 
@@ -1187,23 +1565,25 @@ function updateSelectedInfo() {
     document.getElementById(
         "selectedInfo"
     ).textContent =
-        formatNumber(selected.length) +
+        formatNumber(
+            selected.length
+        ) +
         " مورد انتخاب شده";
 }
 
 
 function selectAllPending() {
 
-    const checkboxes =
-        document.querySelectorAll(
+    document
+        .querySelectorAll(
             ".transfer-checkbox"
+        )
+        .forEach(
+            checkbox => {
+                checkbox.checked =
+                    true;
+            }
         );
-
-    checkboxes.forEach(
-        checkbox => {
-            checkbox.checked = true;
-        }
-    );
 
     updateSelectedInfo();
 }
@@ -1213,10 +1593,6 @@ async function changeStatus(
     transferId,
     status
 ) {
-
-    if (!transferId) {
-        return;
-    }
 
     const text =
         status === "completed"
@@ -1236,7 +1612,8 @@ async function changeStatus(
             {
                 method: "PATCH",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type":
+                        "application/json"
                 },
                 body: JSON.stringify({
                     status
@@ -1245,11 +1622,11 @@ async function changeStatus(
         );
 
         showMessage(
-            "وضعیت درخواست با موفقیت تغییر کرد.",
+            "وضعیت درخواست تغییر کرد.",
             "success"
         );
 
-        await loadTransfers();
+        await loadAll();
 
     } catch (error) {
 
@@ -1261,7 +1638,9 @@ async function changeStatus(
 }
 
 
-async function bulkChangeStatus(status) {
+async function bulkChangeStatus(
+    status
+) {
 
     const selected =
         getSelectedIds();
@@ -1269,7 +1648,7 @@ async function bulkChangeStatus(status) {
     if (!selected.length) {
 
         showMessage(
-            "حداقل یک درخواست در انتظار را انتخاب کنید."
+            "حداقل یک درخواست را انتخاب کنید."
         );
 
         return;
@@ -1289,7 +1668,10 @@ async function bulkChangeStatus(status) {
     let successCount = 0;
     let failedCount = 0;
 
-    for (const transferId of selected) {
+    for (
+        const transferId
+        of selected
+    ) {
 
         try {
 
@@ -1298,7 +1680,8 @@ async function bulkChangeStatus(status) {
                 {
                     method: "PATCH",
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
                     body: JSON.stringify({
                         status
@@ -1314,12 +1697,14 @@ async function bulkChangeStatus(status) {
         }
     }
 
-    await loadTransfers();
+    await loadAll();
 
-    if (failedCount === 0) {
+    if (
+        failedCount === 0
+    ) {
 
         showMessage(
-            `${formatNumber(successCount)} درخواست با موفقیت پردازش شد.`,
+            `${formatNumber(successCount)} درخواست پردازش شد.`,
             "success"
         );
 
@@ -1327,9 +1712,7 @@ async function bulkChangeStatus(status) {
 
         showMessage(
             `${formatNumber(successCount)} موفق و ${formatNumber(failedCount)} ناموفق.`,
-            successCount > 0
-                ? "success"
-                : "error"
+            "error"
         );
     }
 }
@@ -1349,6 +1732,269 @@ function clearFilters() {
 }
 
 
+/* =========================================================
+   ADMIN LOGS
+========================================================= */
+
+async function loadLogs() {
+
+    const loading =
+        document.getElementById(
+            "logsLoading"
+        );
+
+    loading.classList.remove(
+        "hidden"
+    );
+
+    try {
+
+        const data =
+            await apiFetch(
+                "/api/admin/logs?limit=200"
+            );
+
+        logs =
+            Array.isArray(data)
+                ? data
+                : (
+                    data?.items || []
+                );
+
+        updateStats();
+
+        renderLogs();
+
+    } catch (error) {
+
+        showMessage(
+            error.message ||
+            "دریافت تاریخچه ناموفق بود."
+        );
+
+    } finally {
+
+        loading.classList.add(
+            "hidden"
+        );
+    }
+}
+
+
+function getFilteredLogs() {
+
+    const search =
+        document
+            .getElementById(
+                "logSearchInput"
+            )
+            .value
+            .trim()
+            .toLowerCase();
+
+    const action =
+        document
+            .getElementById(
+                "logActionFilter"
+            )
+            .value;
+
+    return logs.filter(
+        log => {
+
+            if (
+                action !== "all" &&
+                log.action !== action
+            ) {
+                return false;
+            }
+
+            if (!search) {
+                return true;
+            }
+
+            const text = [
+                log.id,
+                log.transfer_id,
+                log.request_id,
+                log.action
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+            return text.includes(
+                search
+            );
+        }
+    );
+}
+
+
+function getActionClass(
+    action
+) {
+
+    if (
+        action ===
+        "تأیید انتقال"
+    ) {
+        return "action-approve";
+    }
+
+    if (
+        action ===
+        "رد انتقال"
+    ) {
+        return "action-reject";
+    }
+
+    if (
+        action ===
+        "لغو انتقال"
+    ) {
+        return "action-cancel";
+    }
+
+    return "action-other";
+}
+
+
+function renderLogs() {
+
+    const body =
+        document.getElementById(
+            "logsBody"
+        );
+
+    const filtered =
+        getFilteredLogs();
+
+    if (!filtered.length) {
+
+        body.innerHTML = `
+            <tr>
+                <td
+                    colspan="7"
+                    class="empty"
+                >
+                    هنوز گزارشی ثبت نشده است.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    body.innerHTML =
+        filtered
+            .map(
+                log => {
+
+                    return `
+                        <tr>
+
+                            <td>
+
+                                <span
+                                    class="history-action ${getActionClass(log.action)}"
+                                >
+                                    ${escapeHtml(
+                                        log.action
+                                    )}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                #${escapeHtml(
+                                    log.transfer_id
+                                )}
+
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="${statusClass(log.status_before)}"
+                                >
+                                    ${escapeHtml(
+                                        statusText(
+                                            log.status_before
+                                        )
+                                    )}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="${statusClass(log.status_after)}"
+                                >
+                                    ${escapeHtml(
+                                        statusText(
+                                            log.status_after
+                                        )
+                                    )}
+                                </span>
+
+                            </td>
+
+                            <td class="amount">
+
+                                ${formatAmount(
+                                    log.amount
+                                )}
+
+                            </td>
+
+                            <td>
+
+                                <div class="request-id">
+                                    ${escapeHtml(
+                                        log.request_id
+                                    )}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                ${formatDate(
+                                    log.created_at
+                                )}
+
+                            </td>
+
+                        </tr>
+                    `;
+                }
+            )
+            .join("");
+}
+
+
+function clearLogFilters() {
+
+    document.getElementById(
+        "logSearchInput"
+    ).value = "";
+
+    document.getElementById(
+        "logActionFilter"
+    ).value = "all";
+
+    renderLogs();
+}
+
+
+/* =========================================================
+   AUTO REFRESH
+========================================================= */
+
 function startAutoRefresh() {
 
     stopAutoRefresh();
@@ -1361,16 +2007,19 @@ function startAutoRefresh() {
         setInterval(
             () => {
 
+                const adminView =
+                    document.getElementById(
+                        "adminView"
+                    );
+
                 if (
-                    document
-                        .getElementById("adminView")
-                        .classList
+                    adminView.classList
                         .contains("hidden")
                 ) {
                     return;
                 }
 
-                loadTransfers();
+                loadAll();
 
             },
             15000
@@ -1380,13 +2029,16 @@ function startAutoRefresh() {
 
 function stopAutoRefresh() {
 
-    if (autoRefreshTimer) {
+    if (
+        autoRefreshTimer
+    ) {
 
         clearInterval(
             autoRefreshTimer
         );
 
-        autoRefreshTimer = null;
+        autoRefreshTimer =
+            null;
     }
 }
 
@@ -1403,16 +2055,25 @@ function toggleAutoRefresh() {
 
     button.textContent =
         autoRefreshEnabled
-            ? "بروزرسانی خودکار: روشن"
-            : "بروزرسانی خودکار: خاموش";
+            ? "خودکار: روشن"
+            : "خودکار: خاموش";
 
-    if (autoRefreshEnabled) {
+    if (
+        autoRefreshEnabled
+    ) {
+
         startAutoRefresh();
+
     } else {
+
         stopAutoRefresh();
     }
 }
 
+
+/* =========================================================
+   STORED KEY
+========================================================= */
 
 async function tryStoredKey() {
 
@@ -1434,14 +2095,20 @@ async function tryStoredKey() {
         );
 
         document
-            .getElementById("loginView")
-            .classList.add("hidden");
+            .getElementById(
+                "loginView"
+            )
+            .classList
+            .add("hidden");
 
         document
-            .getElementById("adminView")
-            .classList.remove("hidden");
+            .getElementById(
+                "adminView"
+            )
+            .classList
+            .remove("hidden");
 
-        await loadTransfers();
+        await loadAll();
 
         startAutoRefresh();
 
@@ -1456,19 +2123,32 @@ async function tryStoredKey() {
 }
 
 
+/* =========================================================
+   ENTER LOGIN
+========================================================= */
+
 document
-    .getElementById("adminKey")
+    .getElementById(
+        "adminKey"
+    )
     .addEventListener(
         "keydown",
         event => {
 
-            if (event.key === "Enter") {
+            if (
+                event.key ===
+                "Enter"
+            ) {
                 login();
             }
 
         }
     );
 
+
+/* =========================================================
+   START
+========================================================= */
 
 tryStoredKey();
 
