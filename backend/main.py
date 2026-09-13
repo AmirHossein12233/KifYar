@@ -51,8 +51,12 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # Local development
         "http://127.0.0.1:5500",
         "http://localhost:5500",
+
+        # KifYar online frontend
+        "https://kifyar-web.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -214,7 +218,6 @@ def validate_amount(
             detail="مبلغ نامعتبر است.",
         )
 
-
     if amount <= 0:
 
         raise HTTPException(
@@ -222,14 +225,12 @@ def validate_amount(
             detail="مبلغ باید بیشتر از صفر باشد.",
         )
 
-
     if amount > 100_000_000:
 
         raise HTTPException(
             status_code=400,
             detail="مبلغ بیشتر از حد مجاز است.",
         )
-
 
     return amount
 
@@ -271,7 +272,6 @@ def health():
 
     frontend_ok = True
 
-
     try:
 
         initialize_database()
@@ -281,7 +281,6 @@ def health():
     except Exception:
 
         database_ok = False
-
 
     return {
         "ok": (
@@ -309,14 +308,12 @@ def get_profile(
         user_id
     )
 
-
     if user is None:
 
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
         )
-
 
     return {
         "success": True,
@@ -332,7 +329,6 @@ def update_profile(
 
     name = data.name.strip()
 
-
     if not name:
 
         raise HTTPException(
@@ -340,12 +336,10 @@ def update_profile(
             detail="نام نمی‌تواند خالی باشد.",
         )
 
-
     updated = update_user_name(
         user_id,
         name,
     )
-
 
     if not updated:
 
@@ -354,11 +348,9 @@ def update_profile(
             detail="کاربر پیدا نشد.",
         )
 
-
     user = find_user_by_id(
         user_id
     )
-
 
     return {
         "success": True,
@@ -392,7 +384,6 @@ def change_password(
             detail=str(exc),
         )
 
-
     return {
         "success": True,
         "message": "رمز عبور با موفقیت تغییر کرد.",
@@ -425,7 +416,6 @@ def delete_account(
             detail=str(exc),
         )
 
-
     return {
         "success": True,
         "message": "حساب کاربری حذف شد.",
@@ -444,7 +434,6 @@ def wallet_balance(
     balance = get_balance(
         user_id
     )
-
 
     return {
         "success": True,
@@ -465,7 +454,6 @@ def wallet_add(
     amount = validate_amount(
         data.amount
     )
-
 
     try:
 
@@ -488,7 +476,6 @@ def wallet_add(
             detail=str(exc),
         )
 
-
     return result
 
 
@@ -505,7 +492,6 @@ def wallet_subtract(
     amount = validate_amount(
         data.amount
     )
-
 
     try:
 
@@ -528,7 +514,6 @@ def wallet_subtract(
             detail=str(exc),
         )
 
-
     return result
 
 
@@ -546,11 +531,9 @@ def wallet_deposit(
         data.amount
     )
 
-
     request_id = normalize_request_id(
         data.request_id
     )
-
 
     try:
 
@@ -575,7 +558,6 @@ def wallet_deposit(
             detail=str(exc),
         )
 
-
     return result
 
 
@@ -592,7 +574,6 @@ def wallet_withdraw(
     amount = validate_amount(
         data.amount
     )
-
 
     try:
 
@@ -617,7 +598,6 @@ def wallet_withdraw(
             detail=str(exc),
         )
 
-
     return result
 
 
@@ -635,11 +615,9 @@ def wallet_transfer_to_card(
         data.amount
     )
 
-
     request_id = normalize_request_id(
         data.request_id
     )
-
 
     try:
 
@@ -664,7 +642,6 @@ def wallet_transfer_to_card(
             detail=str(exc),
         )
 
-
     return result
 
 
@@ -680,7 +657,6 @@ def wallet_card_transfers(
     transfers = get_card_transfer_requests(
         user_id
     )
-
 
     return {
         "success": True,
@@ -705,14 +681,12 @@ def wallet_card_transfer(
         transfer_id=transfer_id,
     )
 
-
     if transfer is None:
 
         raise HTTPException(
             status_code=404,
             detail="درخواست انتقال پیدا نشد.",
         )
-
 
     return {
         "success": True,
@@ -738,7 +712,6 @@ def change_card_transfer_status(
         transfer_id=transfer_id,
     )
 
-
     if transfer is None:
 
         raise HTTPException(
@@ -746,9 +719,7 @@ def change_card_transfer_status(
             detail="درخواست انتقال پیدا نشد.",
         )
 
-
     status = data.status.strip().lower()
-
 
     try:
 
@@ -764,7 +735,6 @@ def change_card_transfer_status(
             detail=str(exc),
         )
 
-
     if not updated:
 
         raise HTTPException(
@@ -772,12 +742,10 @@ def change_card_transfer_status(
             detail="درخواست انتقال پیدا نشد.",
         )
 
-
     result = get_card_transfer_request(
         user_id=user_id,
         transfer_id=transfer_id,
     )
-
 
     return {
         "success": True,
@@ -799,7 +767,6 @@ def transactions(
         user_id
     )
 
-
     return {
         "success": True,
         "transactions": items,
@@ -816,13 +783,11 @@ def create_transaction(
         data.amount
     )
 
-
     transaction_type = (
         data.transaction_type
         .strip()
         .lower()
     )
-
 
     if transaction_type not in {
         "income",
@@ -834,14 +799,12 @@ def create_transaction(
             detail="نوع تراکنش باید income یا expense باشد.",
         )
 
-
     title = data.title.strip()
 
     category = (
         data.category.strip()
         or "other"
     )
-
 
     try:
 
@@ -860,13 +823,10 @@ def create_transaction(
             detail=str(exc),
         )
 
-
     return {
         "success": True,
-        "transaction_id":
-            transaction_id,
-        "message":
-            "تراکنش ثبت شد.",
+        "transaction_id": transaction_id,
+        "message": "تراکنش ثبت شد.",
     }
 
 
@@ -882,7 +842,6 @@ def cards(
     items = get_bank_cards(
         user_id
     )
-
 
     return {
         "success": True,
@@ -910,14 +869,12 @@ def create_card(
         if ch.isdigit()
     )
 
-
     if len(card_number) < 4:
 
         raise HTTPException(
             status_code=400,
             detail="شماره کارت نامعتبر است.",
         )
-
 
     try:
 
@@ -935,18 +892,15 @@ def create_card(
             detail=str(exc),
         )
 
-
     card = get_bank_card(
         user_id=user_id,
         card_id=card_id,
     )
 
-
     return {
         "success": True,
         "card": card,
-        "message":
-            "کارت بانکی اضافه شد.",
+        "message": "کارت بانکی اضافه شد.",
     }
 
 
@@ -965,7 +919,6 @@ def default_card(
         card_id=card_id,
     )
 
-
     if not updated:
 
         raise HTTPException(
@@ -973,18 +926,15 @@ def default_card(
             detail="کارت بانکی پیدا نشد.",
         )
 
-
     card = get_bank_card(
         user_id=user_id,
         card_id=card_id,
     )
 
-
     return {
         "success": True,
         "card": card,
-        "message":
-            "کارت پیش‌فرض تغییر کرد.",
+        "message": "کارت پیش‌فرض تغییر کرد.",
     }
 
 
@@ -1003,7 +953,6 @@ def remove_card(
         card_id=card_id,
     )
 
-
     if card is None:
 
         raise HTTPException(
@@ -1011,12 +960,10 @@ def remove_card(
             detail="کارت بانکی پیدا نشد.",
         )
 
-
     deleted = delete_bank_card(
         user_id=user_id,
         card_id=card_id,
     )
-
 
     if not deleted:
 
@@ -1025,9 +972,7 @@ def remove_card(
             detail="کارت بانکی پیدا نشد.",
         )
 
-
     return {
         "success": True,
-        "message":
-            "کارت بانکی حذف شد.",
+        "message": "کارت بانکی حذف شد.",
     }
