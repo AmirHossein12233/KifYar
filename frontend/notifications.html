@@ -58,6 +58,11 @@
             font-size: 14px;
         }
 
+        button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
         .primary {
             background: #2563eb;
             color: white;
@@ -117,6 +122,11 @@
             align-items: flex-start;
             gap: 15px;
             border-right: 5px solid #2563eb;
+            transition: .2s;
+        }
+
+        .notification.unread {
+            box-shadow: 0 6px 22px rgba(37,99,235,.12);
         }
 
         .notification.warning {
@@ -129,6 +139,10 @@
 
         .notification.success {
             border-right-color: #16a34a;
+        }
+
+        .notification.info {
+            border-right-color: #2563eb;
         }
 
         .notification-icon {
@@ -145,6 +159,7 @@
 
         .notification-content {
             flex: 1;
+            min-width: 0;
         }
 
         .notification-title {
@@ -156,6 +171,7 @@
             color: #666;
             line-height: 1.8;
             font-size: 14px;
+            word-break: break-word;
         }
 
         .notification-time {
@@ -184,6 +200,46 @@
             box-shadow: 0 5px 20px rgba(0,0,0,.05);
         }
 
+        .loading {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            color: #777;
+            box-shadow: 0 5px 20px rgba(0,0,0,.05);
+        }
+
+        .error {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #be123c;
+            border-radius: 16px;
+            padding: 18px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .refresh-info {
+            margin-top: 12px;
+            color: #999;
+            font-size: 11px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 7px;
+            margin-right: 5px;
+            border-radius: 999px;
+            background: #dc2626;
+            color: white;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
         @media (max-width: 650px) {
             .summary {
                 grid-template-columns: 1fr;
@@ -196,6 +252,10 @@
             .notification-actions {
                 width: 100%;
             }
+
+            .notification-actions button {
+                flex: 1;
+            }
         }
     </style>
 </head>
@@ -206,7 +266,14 @@
 
     <div class="header">
 
-        <h1>🔔 اعلان‌ها</h1>
+        <h1>
+            🔔 اعلان‌ها
+            <span
+                id="headerUnreadBadge"
+                class="badge"
+                style="display:none;"
+            >۰</span>
+        </h1>
 
         <p>
             هشدارها و اطلاع‌رسانی‌های مالی کیف‌یار
@@ -215,6 +282,7 @@
         <div class="actions">
 
             <button
+                id="markAllButton"
                 class="primary"
                 onclick="markAllAsRead()"
             >
@@ -222,10 +290,18 @@
             </button>
 
             <button
+                id="clearButton"
                 class="danger"
                 onclick="clearNotifications()"
             >
                 پاک کردن اعلان‌ها
+            </button>
+
+            <button
+                class="secondary"
+                onclick="loadNotifications()"
+            >
+                🔄 بروزرسانی
             </button>
 
             <a
@@ -233,6 +309,13 @@
                 href="index.html"
             >
                 داشبورد
+            </a>
+
+            <a
+                class="secondary"
+                href="wallet.html"
+            >
+                کیف پول
             </a>
 
             <a
@@ -249,6 +332,10 @@
                 تنظیمات
             </a>
 
+        </div>
+
+        <div class="refresh-info">
+            اعلان‌ها به صورت خودکار هر ۱۵ ثانیه بروزرسانی می‌شوند.
         </div>
 
     </div>
@@ -272,7 +359,11 @@
     <div
         id="notificationsContainer"
         class="notifications"
-    ></div>
+    >
+        <div class="loading">
+            در حال دریافت اعلان‌ها...
+        </div>
+    </div>
 
 </div>
 
@@ -281,109 +372,64 @@
 
 const API_URL = "https://kifyar-api.onrender.com";
 
-const token = localStorage.getItem("kifyar_token");
+const TOKEN_KEY = "kifyar_token";
+
+const token =
+    localStorage.getItem(TOKEN_KEY);
+
 
 if (!token) {
+
     window.location.href = "login.html";
+
 }
 
 
 let notifications = [];
 
 
-function getStorageKey() {
+/* =========================
+   احراز هویت
+========================= */
 
-    return "kifyar_notifications";
+function authHeaders() {
 
-}
-
-
-function loadSavedNotifications() {
-
-    try {
-
-        const saved =
-            localStorage.getItem(getStorageKey());
-
-        if (!saved) {
-            notifications = [];
-            return;
-        }
-
-        const parsed = JSON.parse(saved);
-
-        notifications =
-            Array.isArray(parsed)
-                ? parsed
-                : [];
-
-    } catch (error) {
-
-        console.error(error);
-
-        notifications = [];
-
-    }
-
-}
-
-
-function saveNotifications() {
-
-    localStorage.setItem(
-        getStorageKey(),
-        JSON.stringify(notifications)
-    );
-
-}
-
-
-function createNotification(
-    title,
-    message,
-    type = "info",
-    icon = "🔔"
-) {
-
-    const notification = {
-
-        id:
-            Date.now() +
-            Math.random(),
-
-        title: title,
-
-        message: message,
-
-        type: type,
-
-        icon: icon,
-
-        read: false,
-
-        created_at:
-            new Date().toISOString()
-
+    return {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
     };
 
-
-    notifications.unshift(notification);
-
-
-    if (notifications.length > 100) {
-
-        notifications =
-            notifications.slice(0, 100);
-
-    }
+}
 
 
-    saveNotifications();
+function handleUnauthorized() {
 
-    renderNotifications();
+    localStorage.removeItem(TOKEN_KEY);
+
+    window.location.href = "login.html";
 
 }
 
+
+/* =========================
+   تبدیل متن
+========================= */
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+/* =========================
+   تاریخ
+========================= */
 
 function formatDate(value) {
 
@@ -408,28 +454,229 @@ function formatDate(value) {
 }
 
 
+/* =========================
+   مبلغ
+========================= */
+
 function formatMoney(value) {
 
     return (
-        Number(value || 0)
-        .toLocaleString("fa-IR")
+        Number(value || 0).toLocaleString("fa-IR")
         + " تومان"
     );
 
 }
 
 
-function escapeHtml(value) {
+/* =========================
+   نوع اعلان
+========================= */
 
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+function getNotificationType(item) {
+
+    if (item.type) {
+        return String(item.type);
+    }
+
+    return "info";
 
 }
 
+
+function getNotificationIcon(item) {
+
+    if (item.icon) {
+        return String(item.icon);
+    }
+
+    const type =
+        getNotificationType(item);
+
+    if (type === "success") {
+        return "✅";
+    }
+
+    if (type === "danger") {
+        return "❌";
+    }
+
+    if (type === "warning") {
+        return "⚠️";
+    }
+
+    return "🔔";
+
+}
+
+
+/* =========================
+   دریافت اعلان‌ها
+========================= */
+
+async function loadNotifications() {
+
+    const container =
+        document.getElementById(
+            "notificationsContainer"
+        );
+
+    container.innerHTML = `
+        <div class="loading">
+            در حال دریافت اعلان‌ها...
+        </div>
+    `;
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/notifications?limit=100`,
+                {
+                    method: "GET",
+                    headers: authHeaders()
+                }
+            );
+
+
+        if (response.status === 401) {
+
+            handleUnauthorized();
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "دریافت اعلان‌ها ناموفق بود."
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (Array.isArray(data)) {
+
+            notifications = data;
+
+        } else if (
+            Array.isArray(data.notifications)
+        ) {
+
+            notifications =
+                data.notifications;
+
+        } else {
+
+            notifications = [];
+
+        }
+
+
+        renderNotifications();
+
+
+        await loadUnreadCount();
+
+    } catch (error) {
+
+        console.error(
+            "Notifications error:",
+            error
+        );
+
+
+        container.innerHTML = `
+            <div class="error">
+                ❌ دریافت اعلان‌ها انجام نشد.
+                <br>
+                لطفاً اتصال اینترنت و سرور را بررسی کنید.
+                <br><br>
+                <button
+                    class="primary"
+                    onclick="loadNotifications()"
+                >
+                    تلاش دوباره
+                </button>
+            </div>
+        `;
+
+    }
+
+}
+
+
+/* =========================
+   تعداد خوانده‌نشده
+========================= */
+
+async function loadUnreadCount() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/notifications/unread-count`,
+                {
+                    method: "GET",
+                    headers: authHeaders()
+                }
+            );
+
+
+        if (response.status === 401) {
+
+            handleUnauthorized();
+            return;
+
+        }
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const count =
+            Number(
+                data.unread_count ??
+                data.count ??
+                0
+            );
+
+
+        document.getElementById(
+            "unreadCount"
+        ).textContent =
+            count.toLocaleString("fa-IR");
+
+
+        updateHeaderBadge(count);
+
+    } catch (error) {
+
+        console.error(
+            "Unread count error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================
+   نمایش اعلان‌ها
+========================= */
 
 function renderNotifications() {
 
@@ -445,7 +692,11 @@ function renderNotifications() {
 
     const unread =
         notifications.filter(
-            item => !item.read
+            item =>
+                !Boolean(
+                    item.is_read ??
+                    item.read
+                )
         ).length;
 
 
@@ -461,7 +712,10 @@ function renderNotifications() {
         unread.toLocaleString("fa-IR");
 
 
-    if (notifications.length === 0) {
+    updateHeaderBadge(unread);
+
+
+    if (total === 0) {
 
         container.innerHTML = `
             <div class="empty">
@@ -479,38 +733,87 @@ function renderNotifications() {
     container.innerHTML =
         notifications.map(item => {
 
-            const typeClass =
-                item.type || "info";
+            const id =
+                item.id;
+
+            const type =
+                getNotificationType(item);
+
+            const icon =
+                getNotificationIcon(item);
+
+            const isRead =
+                Boolean(
+                    item.is_read ??
+                    item.read
+                );
 
 
             return `
                 <div
-                    class="notification ${escapeHtml(typeClass)}"
+                    class="notification
+                           ${escapeHtml(type)}
+                           ${isRead ? "" : "unread"}"
                     style="${
-                        item.read
+                        isRead
                             ? "opacity:.65;"
                             : ""
                     }"
                 >
 
                     <div class="notification-icon">
-                        ${escapeHtml(item.icon || "🔔")}
+                        ${escapeHtml(icon)}
                     </div>
 
 
                     <div class="notification-content">
 
                         <div class="notification-title">
-                            ${escapeHtml(item.title)}
+                            ${escapeHtml(
+                                item.title ||
+                                "اعلان کیف‌یار"
+                            )}
                         </div>
+
 
                         <div class="notification-message">
-                            ${escapeHtml(item.message)}
+                            ${escapeHtml(
+                                item.message ||
+                                ""
+                            )}
                         </div>
 
-                        <div class="notification-time">
-                            ${formatDate(item.created_at)}
-                        </div>
+
+                        ${
+                            item.amount !== undefined &&
+                            item.amount !== null
+                                ? `
+                                    <div
+                                        class="notification-time"
+                                        style="
+                                            color:#2563eb;
+                                            font-weight:bold;
+                                        "
+                                    >
+                                        مبلغ:
+                                        ${formatMoney(item.amount)}
+                                    </div>
+                                  `
+                                : ""
+                        }
+
+
+                        ${
+                            item.created_at
+                                ? `
+                                    <div class="notification-time">
+                                        ${formatDate(
+                                            item.created_at
+                                        )}
+                                    </div>
+                                  `
+                                : ""
+                        }
 
                     </div>
 
@@ -518,11 +821,11 @@ function renderNotifications() {
                     <div class="notification-actions">
 
                         ${
-                            !item.read
+                            !isRead
                                 ? `
                                     <button
                                         class="success"
-                                        onclick="markAsRead('${item.id}')"
+                                        onclick="markAsRead(${Number(id)})"
                                     >
                                         خواندم
                                     </button>
@@ -530,9 +833,10 @@ function renderNotifications() {
                                 : ""
                         }
 
+
                         <button
                             class="danger"
-                            onclick="deleteNotification('${item.id}')"
+                            onclick="deleteNotification(${Number(id)})"
                         >
                             حذف
                         </button>
@@ -547,65 +851,267 @@ function renderNotifications() {
 }
 
 
-function markAsRead(id) {
+/* =========================
+   Badge
+========================= */
 
-    notifications =
-        notifications.map(item => {
+function updateHeaderBadge(count) {
 
-            if (String(item.id) === String(id)) {
-
-                return {
-                    ...item,
-                    read: true
-                };
-
-            }
-
-            return item;
-
-        });
-
-
-    saveNotifications();
-
-    renderNotifications();
-
-}
-
-
-function markAllAsRead() {
-
-    notifications =
-        notifications.map(item => ({
-            ...item,
-            read: true
-        }));
-
-
-    saveNotifications();
-
-    renderNotifications();
-
-}
-
-
-function deleteNotification(id) {
-
-    notifications =
-        notifications.filter(
-            item =>
-                String(item.id) !== String(id)
+    const badge =
+        document.getElementById(
+            "headerUnreadBadge"
         );
 
 
-    saveNotifications();
+    if (!count || count <= 0) {
 
-    renderNotifications();
+        badge.style.display =
+            "none";
+
+        return;
+
+    }
+
+
+    badge.style.display =
+        "inline-flex";
+
+
+    badge.textContent =
+        Number(count)
+            .toLocaleString("fa-IR");
 
 }
 
 
-function clearNotifications() {
+/* =========================
+   خواندن یک اعلان
+========================= */
+
+async function markAsRead(id) {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/notifications/${id}/read`,
+                {
+                    method: "PATCH",
+                    headers: authHeaders()
+                }
+            );
+
+
+        if (response.status === 401) {
+
+            handleUnauthorized();
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "خواندن اعلان ناموفق بود."
+            );
+
+        }
+
+
+        notifications =
+            notifications.map(item => {
+
+                if (
+                    String(item.id) ===
+                    String(id)
+                ) {
+
+                    return {
+                        ...item,
+                        is_read: true,
+                        read: true
+                    };
+
+                }
+
+                return item;
+
+            });
+
+
+        renderNotifications();
+
+        await loadUnreadCount();
+
+    } catch (error) {
+
+        console.error(
+            "Mark notification read error:",
+            error
+        );
+
+
+        alert(
+            "خواندن اعلان انجام نشد."
+        );
+
+    }
+
+}
+
+
+/* =========================
+   خواندن همه
+========================= */
+
+async function markAllAsRead() {
+
+    if (notifications.length === 0) {
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "markAllButton"
+        );
+
+
+    button.disabled = true;
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/notifications/read-all`,
+                {
+                    method: "PATCH",
+                    headers: authHeaders()
+                }
+            );
+
+
+        if (response.status === 401) {
+
+            handleUnauthorized();
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "خواندن همه اعلان‌ها ناموفق بود."
+            );
+
+        }
+
+
+        notifications =
+            notifications.map(item => ({
+                ...item,
+                is_read: true,
+                read: true
+            }));
+
+
+        renderNotifications();
+
+        await loadUnreadCount();
+
+    } catch (error) {
+
+        console.error(
+            "Mark all notifications error:",
+            error
+        );
+
+
+        alert(
+            "خواندن همه اعلان‌ها انجام نشد."
+        );
+
+    } finally {
+
+        button.disabled = false;
+
+    }
+
+}
+
+
+/* =========================
+   حذف یک اعلان
+========================= */
+
+async function deleteNotification(id) {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/notifications/${id}`,
+                {
+                    method: "DELETE",
+                    headers: authHeaders()
+                }
+            );
+
+
+        if (response.status === 401) {
+
+            handleUnauthorized();
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "حذف اعلان ناموفق بود."
+            );
+
+        }
+
+
+        notifications =
+            notifications.filter(
+                item =>
+                    String(item.id) !==
+                    String(id)
+            );
+
+
+        renderNotifications();
+
+        await loadUnreadCount();
+
+    } catch (error) {
+
+        console.error(
+            "Delete notification error:",
+            error
+        );
+
+
+        alert(
+            "حذف اعلان انجام نشد."
+        );
+
+    }
+
+}
+
+
+/* =========================
+   پاک کردن همه اعلان‌ها
+========================= */
+
+async function clearNotifications() {
 
     if (notifications.length === 0) {
         return;
@@ -623,374 +1129,70 @@ function clearNotifications() {
     }
 
 
-    notifications = [];
-
-    saveNotifications();
-
-    renderNotifications();
-
-}
-
-
-async function getBalance() {
-
-    const response =
-        await fetch(
-            `${API_URL}/api/balance`,
-            {
-                headers: {
-                    "Authorization":
-                        `Bearer ${token}`
-                }
-            }
-        );
-
-
-    if (response.status === 401) {
-
-        localStorage.removeItem(
-            "kifyar_token"
-        );
-
-        window.location.href =
-            "login.html";
-
-        return null;
-
-    }
-
-
-    if (!response.ok) {
-        throw new Error(
-            "دریافت موجودی ناموفق بود."
-        );
-    }
-
-
-    return await response.json();
-
-}
-
-
-async function getTransactions() {
-
-    const response =
-        await fetch(
-            `${API_URL}/api/transactions`,
-            {
-                headers: {
-                    "Authorization":
-                        `Bearer ${token}`
-                }
-            }
-        );
-
-
-    if (response.status === 401) {
-
-        localStorage.removeItem(
-            "kifyar_token"
-        );
-
-        window.location.href =
-            "login.html";
-
-        return [];
-
-    }
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            "دریافت تراکنش‌ها ناموفق بود."
-        );
-
-    }
-
-
-    const data =
-        await response.json();
-
-
-    if (Array.isArray(data)) {
-        return data;
-    }
-
-
-    if (Array.isArray(data.transactions)) {
-        return data.transactions;
-    }
-
-
-    return [];
-
-}
-
-
-function notificationAlreadyExists(key) {
-
-    return notifications.some(
-        item =>
-            item.message_key === key
-    );
-
-}
-
-
-function createOnce(
-    key,
-    title,
-    message,
-    type,
-    icon
-) {
-
-    if (
-        notificationAlreadyExists(key)
-    ) {
-        return;
-    }
-
-
-    const notification = {
-
-        id:
-            Date.now() +
-            Math.random(),
-
-        title: title,
-
-        message: message,
-
-        type: type,
-
-        icon: icon,
-
-        read: false,
-
-        message_key: key,
-
-        created_at:
-            new Date().toISOString()
-
-    };
-
-
-    notifications.unshift(
-        notification
-    );
-
-
-    if (notifications.length > 100) {
-
-        notifications =
-            notifications.slice(0, 100);
-
-    }
-
-
-    saveNotifications();
-
-}
-
-
-async function checkFinancialAlerts() {
-
     try {
 
-        const balanceData =
-            await getBalance();
+        /*
+         * حذف همه اعلان‌ها با حذف تک‌تک آن‌ها
+         * تا نیازی به endpoint اضافه نباشد.
+         */
 
-
-        if (!balanceData) {
-            return;
-        }
-
-
-        const balance =
-            Number(
-                balanceData.balance ??
-                balanceData.amount ??
-                0
-            );
-
-
-        if (balance <= 0) {
-
-            createOnce(
-                "balance_zero",
-                "موجودی صفر است",
-                "موجودی کیف پول شما صفر یا منفی شده است.",
-                "danger",
-                "🚨"
-            );
-
-        } else if (balance < 100000) {
-
-            createOnce(
-                "balance_low",
-                "موجودی کم",
-                "موجودی کیف پول شما کمتر از ۱۰۰٬۰۰۰ تومان است.",
-                "warning",
-                "⚠️"
-            );
-
-        }
-
-
-        const transactions =
-            await getTransactions();
-
-
-        if (!transactions) {
-            return;
-        }
-
-
-        const today =
-            new Date();
-
-
-        const startToday =
-            new Date(
-                today.getFullYear(),
-                today.getMonth(),
-                today.getDate()
-            );
-
-
-        const todayExpenses =
-            transactions
-                .filter(item => {
-
-                    if (
-                        item.type !==
-                        "expense"
-                    ) {
-                        return false;
-                    }
-
-
-                    const date =
-                        new Date(
-                            item.created_at
-                        );
-
-
-                    return (
-                        !Number.isNaN(
-                            date.getTime()
-                        ) &&
-                        date >= startToday
-                    );
-
-                })
-                .reduce(
-                    (
-                        total,
-                        item
-                    ) =>
-                        total +
-                        Number(
-                            item.amount || 0
-                        ),
-                    0
+        const ids =
+            notifications
+                .map(item => item.id)
+                .filter(
+                    id =>
+                        id !== undefined &&
+                        id !== null
                 );
 
 
-        if (
-            todayExpenses >=
-            1000000
-        ) {
+        for (const id of ids) {
 
-            createOnce(
-                "daily_expense_" +
-                startToday
-                    .toISOString()
-                    .slice(0, 10),
-
-                "هزینه امروز زیاد شده",
-                "هزینه‌های امروز شما به " +
-                formatMoney(todayExpenses) +
-                " رسیده است.",
-
-                "warning",
-
-                "💰"
-            );
-
-        }
-
-
-        if (
-            transactions.length > 0
-        ) {
-
-            const latest =
-                transactions[0];
-
-
-            const latestKey =
-                "transaction_" +
-                latest.id;
+            const response =
+                await fetch(
+                    `${API_URL}/api/notifications/${id}`,
+                    {
+                        method: "DELETE",
+                        headers: authHeaders()
+                    }
+                );
 
 
             if (
-                !notificationAlreadyExists(
-                    latestKey
-                )
+                response.status === 401
             ) {
 
-                const amount =
-                    formatMoney(
-                        latest.amount
-                    );
-
-
-                const isIncome =
-                    latest.type ===
-                    "income";
-
-
-                createOnce(
-                    latestKey,
-
-                    isIncome
-                        ? "درآمد جدید"
-                        : "هزینه جدید",
-
-                    (
-                        isIncome
-                            ? "یک درآمد جدید به مبلغ "
-                            : "یک هزینه جدید به مبلغ "
-                    ) +
-                    amount +
-                    " ثبت شده است.",
-
-                    isIncome
-                        ? "success"
-                        : "info",
-
-                    isIncome
-                        ? "💵"
-                        : "🧾"
-                );
+                handleUnauthorized();
+                return;
 
             }
 
         }
 
 
-        saveNotifications();
+        notifications = [];
 
         renderNotifications();
+
+        await loadUnreadCount();
 
     } catch (error) {
 
         console.error(
-            "Financial alerts error:",
+            "Clear notifications error:",
             error
+        );
+
+
+        /*
+         * حتی اگر حذف یکی از اعلان‌ها خطا بدهد،
+         * دوباره لیست واقعی سرور را می‌گیریم.
+         */
+
+        await loadNotifications();
+
+        alert(
+            "پاک کردن همه اعلان‌ها کامل انجام نشد."
         );
 
     }
@@ -998,11 +1200,25 @@ async function checkFinancialAlerts() {
 }
 
 
-loadSavedNotifications();
+/* =========================
+   بروزرسانی خودکار
+========================= */
 
-renderNotifications();
+setInterval(
+    () => {
 
-checkFinancialAlerts();
+        loadNotifications();
+
+    },
+    15000
+);
+
+
+/* =========================
+   شروع صفحه
+========================= */
+
+loadNotifications();
 
 </script>
 
