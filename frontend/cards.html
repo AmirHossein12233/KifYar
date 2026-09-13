@@ -58,20 +58,16 @@
 
         label {
             display: block;
-            margin:
-                14px 0 7px;
+            margin: 14px 0 7px;
             font-weight: bold;
         }
 
         input {
             width: 100%;
             height: 48px;
-            border:
-                1px solid
-                #d1d5db;
+            border: 1px solid #d1d5db;
             border-radius: 12px;
-            padding:
-                0 12px;
+            padding: 0 12px;
             font-family: inherit;
             font-size: 14px;
         }
@@ -81,12 +77,7 @@
             border-color: #2563eb;
             box-shadow:
                 0 0 0 3px
-                rgba(
-                    37,
-                    99,
-                    235,
-                    0.1
-                );
+                rgba(37, 99, 235, 0.1);
         }
 
         .card-button {
@@ -133,9 +124,7 @@
         }
 
         .bank-card {
-            border:
-                1px solid
-                #e5e7eb;
+            border: 1px solid #e5e7eb;
             border-radius: 15px;
             padding: 16px;
             margin-bottom: 12px;
@@ -204,11 +193,6 @@
 
 <div class="container">
 
-
-    <!-- =====================================================
-         HEADER
-         ===================================================== -->
-
     <header class="page-header">
 
         <h1>
@@ -221,10 +205,6 @@
 
     </header>
 
-
-    <!-- =====================================================
-         ADD CARD
-         ===================================================== -->
 
     <section class="card">
 
@@ -245,6 +225,7 @@
             id="holderName"
             type="text"
             maxlength="100"
+            autocomplete="off"
             placeholder="نام و نام خانوادگی"
         >
 
@@ -257,6 +238,7 @@
             id="bankName"
             type="text"
             maxlength="100"
+            autocomplete="off"
             placeholder="مثلاً بانک ملی"
         >
 
@@ -270,6 +252,7 @@
             type="text"
             inputmode="numeric"
             maxlength="19"
+            autocomplete="off"
             placeholder="6037-xxxx-xxxx-xxxx"
         >
 
@@ -290,10 +273,6 @@
 
     </section>
 
-
-    <!-- =====================================================
-         CARDS LIST
-         ===================================================== -->
 
     <section class="card">
 
@@ -316,25 +295,12 @@
 
 <script>
 
-// =========================================================
-// API
-// =========================================================
-
 const API_URL =
     "https://kifyar-api.onrender.com";
-
-
-// =========================================================
-// TOKEN
-// =========================================================
 
 const TOKEN_KEY =
     "kifyar_token";
 
-
-// =========================================================
-// GET TOKEN
-// =========================================================
 
 function getToken() {
 
@@ -347,33 +313,6 @@ function getToken() {
 }
 
 
-// =========================================================
-// AUTH HEADERS
-// =========================================================
-
-function authHeaders() {
-
-    return {
-
-        "Content-Type":
-            "application/json",
-
-        "Accept":
-            "application/json",
-
-        "Authorization":
-            "Bearer " +
-            getToken()
-
-    };
-
-}
-
-
-// =========================================================
-// AUTH CHECK
-// =========================================================
-
 function ensureLoggedIn() {
 
     const token =
@@ -385,15 +324,34 @@ function ensureLoggedIn() {
             "login.html";
 
         return false;
+
     }
 
     return true;
+
 }
 
 
-// =========================================================
-// API REQUEST
-// =========================================================
+function authHeaders() {
+
+    const token =
+        getToken();
+
+    return {
+
+        "Accept":
+            "application/json",
+
+        "Content-Type":
+            "application/json",
+
+        "Authorization":
+            "Bearer " + token
+
+    };
+
+}
+
 
 async function apiRequest(
     endpoint,
@@ -402,8 +360,7 @@ async function apiRequest(
 
     const response =
         await fetch(
-            API_URL +
-            endpoint,
+            API_URL + endpoint,
             {
                 ...options,
 
@@ -416,8 +373,7 @@ async function apiRequest(
 
 
     if (
-        response.status ===
-        401
+        response.status === 401
     ) {
 
         localStorage.removeItem(
@@ -443,9 +399,33 @@ async function apiRequest(
 }
 
 
-// =========================================================
-// MESSAGE
-// =========================================================
+async function readResponse(
+    response
+) {
+
+    const text =
+        await response.text();
+
+    if (!text) {
+        return {};
+    }
+
+    try {
+
+        return JSON.parse(
+            text
+        );
+
+    } catch {
+
+        return {
+            detail: text
+        };
+
+    }
+
+}
+
 
 function showMessage(
     element,
@@ -463,10 +443,6 @@ function showMessage(
 
 }
 
-
-// =========================================================
-// ESCAPE HTML
-// =========================================================
 
 function escapeHtml(
     value
@@ -499,10 +475,6 @@ function escapeHtml(
 }
 
 
-// =========================================================
-// FORMAT CARD NUMBER
-// =========================================================
-
 function formatCardNumber(
     value
 ) {
@@ -511,30 +483,27 @@ function formatCardNumber(
         String(
             value || ""
         )
-            .replace(
-                /\D/g,
-                ""
-            )
-            .slice(
-                0,
-                16
-            );
+        .replace(
+            /\D/g,
+            ""
+        )
+        .slice(
+            0,
+            16
+        );
 
-
-    return digits.replace(
-        /(.{4})/g,
-        "$1-"
-    ).replace(
-        /-$/,
-        ""
-    );
+    return digits
+        .replace(
+            /(.{4})/g,
+            "$1-"
+        )
+        .replace(
+            /-$/,
+            ""
+        );
 
 }
 
-
-// =========================================================
-// CARD NUMBER INPUT
-// =========================================================
 
 document
     .getElementById(
@@ -542,7 +511,7 @@ document
     )
     .addEventListener(
         "input",
-        function() {
+        function () {
 
             this.value =
                 formatCardNumber(
@@ -552,10 +521,6 @@ document
         }
     );
 
-
-// =========================================================
-// LOAD CARDS
-// =========================================================
 
 async function loadCards() {
 
@@ -576,12 +541,17 @@ async function loadCards() {
 
         const response =
             await apiRequest(
-                "/api/cards"
+                "/api/cards",
+                {
+                    method: "GET"
+                }
             );
 
 
         const data =
-            await response.json();
+            await readResponse(
+                response
+            );
 
 
         if (!response.ok) {
@@ -594,12 +564,46 @@ async function loadCards() {
         }
 
 
-        const cards =
+        /*
+         * Backend ممکن است مستقیماً
+         * آرایه برگرداند:
+         *
+         * [
+         *   {...},
+         *   {...}
+         * ]
+         *
+         * یا:
+         *
+         * {
+         *   "cards": [...]
+         * }
+         *
+         * هر دو حالت را پشتیبانی می‌کنیم.
+         */
+
+        let cards = [];
+
+
+        if (
+            Array.isArray(
+                data
+            )
+        ) {
+
+            cards =
+                data;
+
+        } else if (
             Array.isArray(
                 data.cards
             )
-                ? data.cards
-                : [];
+        ) {
+
+            cards =
+                data.cards;
+
+        }
 
 
         if (
@@ -617,8 +621,7 @@ async function loadCards() {
         }
 
 
-        list.innerHTML =
-            "";
+        list.innerHTML = "";
 
 
         cards.forEach(
@@ -640,65 +643,75 @@ async function loadCards() {
                     ) === 1;
 
 
+                const bankName =
+                    card.bank_name ||
+                    card.bank ||
+                    "بانک";
+
+
+                const holderName =
+                    card.holder_name ||
+                    card.name ||
+                    "-";
+
+
+                const cardNumber =
+                    card.masked_card_number ||
+                    card.card_number_masked ||
+                    card.masked_number ||
+                    "****";
+
+
                 item.innerHTML = `
 
-                    <div
-                        class="bank-card-title"
-                    >
-                        💳 ${
-                            escapeHtml(
-                                card.bank_name ||
-                                "بانک"
-                            )
-                        }
+                    <div class="bank-card-title">
+                        💳
+                        ${escapeHtml(
+                            bankName
+                        )}
                     </div>
 
 
-                    <div
-                        class="bank-card-row"
-                    >
+                    <div class="bank-card-row">
+
                         صاحب کارت:
+
                         <strong>
-                            ${
-                                escapeHtml(
-                                    card.holder_name ||
-                                    "-"
-                                )
-                            }
+                            ${escapeHtml(
+                                holderName
+                            )}
                         </strong>
+
                     </div>
 
 
-                    <div
-                        class="bank-card-row"
-                    >
+                    <div class="bank-card-row">
+
                         شماره کارت:
+
                         <strong>
-                            ${
-                                escapeHtml(
-                                    card.masked_card_number ||
-                                    "****"
-                                )
-                            }
+                            ${escapeHtml(
+                                cardNumber
+                            )}
                         </strong>
+
                     </div>
 
 
-                    <div
-                        class="bank-card-row"
-                    >
+                    <div class="bank-card-row">
+
                         وضعیت:
+
                         ${
                             isDefault
                                 ? "⭐ کارت پیش‌فرض"
                                 : "کارت عادی"
                         }
+
                     </div>
 
 
-                    <div
-                        class="bank-card-actions"
-                    >
+                    <div class="bank-card-actions">
 
                         ${
                             !isDefault
@@ -706,7 +719,7 @@ async function loadCards() {
                                     <button
                                         type="button"
                                         class="small-button primary"
-                                        data-default="${card.id}"
+                                        data-default="${Number(card.id)}"
                                     >
                                         ⭐ انتخاب به‌عنوان پیش‌فرض
                                     </button>
@@ -718,7 +731,7 @@ async function loadCards() {
                         <button
                             type="button"
                             class="small-button danger"
-                            data-delete="${card.id}"
+                            data-delete="${Number(card.id)}"
                         >
                             🗑 حذف کارت
                         </button>
@@ -745,15 +758,12 @@ async function loadCards() {
 
                     button.addEventListener(
                         "click",
-                        function() {
-
-                            const cardId =
-                                Number(
-                                    this.dataset.default
-                                );
+                        () => {
 
                             setDefaultCard(
-                                cardId
+                                Number(
+                                    button.dataset.default
+                                )
                             );
 
                         }
@@ -772,15 +782,12 @@ async function loadCards() {
 
                     button.addEventListener(
                         "click",
-                        function() {
-
-                            const cardId =
-                                Number(
-                                    this.dataset.delete
-                                );
+                        () => {
 
                             deleteCard(
-                                cardId
+                                Number(
+                                    button.dataset.delete
+                                )
                             );
 
                         }
@@ -802,12 +809,10 @@ async function loadCards() {
 
         list.innerHTML = `
             <div class="message error">
-                ${
-                    escapeHtml(
-                        error.message ||
-                        "خطا در دریافت کارت‌ها."
-                    )
-                }
+                ${escapeHtml(
+                    error.message ||
+                    "خطا در دریافت کارت‌ها."
+                )}
             </div>
         `;
 
@@ -815,10 +820,6 @@ async function loadCards() {
 
 }
 
-
-// =========================================================
-// ADD CARD
-// =========================================================
 
 async function addCard() {
 
@@ -938,7 +939,9 @@ async function addCard() {
 
 
         const data =
-            await response.json();
+            await readResponse(
+                response
+            );
 
 
         if (!response.ok) {
@@ -953,6 +956,7 @@ async function addCard() {
 
         showMessage(
             message,
+            data.message ||
             "کارت با موفقیت اضافه شد.",
             true
         );
@@ -1006,10 +1010,6 @@ async function addCard() {
 }
 
 
-// =========================================================
-// DEFAULT CARD
-// =========================================================
-
 async function setDefaultCard(
     cardId
 ) {
@@ -1029,7 +1029,9 @@ async function setDefaultCard(
 
 
         const data =
-            await response.json();
+            await readResponse(
+                response
+            );
 
 
         if (!response.ok) {
@@ -1065,10 +1067,6 @@ async function setDefaultCard(
 }
 
 
-// =========================================================
-// DELETE CARD
-// =========================================================
-
 async function deleteCard(
     cardId
 ) {
@@ -1080,9 +1078,7 @@ async function deleteCard(
 
 
     if (!confirmed) {
-
         return;
-
     }
 
 
@@ -1100,7 +1096,9 @@ async function deleteCard(
 
 
         const data =
-            await response.json();
+            await readResponse(
+                response
+            );
 
 
         if (!response.ok) {
@@ -1136,10 +1134,6 @@ async function deleteCard(
 }
 
 
-// =========================================================
-// EVENT
-// =========================================================
-
 document
     .getElementById(
         "addCardButton"
@@ -1150,20 +1144,13 @@ document
     );
 
 
-// =========================================================
-// INIT
-// =========================================================
-
 async function init() {
 
     if (
         !ensureLoggedIn()
     ) {
-
         return;
-
     }
-
 
     await loadCards();
 
