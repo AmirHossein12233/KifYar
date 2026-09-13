@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>تراکنش‌ها | کیف‌یار</title>
+    <title>تراکنش‌ها | KifYar</title>
 
     <style>
         * {
@@ -13,138 +13,158 @@
 
         body {
             margin: 0;
+            padding: 20px;
             font-family: Tahoma, Arial, sans-serif;
             background: #f4f6f8;
-            color: #1f2937;
+            color: #111827;
         }
 
         .container {
-            width: min(1100px, 94%);
+            width: 100%;
+            max-width: 750px;
             margin: 0 auto;
-            padding: 24px 0 50px;
         }
 
         .header {
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            background: #111827;
+            color: white;
+            padding: 22px;
+            border-radius: 20px;
+            margin-bottom: 18px;
         }
 
-        .header-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        h1 {
-            margin: 0;
+        .header h1 {
+            margin: 0 0 8px;
             font-size: 25px;
         }
 
-        .subtitle {
-            margin-top: 8px;
-            color: #6b7280;
-            font-size: 14px;
+        .header p {
+            margin: 0;
+            color: #cbd5e1;
         }
 
-        .back-button {
-            border: none;
-            background: #111827;
-            color: white;
-            padding: 11px 17px;
-            border-radius: 12px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .back-button:hover {
-            opacity: 0.9;
-        }
-
-        .filters {
+        .card {
             background: white;
             border-radius: 18px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
         }
 
-        .filters-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .filter-grid {
+        .summary {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-        }
-
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-
-        label {
-            font-size: 13px;
-            color: #4b5563;
-        }
-
-        input,
-        select {
-            width: 100%;
-            border: 1px solid #d1d5db;
-            border-radius: 11px;
-            padding: 11px 12px;
-            background: white;
-            color: #111827;
-            outline: none;
-            font-family: inherit;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: #2563eb;
-        }
-
-        .filter-actions {
-            display: flex;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
         }
 
-        .button {
-            border: none;
-            border-radius: 11px;
-            padding: 11px 18px;
-            cursor: pointer;
-            font-family: inherit;
+        .summary-item {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 15px;
+            text-align: center;
         }
 
-        .primary {
-            background: #2563eb;
-            color: white;
+        .summary-item span {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 8px;
         }
 
-        .secondary {
+        .summary-item strong {
+            font-size: 17px;
+        }
+
+        .transaction {
+            border: 1px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #fff;
+        }
+
+        .transaction:last-child {
+            margin-bottom: 0;
+        }
+
+        .transaction-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .transaction-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .amount {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .amount.plus {
+            color: #15803d;
+        }
+
+        .amount.minus {
+            color: #dc2626;
+        }
+
+        .transaction-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 5px 0;
+            font-size: 13px;
+        }
+
+        .transaction-row span:first-child {
+            color: #64748b;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
             background: #e5e7eb;
-            color: #111827;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.completed,
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.pending,
+        .status.processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.failed,
+        .status.rejected,
+        .status.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 30px 10px;
         }
 
         .message {
             display: none;
-            padding: 12px;
-            border-radius: 11px;
-            margin-top: 15px;
-            font-size: 14px;
+            padding: 13px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            line-height: 1.8;
         }
 
         .message.success {
@@ -159,178 +179,48 @@
             color: #991b1b;
         }
 
-        .summary {
+        .buttons {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .summary-card {
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
-        }
-
-        .summary-label {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .summary-value {
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        .income {
-            color: #15803d;
-        }
-
-        .expense {
-            color: #dc2626;
-        }
-
-        .count {
-            color: #2563eb;
-        }
-
-        .transactions-box {
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
-        }
-
-        .transactions-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .transactions-title {
-            font-size: 19px;
-            font-weight: bold;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 35px 10px;
-            color: #6b7280;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 45px 10px;
-            color: #6b7280;
-        }
-
-        .transaction-list {
-            display: flex;
-            flex-direction: column;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
 
-        .transaction {
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .transaction-right {
-            min-width: 0;
-            flex: 1;
-        }
-
-        .transaction-title {
+        button {
+            border: 0;
+            border-radius: 13px;
+            padding: 14px;
+            font-family: inherit;
+            font-size: 15px;
             font-weight: bold;
-            margin-bottom: 7px;
-            word-break: break-word;
+            cursor: pointer;
         }
 
-        .transaction-meta {
-            color: #6b7280;
-            font-size: 12px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+        .primary {
+            background: #2563eb;
+            color: white;
         }
 
-        .transaction-left {
-            text-align: left;
-            white-space: nowrap;
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
         }
 
-        .transaction-amount {
-            font-size: 16px;
-            font-weight: bold;
-        }
+        @media (max-width: 600px) {
 
-        .transaction-type {
-            margin-top: 5px;
-            font-size: 12px;
-        }
-
-        .amount-income {
-            color: #15803d;
-        }
-
-        .amount-expense {
-            color: #dc2626;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 11px;
-            background: #f3f4f6;
-            color: #4b5563;
-        }
-
-        .wallet-badge {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        @media (max-width: 800px) {
-            .filter-grid {
-                grid-template-columns: repeat(2, 1fr);
+            body {
+                padding: 12px;
             }
 
             .summary {
                 grid-template-columns: 1fr;
             }
-        }
 
-        @media (max-width: 560px) {
-            .container {
-                width: 92%;
-                padding-top: 15px;
-            }
-
-            .filter-grid {
+            .buttons {
                 grid-template-columns: 1fr;
             }
 
-            .transaction {
+            .transaction-top {
                 align-items: flex-start;
-            }
-
-            .transaction-left {
-                text-align: right;
-            }
-
-            .transaction-amount {
-                font-size: 15px;
             }
         }
     </style>
@@ -341,166 +231,78 @@
 <div class="container">
 
     <div class="header">
-        <div class="header-top">
-            <div>
-                <h1>💳 تراکنش‌ها</h1>
-                <div class="subtitle">
-                    تمام درآمدها، هزینه‌ها و برداشت‌های کیف پول شما
-                </div>
-            </div>
-
-            <a class="back-button" href="index.html">
-                ← بازگشت به داشبورد
-            </a>
-        </div>
+        <h1>📋 تراکنش‌های من</h1>
+        <p>تاریخچه فعالیت‌های مالی کیف‌یار</p>
     </div>
 
-    <div class="filters">
+    <div id="message" class="message"></div>
 
-        <div class="filters-title">
-            🔎 جستجو و فیلتر
-        </div>
+    <!-- SUMMARY -->
 
-        <div class="filter-grid">
+    <div class="card">
 
-            <div class="field">
-                <label for="searchInput">جستجو</label>
-                <input
-                    id="searchInput"
-                    type="text"
-                    placeholder="عنوان تراکنش..."
-                >
+        <h2>💰 خلاصه حساب</h2>
+
+        <div class="summary">
+
+            <div class="summary-item">
+                <span>موجودی</span>
+                <strong id="balance">۰ تومان</strong>
             </div>
 
-            <div class="field">
-                <label for="typeFilter">نوع تراکنش</label>
-                <select id="typeFilter">
-                    <option value="">همه</option>
-                    <option value="income">درآمد</option>
-                    <option value="expense">هزینه</option>
-                </select>
+            <div class="summary-item">
+                <span>دریافتی‌ها</span>
+                <strong id="income">۰ تومان</strong>
             </div>
 
-            <div class="field">
-                <label for="categoryFilter">دسته‌بندی</label>
-                <select id="categoryFilter">
-                    <option value="">همه دسته‌ها</option>
-                    <option value="other">سایر</option>
-                    <option value="shopping">خرید</option>
-                    <option value="food">غذا</option>
-                    <option value="transport">حمل‌ونقل</option>
-                    <option value="bill">قبض</option>
-                    <option value="entertainment">سرگرمی</option>
-                    <option value="education">آموزش</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label for="dateFilter">تاریخ</label>
-                <input
-                    id="dateFilter"
-                    type="date"
-                >
+            <div class="summary-item">
+                <span>پرداختی‌ها</span>
+                <strong id="expense">۰ تومان</strong>
             </div>
 
         </div>
 
-        <div class="filter-actions">
+    </div>
+
+    <!-- BUTTONS -->
+
+    <div class="card">
+
+        <div class="buttons">
 
             <button
-                class="button primary"
-                onclick="applyFilters()"
+                class="primary"
+                type="button"
+                onclick="window.location.href='withdraw.html'"
             >
-                اعمال فیلتر
+                💳 برداشت وجه
             </button>
 
             <button
-                class="button secondary"
-                onclick="clearFilters()"
-            >
-                پاک کردن فیلتر
-            </button>
-
-            <button
-                class="button secondary"
-                onclick="loadTransactions()"
+                class="secondary"
+                type="button"
+                onclick="loadAll()"
             >
                 🔄 بروزرسانی
             </button>
 
         </div>
 
-        <div id="message" class="message"></div>
-
     </div>
 
-    <div class="summary">
+    <!-- TRANSACTIONS -->
 
-        <div class="summary-card">
-            <div class="summary-label">
-                مجموع درآمد
+    <div class="card">
+
+        <h2>تاریخچه تراکنش‌ها</h2>
+
+        <div id="transactions">
+
+            <div class="empty">
+                در حال دریافت تراکنش‌ها...
             </div>
 
-            <div
-                id="totalIncome"
-                class="summary-value income"
-            >
-                ۰ تومان
-            </div>
         </div>
-
-        <div class="summary-card">
-            <div class="summary-label">
-                مجموع هزینه
-            </div>
-
-            <div
-                id="totalExpense"
-                class="summary-value expense"
-            >
-                ۰ تومان
-            </div>
-        </div>
-
-        <div class="summary-card">
-            <div class="summary-label">
-                تعداد تراکنش
-            </div>
-
-            <div
-                id="transactionCount"
-                class="summary-value count"
-            >
-                ۰
-            </div>
-        </div>
-
-    </div>
-
-    <div class="transactions-box">
-
-        <div class="transactions-header">
-            <div class="transactions-title">
-                📋 فهرست تراکنش‌ها
-            </div>
-        </div>
-
-        <div id="loading" class="loading">
-            در حال دریافت تراکنش‌ها...
-        </div>
-
-        <div
-            id="empty"
-            class="empty"
-            style="display:none;"
-        >
-            هنوز تراکنشی ثبت نشده است.
-        </div>
-
-        <div
-            id="transactionList"
-            class="transaction-list"
-        ></div>
 
     </div>
 
@@ -508,433 +310,113 @@
 
 <script>
 
-const API_URL = "https://kifyar-api.onrender.com";
+const API_URL =
+    "https://kifyar-api.onrender.com";
 
-const token = localStorage.getItem("kifyar_token");
 
-let allTransactions = [];
+/* =========================================================
+   TOKEN
+========================================================= */
 
-if (!token) {
-    window.location.href = "login.html";
+function getToken() {
+
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("kifyar_token") ||
+        ""
+    );
 }
 
-function formatNumber(value) {
-    const number = Number(value || 0);
 
-    return number.toLocaleString("fa-IR");
-}
+/* =========================================================
+   HEADERS
+========================================================= */
 
-function formatMoney(value) {
-    return formatNumber(value) + " تومان";
-}
+function getHeaders() {
 
-function normalizeType(type) {
-    if (!type) {
-        return "";
-    }
+    const token =
+        getToken();
 
-    const value = String(type).toLowerCase().trim();
-
-    if (
-        value === "income" ||
-        value === "deposit" ||
-        value === "credit"
-    ) {
-        return "income";
-    }
-
-    if (
-        value === "expense" ||
-        value === "withdraw" ||
-        value === "debit"
-    ) {
-        return "expense";
-    }
-
-    return value;
-}
-
-function categoryName(category) {
-
-    const categories = {
-        other: "سایر",
-        shopping: "خرید",
-        food: "غذا",
-        transport: "حمل‌ونقل",
-        bill: "قبض",
-        entertainment: "سرگرمی",
-        education: "آموزش"
+    const headers = {
+        "Content-Type": "application/json"
     };
 
-    return categories[category] || category || "سایر";
-}
+    if (token) {
 
-function showMessage(text, type = "success") {
-
-    const message = document.getElementById("message");
-
-    message.textContent = text;
-    message.className = "message " + type;
-
-    setTimeout(() => {
-        message.className = "message";
-    }, 3500);
-}
-
-function formatDate(value) {
-
-    if (!value) {
-        return "بدون تاریخ";
+        headers["Authorization"] =
+            "Bearer " + token;
     }
 
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return String(value);
-    }
-
-    return date.toLocaleString("fa-IR");
+    return headers;
 }
 
-async function loadTransactions() {
 
-    const loading = document.getElementById("loading");
-    const empty = document.getElementById("empty");
-    const list = document.getElementById("transactionList");
+/* =========================================================
+   API
+========================================================= */
 
-    loading.style.display = "block";
-    empty.style.display = "none";
-    list.innerHTML = "";
+async function apiFetch(url, options = {}) {
+
+    const response =
+        await fetch(
+            API_URL + url,
+            {
+                ...options,
+
+                headers: {
+                    ...getHeaders(),
+                    ...(options.headers || {})
+                }
+            }
+        );
+
+    let data = {};
 
     try {
 
-        const response = await fetch(
-            API_URL + "/api/transactions",
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-            }
-        );
+        data =
+            await response.json();
 
-        if (response.status === 401) {
-            localStorage.removeItem("kifyar_token");
-            window.location.href = "login.html";
-            return;
-        }
+    } catch {
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(
-                data.detail || "دریافت تراکنش‌ها ناموفق بود."
-            );
-        }
-
-        if (Array.isArray(data)) {
-            allTransactions = data;
-        } else if (Array.isArray(data.transactions)) {
-            allTransactions = data.transactions;
-        } else {
-            allTransactions = [];
-        }
-
-        renderTransactions(allTransactions);
-
-    } catch (error) {
-
-        loading.style.display = "none";
-
-        list.innerHTML = "";
-
-        showMessage(
-            error.message || "خطا در دریافت تراکنش‌ها.",
-            "error"
-        );
-    }
-}
-
-function renderTransactions(transactions) {
-
-    const loading = document.getElementById("loading");
-    const empty = document.getElementById("empty");
-    const list = document.getElementById("transactionList");
-
-    loading.style.display = "none";
-    list.innerHTML = "";
-
-    updateSummary(transactions);
-
-    if (!transactions.length) {
-
-        empty.style.display = "block";
-
-        return;
+        data = {};
     }
 
-    empty.style.display = "none";
+    if (!response.ok) {
 
-    transactions.forEach(transaction => {
-
-        const item = document.createElement("div");
-
-        item.className = "transaction";
-
-        const rawType =
-            transaction.transaction_type ??
-            transaction.type ??
-            "";
-
-        const type = normalizeType(rawType);
-
-        const amount = Number(
-            transaction.amount || 0
+        throw new Error(
+            data.detail ||
+            data.message ||
+            data.error ||
+            "خطا در ارتباط با سرور"
         );
+    }
 
-        const title =
-            transaction.title ||
-            "تراکنش بدون عنوان";
-
-        const category =
-            transaction.category ||
-            "other";
-
-        const createdAt =
-            transaction.created_at ||
-            transaction.date ||
-            transaction.createdAt ||
-            "";
-
-        const isWalletWithdrawal =
-            type === "expense" &&
-            (
-                title.includes("برداشت") ||
-                title.includes("کیف پول")
-            );
-
-        const amountClass =
-            type === "income"
-                ? "amount-income"
-                : "amount-expense";
-
-        const sign =
-            type === "income"
-                ? "+"
-                : "-";
-
-        const typeText =
-            type === "income"
-                ? "درآمد"
-                : type === "expense"
-                    ? "هزینه"
-                    : "تراکنش";
-
-        const walletBadge =
-            isWalletWithdrawal
-                ? `
-                    <span class="badge wallet-badge">
-                        برداشت کیف پول
-                    </span>
-                  `
-                : "";
-
-        item.innerHTML = `
-            <div class="transaction-right">
-
-                <div class="transaction-title">
-                    ${escapeHtml(title)}
-                </div>
-
-                <div class="transaction-meta">
-
-                    <span class="badge">
-                        ${escapeHtml(categoryName(category))}
-                    </span>
-
-                    ${walletBadge}
-
-                    <span>
-                        ${escapeHtml(formatDate(createdAt))}
-                    </span>
-
-                </div>
-
-            </div>
-
-            <div class="transaction-left">
-
-                <div class="transaction-amount ${amountClass}">
-                    ${sign}${formatMoney(amount)}
-                </div>
-
-                <div class="transaction-type ${amountClass}">
-                    ${typeText}
-                </div>
-
-            </div>
-        `;
-
-        list.appendChild(item);
-    });
+    return data;
 }
 
-function updateSummary(transactions) {
 
-    let income = 0;
-    let expense = 0;
+/* =========================================================
+   MONEY
+========================================================= */
 
-    transactions.forEach(transaction => {
+function formatMoney(value) {
 
-        const amount = Number(
-            transaction.amount || 0
-        );
+    const number =
+        Number(value || 0);
 
-        const type = normalizeType(
-            transaction.transaction_type ??
-            transaction.type ??
-            ""
-        );
-
-        if (type === "income") {
-            income += amount;
-        }
-
-        if (type === "expense") {
-            expense += amount;
-        }
-    });
-
-    document.getElementById("totalIncome").textContent =
-        formatMoney(income);
-
-    document.getElementById("totalExpense").textContent =
-        formatMoney(expense);
-
-    document.getElementById("transactionCount").textContent =
-        formatNumber(transactions.length);
+    return (
+        new Intl.NumberFormat("fa-IR")
+            .format(number)
+        + " تومان"
+    );
 }
 
-function applyFilters() {
 
-    const search =
-        document.getElementById("searchInput")
-            .value
-            .trim()
-            .toLowerCase();
-
-    const type =
-        document.getElementById("typeFilter").value;
-
-    const category =
-        document.getElementById("categoryFilter").value;
-
-    const date =
-        document.getElementById("dateFilter").value;
-
-    const filtered = allTransactions.filter(transaction => {
-
-        const title =
-            String(transaction.title || "")
-                .toLowerCase();
-
-        const transactionType =
-            normalizeType(
-                transaction.transaction_type ??
-                transaction.type ??
-                ""
-            );
-
-        const transactionCategory =
-            String(
-                transaction.category || "other"
-            );
-
-        const createdAt =
-            transaction.created_at ||
-            transaction.date ||
-            transaction.createdAt ||
-            "";
-
-        let matchesSearch = true;
-        let matchesType = true;
-        let matchesCategory = true;
-        let matchesDate = true;
-
-        if (search) {
-            matchesSearch =
-                title.includes(search);
-        }
-
-        if (type) {
-            matchesType =
-                transactionType === type;
-        }
-
-        if (category) {
-            matchesCategory =
-                transactionCategory === category;
-        }
-
-        if (date) {
-
-            if (createdAt) {
-
-                const transactionDate =
-                    new Date(createdAt);
-
-                if (!Number.isNaN(transactionDate.getTime())) {
-
-                    const year =
-                        transactionDate.getFullYear();
-
-                    const month =
-                        String(
-                            transactionDate.getMonth() + 1
-                        ).padStart(2, "0");
-
-                    const day =
-                        String(
-                            transactionDate.getDate()
-                        ).padStart(2, "0");
-
-                    const localDate =
-                        `${year}-${month}-${day}`;
-
-                    matchesDate =
-                        localDate === date;
-
-                } else {
-
-                    matchesDate = true;
-                }
-
-            } else {
-
-                matchesDate = false;
-            }
-        }
-
-        return (
-            matchesSearch &&
-            matchesType &&
-            matchesCategory &&
-            matchesDate
-        );
-    });
-
-    renderTransactions(filtered);
-}
-
-function clearFilters() {
-
-    document.getElementById("searchInput").value = "";
-    document.getElementById("typeFilter").value = "";
-    document.getElementById("categoryFilter").value = "";
-    document.getElementById("dateFilter").value = "";
-
-    renderTransactions(allTransactions);
-}
+/* =========================================================
+   HTML SECURITY
+========================================================= */
 
 function escapeHtml(value) {
 
@@ -946,26 +428,605 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-document
-    .getElementById("searchInput")
-    .addEventListener("input", applyFilters);
 
-document
-    .getElementById("typeFilter")
-    .addEventListener("change", applyFilters);
+/* =========================================================
+   STATUS
+========================================================= */
 
-document
-    .getElementById("categoryFilter")
-    .addEventListener("change", applyFilters);
+function statusText(status) {
 
-document
-    .getElementById("dateFilter")
-    .addEventListener("change", applyFilters);
+    const value =
+        String(status || "")
+            .toLowerCase();
 
-loadTransactions();
+    const map = {
+
+        completed:
+            "تکمیل شده",
+
+        success:
+            "موفق",
+
+        pending:
+            "در انتظار",
+
+        processing:
+            "در حال پردازش",
+
+        failed:
+            "ناموفق",
+
+        rejected:
+            "رد شده",
+
+        cancelled:
+            "لغو شده",
+
+        canceled:
+            "لغو شده"
+    };
+
+    return (
+        map[value] ||
+        status ||
+        "نامشخص"
+    );
+}
+
+
+function statusClass(status) {
+
+    const value =
+        String(status || "")
+            .toLowerCase();
+
+    if (
+        value === "completed" ||
+        value === "success"
+    ) {
+        return "completed";
+    }
+
+    if (
+        value === "pending" ||
+        value === "processing"
+    ) {
+        return value;
+    }
+
+    if (
+        value === "failed" ||
+        value === "rejected" ||
+        value === "cancelled" ||
+        value === "canceled"
+    ) {
+        return value;
+    }
+
+    return "";
+}
+
+
+/* =========================================================
+   TRANSACTION TYPE
+========================================================= */
+
+function transactionTitle(item) {
+
+    const type =
+        String(
+            item.type ||
+            item.transaction_type ||
+            item.kind ||
+            item.category ||
+            ""
+        ).toLowerCase();
+
+    if (
+        type.includes("deposit") ||
+        type.includes("charge") ||
+        type.includes("credit") ||
+        type.includes("income")
+    ) {
+        return "💰 افزایش موجودی";
+    }
+
+    if (
+        type.includes("withdraw") ||
+        type.includes("payout")
+    ) {
+        return "💳 برداشت وجه";
+    }
+
+    if (
+        type.includes("transfer")
+    ) {
+        return "💸 انتقال وجه";
+    }
+
+    if (
+        type.includes("purchase") ||
+        type.includes("payment") ||
+        type.includes("debit")
+    ) {
+        return "🛒 پرداخت";
+    }
+
+    return (
+        item.title ||
+        item.description ||
+        "تراکنش کیف پول"
+    );
+}
+
+
+/* =========================================================
+   TRANSACTION AMOUNT
+========================================================= */
+
+function getAmount(item) {
+
+    return Number(
+        item.amount ??
+        item.value ??
+        item.total ??
+        0
+    );
+}
+
+
+function isIncome(item) {
+
+    const amount =
+        getAmount(item);
+
+    if (
+        item.direction === "in" ||
+        item.direction === "credit" ||
+        item.is_credit === true
+    ) {
+        return true;
+    }
+
+    if (
+        item.direction === "out" ||
+        item.direction === "debit" ||
+        item.is_debit === true
+    ) {
+        return false;
+    }
+
+    const type =
+        String(
+            item.type ||
+            item.transaction_type ||
+            item.kind ||
+            ""
+        ).toLowerCase();
+
+    if (
+        type.includes("deposit") ||
+        type.includes("charge") ||
+        type.includes("credit") ||
+        type.includes("income")
+    ) {
+        return true;
+    }
+
+    if (
+        type.includes("withdraw") ||
+        type.includes("payout") ||
+        type.includes("payment") ||
+        type.includes("debit")
+    ) {
+        return false;
+    }
+
+    return amount >= 0;
+}
+
+
+/* =========================================================
+   BALANCE
+========================================================= */
+
+async function loadBalance() {
+
+    try {
+
+        const data =
+            await apiFetch(
+                "/api/balance"
+            );
+
+        const balance =
+            data.balance ??
+            data.current_balance ??
+            0;
+
+        document.getElementById(
+            "balance"
+        ).textContent =
+            formatMoney(balance);
+
+    } catch (error) {
+
+        console.error(
+            "Balance error:",
+            error
+        );
+
+        document.getElementById(
+            "balance"
+        ).textContent =
+            "خطا";
+    }
+}
+
+
+/* =========================================================
+   TRANSACTIONS
+========================================================= */
+
+async function loadTransactions() {
+
+    const container =
+        document.getElementById(
+            "transactions"
+        );
+
+    try {
+
+        const data =
+            await apiFetch(
+                "/api/transactions"
+            );
+
+        let transactions =
+            Array.isArray(data)
+                ? data
+                : (
+                    data.transactions ||
+                    data.items ||
+                    data.data ||
+                    []
+                );
+
+        if (!Array.isArray(transactions)) {
+
+            transactions = [];
+        }
+
+        container.innerHTML = "";
+
+        let income = 0;
+        let expense = 0;
+
+        transactions.forEach(item => {
+
+            const amount =
+                Math.abs(
+                    getAmount(item)
+                );
+
+            if (isIncome(item)) {
+
+                income += amount;
+
+            } else {
+
+                expense += amount;
+            }
+        });
+
+        document.getElementById(
+            "income"
+        ).textContent =
+            formatMoney(income);
+
+        document.getElementById(
+            "expense"
+        ).textContent =
+            formatMoney(expense);
+
+
+        if (!transactions.length) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    هنوز تراکنشی ثبت نشده است.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        transactions.forEach(item => {
+
+            const amount =
+                Math.abs(
+                    getAmount(item)
+                );
+
+            const incomeTransaction =
+                isIncome(item);
+
+            const status =
+                item.status ||
+                item.state ||
+                "completed";
+
+            const transactionId =
+                item.id ??
+                item.transaction_id ??
+                "-";
+
+            const description =
+                item.description ||
+                item.note ||
+                "";
+
+            const createdAt =
+                item.created_at ||
+                item.date ||
+                item.created ||
+                "";
+
+            const balanceAfter =
+                item.balance_after ??
+                item.result_balance ??
+                item.new_balance;
+
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "transaction";
+
+
+            div.innerHTML = `
+
+                <div class="transaction-top">
+
+                    <div class="transaction-title">
+                        ${escapeHtml(
+                            transactionTitle(item)
+                        )}
+                    </div>
+
+                    <div class="amount ${
+                        incomeTransaction
+                            ? "plus"
+                            : "minus"
+                    }">
+
+                        ${
+                            incomeTransaction
+                                ? "+"
+                                : "-"
+                        }
+
+                        ${formatMoney(amount)}
+
+                    </div>
+
+                </div>
+
+
+                <div class="transaction-row">
+
+                    <span>شناسه</span>
+
+                    <strong>
+                        ${escapeHtml(
+                            String(transactionId)
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <div class="transaction-row">
+
+                    <span>وضعیت</span>
+
+                    <span class="status ${
+                        statusClass(status)
+                    }">
+
+                        ${escapeHtml(
+                            statusText(status)
+                        )}
+
+                    </span>
+
+                </div>
+
+
+                ${
+                    description
+                        ? `
+                            <div class="transaction-row">
+
+                                <span>توضیح</span>
+
+                                <strong>
+                                    ${escapeHtml(
+                                        String(
+                                            description
+                                        )
+                                    )}
+                                </strong>
+
+                            </div>
+                        `
+                        : ""
+                }
+
+
+                ${
+                    createdAt
+                        ? `
+                            <div class="transaction-row">
+
+                                <span>تاریخ</span>
+
+                                <strong>
+                                    ${escapeHtml(
+                                        String(
+                                            createdAt
+                                        )
+                                    )}
+                                </strong>
+
+                            </div>
+                        `
+                        : ""
+                }
+
+
+                ${
+                    balanceAfter !== undefined &&
+                    balanceAfter !== null
+                        ? `
+                            <div class="transaction-row">
+
+                                <span>
+                                    موجودی پس از تراکنش
+                                </span>
+
+                                <strong>
+                                    ${formatMoney(
+                                        balanceAfter
+                                    )}
+                                </strong>
+
+                            </div>
+                        `
+                        : ""
+                }
+
+            `;
+
+            container.appendChild(div);
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Transactions error:",
+            error
+        );
+
+        container.innerHTML = `
+            <div class="empty">
+                دریافت تراکنش‌ها ناموفق بود.
+                <br><br>
+                ${escapeHtml(
+                    error.message ||
+                    "خطای نامشخص"
+                )}
+            </div>
+        `;
+
+        showMessage(
+            error.message ||
+            "دریافت تراکنش‌ها ناموفق بود.",
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function showMessage(text, type) {
+
+    const element =
+        document.getElementById(
+            "message"
+        );
+
+    element.textContent =
+        text;
+
+    element.className =
+        "message " + type;
+}
+
+
+/* =========================================================
+   LOAD ALL
+========================================================= */
+
+async function loadAll() {
+
+    await Promise.all([
+        loadBalance(),
+        loadTransactions()
+    ]);
+}
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+async function checkAuth() {
+
+    const token =
+        getToken();
+
+    if (!token) {
+
+        showMessage(
+            "ابتدا وارد حساب خود شوید.",
+            "error"
+        );
+
+        setTimeout(() => {
+
+            window.location.href =
+                "login.html";
+
+        }, 1200);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+async function startPage() {
+
+    const authenticated =
+        await checkAuth();
+
+    if (!authenticated) {
+        return;
+    }
+
+    await loadAll();
+}
+
+
+window.addEventListener(
+    "DOMContentLoaded",
+    startPage
+);
 
 </script>
 
 </body>
 </html>
-

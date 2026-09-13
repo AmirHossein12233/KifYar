@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>درخواست برداشت | KifYar</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 22px;
+            border-radius: 18px;
+            margin-bottom: 18px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 24px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .balance-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .balance-item {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .balance-item span {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .balance-item strong {
+            font-size: 17px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #2563eb;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        button {
+            width: 100%;
+            border: 0;
+            border-radius: 13px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .primary:hover {
+            background: #1d4ed8;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+            margin-top: 10px;
+        }
+
+        .message {
+            display: none;
+            padding: 13px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .withdrawal {
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: #fafafa;
+        }
+
+        .withdrawal-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 5px 0;
+        }
+
+        .withdrawal-row span:first-child {
+            color: #64748b;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #e5e7eb;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 20px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .balance-box {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>💳 درخواست برداشت</h1>
+        <p>درخواست برداشت از موجودی کیف‌یار</p>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div class="card">
+
+        <h2>موجودی حساب</h2>
+
+        <div class="balance-box">
+
+            <div class="balance-item">
+                <span>موجودی کل</span>
+                <strong id="balance">۰ تومان</strong>
+            </div>
+
+            <div class="balance-item">
+                <span>رزرو شده</span>
+                <strong id="reserved">۰ تومان</strong>
+            </div>
+
+            <div class="balance-item">
+                <span>قابل برداشت</span>
+                <strong id="available">۰ تومان</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>ثبت درخواست</h2>
+
+        <div class="field">
+            <label for="card">کارت بانکی</label>
+
+            <select id="card">
+                <option value="">در حال دریافت کارت‌ها...</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="amount">مبلغ برداشت (تومان)</label>
+
+            <input
+                id="amount"
+                type="number"
+                min="1000"
+                step="1000"
+                placeholder="مثلاً 50000"
+            >
+        </div>
+
+        <button
+            id="submitButton"
+            class="primary"
+            onclick="submitWithdrawal()"
+        >
+            ثبت درخواست برداشت
+        </button>
+
+        <button
+            class="secondary"
+            onclick="loadAll()"
+        >
+            🔄 بروزرسانی
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <h2>درخواست‌های قبلی</h2>
+
+        <div id="withdrawals">
+            <div class="empty">در حال دریافت...</div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+const API_URL = "https://kifyar-api.onrender.com";
+
+function getToken() {
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("kifyar_token") ||
+        ""
+    );
+}
+
+function authHeaders() {
+    const token = getToken();
+
+    const headers = {
+        "Content-Type": "application/json"
+    };
+
+    if (token) {
+        headers["Authorization"] = "Bearer " + token;
+    }
+
+    return headers;
+}
+
+function formatMoney(value) {
+    const number = Number(value || 0);
+
+    return new Intl.NumberFormat("fa-IR").format(number) + " تومان";
+}
+
+function showMessage(text, type) {
+    const element = document.getElementById("message");
+
+    element.textContent = text;
+    element.className = "message " + type;
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+async function apiFetch(url, options = {}) {
+
+    const response = await fetch(API_URL + url, {
+        ...options,
+        headers: {
+            ...authHeaders(),
+            ...(options.headers || {})
+        }
+    });
+
+    let data = null;
+
+    try {
+        data = await response.json();
+    } catch {
+        data = {};
+    }
+
+    if (!response.ok) {
+
+        const detail =
+            data.detail ||
+            data.message ||
+            data.error ||
+            "خطا در ارتباط با سرور";
+
+        throw new Error(detail);
+    }
+
+    return data;
+}
+
+async function loadBalance() {
+
+    try {
+
+        const data = await apiFetch("/api/balance");
+
+        const balance =
+            data.balance ??
+            data.current_balance ??
+            0;
+
+        const reserved =
+            data.reserved ??
+            data.reserved_balance ??
+            0;
+
+        const available =
+            data.available ??
+            data.available_balance ??
+            Math.max(Number(balance) - Number(reserved), 0);
+
+        document.getElementById("balance").textContent =
+            formatMoney(balance);
+
+        document.getElementById("reserved").textContent =
+            formatMoney(reserved);
+
+        document.getElementById("available").textContent =
+            formatMoney(available);
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("balance").textContent = "خطا";
+        document.getElementById("reserved").textContent = "خطا";
+        document.getElementById("available").textContent = "خطا";
+    }
+}
+
+async function loadCards() {
+
+    const select = document.getElementById("card");
+
+    try {
+
+        const data = await apiFetch("/api/cards");
+
+        const cards =
+            Array.isArray(data)
+                ? data
+                : (
+                    data.cards ||
+                    data.items ||
+                    []
+                );
+
+        select.innerHTML = "";
+
+        if (!cards.length) {
+
+            select.innerHTML =
+                '<option value="">کارت بانکی ندارید</option>';
+
+            return;
+        }
+
+        const firstOption = document.createElement("option");
+
+        firstOption.value = "";
+        firstOption.textContent = "انتخاب کارت بانکی";
+
+        select.appendChild(firstOption);
+
+        cards.forEach(card => {
+
+            const option = document.createElement("option");
+
+            option.value =
+                card.id ??
+                card.card_id ??
+                "";
+
+            const masked =
+                card.masked_card_number ||
+                card.card_number ||
+                card.masked ||
+                "کارت بانکی";
+
+            const bank =
+                card.bank_name ||
+                card.bank ||
+                "";
+
+            const isDefault =
+                card.is_default ||
+                card.default ||
+                false;
+
+            option.textContent =
+                masked +
+                (bank ? " - " + bank : "") +
+                (isDefault ? " ⭐" : "");
+
+            select.appendChild(option);
+        });
+
+        const defaultCard = cards.find(card =>
+            card.is_default ||
+            card.default
+        );
+
+        if (defaultCard) {
+
+            select.value =
+                defaultCard.id ??
+                defaultCard.card_id ??
+                "";
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        select.innerHTML =
+            '<option value="">خطا در دریافت کارت‌ها</option>';
+    }
+}
+
+function getStatusText(status) {
+
+    const map = {
+        pending: "در انتظار بررسی",
+        approved: "تأیید شده",
+        processing: "در حال پردازش",
+        completed: "تکمیل شده",
+        rejected: "رد شده",
+        failed: "ناموفق",
+        cancelled: "لغو شده"
+    };
+
+    return map[String(status || "").toLowerCase()]
+        || status
+        || "نامشخص";
+}
+
+async function loadWithdrawals() {
+
+    const container =
+        document.getElementById("withdrawals");
+
+    try {
+
+        const data =
+            await apiFetch("/api/withdrawals");
+
+        const withdrawals =
+            Array.isArray(data)
+                ? data
+                : (
+                    data.withdrawals ||
+                    data.items ||
+                    []
+                );
+
+        container.innerHTML = "";
+
+        if (!withdrawals.length) {
+
+            container.innerHTML =
+                '<div class="empty">هنوز درخواست برداشتی ثبت نشده است.</div>';
+
+            return;
+        }
+
+        withdrawals.forEach(item => {
+
+            const div =
+                document.createElement("div");
+
+            div.className = "withdrawal";
+
+            const id =
+                item.id ??
+                item.withdrawal_id ??
+                "-";
+
+            const amount =
+                item.amount ??
+                0;
+
+            const status =
+                item.status ||
+                "pending";
+
+            const card =
+                item.masked_card_number ||
+                item.card_number ||
+                item.card ||
+                "-";
+
+            const created =
+                item.created_at ||
+                item.requested_at ||
+                "";
+
+            div.innerHTML = `
+                <div class="withdrawal-row">
+                    <span>شناسه</span>
+                    <strong>${escapeHtml(String(id))}</strong>
+                </div>
+
+                <div class="withdrawal-row">
+                    <span>مبلغ</span>
+                    <strong>${formatMoney(amount)}</strong>
+                </div>
+
+                <div class="withdrawal-row">
+                    <span>کارت</span>
+                    <strong>${escapeHtml(String(card))}</strong>
+                </div>
+
+                <div class="withdrawal-row">
+                    <span>وضعیت</span>
+                    <span class="status">
+                        ${escapeHtml(getStatusText(status))}
+                    </span>
+                </div>
+
+                ${
+                    created
+                    ? `
+                    <div class="withdrawal-row">
+                        <span>تاریخ</span>
+                        <strong>
+                            ${escapeHtml(String(created))}
+                        </strong>
+                    </div>
+                    `
+                    : ""
+                }
+            `;
+
+            container.appendChild(div);
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        container.innerHTML =
+            '<div class="empty">خطا در دریافت درخواست‌ها</div>';
+    }
+}
+
+async function submitWithdrawal() {
+
+    const button =
+        document.getElementById("submitButton");
+
+    const cardId =
+        document.getElementById("card").value;
+
+    const amount =
+        Number(document.getElementById("amount").value);
+
+    if (!cardId) {
+
+        showMessage(
+            "لطفاً یک کارت بانکی انتخاب کنید.",
+            "error"
+        );
+
+        return;
+    }
+
+    if (!amount || amount <= 0) {
+
+        showMessage(
+            "مبلغ برداشت را وارد کنید.",
+            "error"
+        );
+
+        return;
+    }
+
+    if (amount < 1000) {
+
+        showMessage(
+            "حداقل مبلغ درخواست برداشت ۱٬۰۰۰ تومان است.",
+            "error"
+        );
+
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "در حال ثبت درخواست...";
+
+    try {
+
+        const data = await apiFetch("/api/withdraw", {
+
+            method: "POST",
+
+            body: JSON.stringify({
+                card_id: Number(cardId),
+                amount: amount
+            })
+        });
+
+        showMessage(
+            data.message ||
+            "درخواست برداشت با موفقیت ثبت شد.",
+            "success"
+        );
+
+        document.getElementById("amount").value = "";
+
+        await loadAll();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            error.message ||
+            "ثبت درخواست برداشت ناموفق بود.",
+            "error"
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "ثبت درخواست برداشت";
+    }
+}
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+async function loadAll() {
+
+    await Promise.all([
+        loadBalance(),
+        loadCards(),
+        loadWithdrawals()
+    ]);
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+
+    const token = getToken();
+
+    if (!token) {
+
+        showMessage(
+            "ابتدا وارد حساب KifYar شوید.",
+            "error"
+        );
+    }
+
+    await loadAll();
+});
+</script>
+
+</body>
+</html>

@@ -1,259 +1,341 @@
 from __future__ import annotations
 
 import os
-import uuid
-from typing import Optional
+import secrets
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from typing import Any
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend.database import (
-    add_bank_card,
-    add_transaction,
-    add_wallet_balance_with_transaction,
-    approve_card_transfer,
-    complete_card_transfer,
-    delete_bank_card,
-    delete_notification,
-    delete_user,
-    deposit_by_card_once,
-    fail_card_transfer,
-    find_user_by_email,
-    find_user_by_id,
-    find_user_by_username,
-    get_all_card_transfer_requests,
-    get_balance,
-    get_bank_cards,
-    get_card_transfer_request,
-    get_card_transfer_requests,
-    get_notifications,
-    get_transactions,
-    get_unread_notification_count,
     initialize_database,
-    mark_all_notifications_as_read,
-    mark_notification_as_read,
-    mark_transfer_processing,
-    reject_card_transfer,
-    set_default_bank_card,
-    subtract_wallet_balance_with_transaction,
-    transfer_wallet_to_card_once,
+    get_connection,
+    find_user_by_id,
     update_user_name,
     update_user_password,
+    delete_user,
     verify_user_password,
-    create_user,
+    get_balance,
+    get_available_balance,
+    get_reserved_amount,
+    get_transactions,
+    add_wallet_balance_with_transaction,
+    get_bank_cards,
+    add_bank_card,
+    set_default_bank_card,
+    delete_bank_card,
+    transfer_wallet_to_card_once,
+    get_card_transfer_request,
+    get_card_transfer_requests,
+    approve_card_transfer,
+    reject_card_transfer,
+    mark_transfer_processing,
+    complete_card_transfer,
+    fail_card_transfer,
+    get_notifications,
+    get_unread_notification_count,
+    mark_notification_as_read,
+    mark_all_notifications_as_read,
+    delete_notification,
 )
 
-from backend.session import require_session_user_id
+from backend.auth import router as auth_router
 
-from backend.auth import (
-    create_token,
-    remove_token,
+
+# ============================================================
+# SETTINGS
+# ============================================================
+
+APP_NAME = "KifYar"
+APP_VERSION = "1.0.0"
+
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "https://kifyar-web.onrender.com",
+).strip()
+
+ADMIN_KEY = os.getenv("ADMIN_KEY", "").strip()
+
+ZARINPAL_MERCHANT_ID = os.getenv(
+    "ZARINPAL_MERCHANT_ID",
+    "",
+).strip()
+
+ZARINPAL_CALLBACK_URL = os.getenv(
+    "ZARINPAL_CALLBACK_URL",
+    "https://kifyar-api.onrender.com/api/payment/zarinpal/callback",
+).strip()
+
+ZARINPAL_SANDBOX = (
+    os.getenv("ZARINPAL_SANDBOX", "false")
+    .strip()
+    .lower()
+    in {"1", "true", "yes", "on"}
 )
 
-from backend.services.settlement import (
-    settlement_service,
-)
 
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+# ============================================================
+# SESSION
+# ============================================================
+
+try:
+    from backend.session import require_session_user_id
+except Exception:
+
+    def require_session_user_id(request: Request) -> int:
+        authorization = request.headers.get(
+            "Authorization",
+            "",
+        )
+
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(
+                status_code=401,
+                detail="ورود لازم است.",
+            )
+
+        token = authorization[7:].strip()
+
+        if not token:
+            raise HTTPException(
+                status_code=401,
+                detail="توکن نامعتبر است.",
+            )
+
+        try:
+            from backend.auth import tokens
+        except Exception:
+            raise HTTPException(
+                status_code=500,
+                detail="سیستم ورود در دسترس نیست.",
+            )
+
+        user_id = tokens.get(token)
+
+        if user_id is None:
+            raise HTTPException(
+                status_code=401,
+                detail="جلسه ورود معتبر نیست.",
+            )
+
+        return int(user_id)
+
+
+# ============================================================
+# DATABASE EXTRA SCHEMA
+# ============================================================
+
+def ensure_runtime_schema() -> None:
+
+    with get_connection() as conn:
+
+        conn.execute(
+            """
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS is_admin
+            BOOLEAN NOT NULL DEFAULT FALSE
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS zarinpal_payments (
+                id BIGSERIAL PRIMARY KEY,
+
+                user_id BIGINT NOT NULL,
+
+                amount_toman DOUBLE PRECISION NOT NULL,
+
+                amount_rial BIGINT NOT NULL,
+
+                request_id TEXT NOT NULL UNIQUE,
+
+                authority TEXT UNIQUE,
+
+                status TEXT NOT NULL DEFAULT 'created',
+
+                ref_id TEXT,
+
+                response_code INTEGER,
+
+                fee DOUBLE PRECISION,
+
+                error_message TEXT,
+
+                created_at TEXT NOT NULL,
+
+                updated_at TEXT NOT NULL,
+
+                paid_at TEXT,
+
+                CONSTRAINT fk_zarinpal_user
+                    FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_zarinpal_user
+            ON zarinpal_payments(user_id)
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_zarinpal_authority
+            ON zarinpal_payments(authority)
+            """
+        )
+
+
+# ============================================================
+# APP LIFESPAN
+# ============================================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    if not DATABASE_URL:
+
+        print(
+            "WARNING: DATABASE_URL تنظیم نشده است."
+        )
+
+    else:
+
+        initialize_database()
+
+        ensure_runtime_schema()
+
+        print(
+            "KifYar database initialized successfully."
+        )
+
+    yield
+
+
+# ============================================================
+# FASTAPI
+# ============================================================
 
 app = FastAPI(
-    title="KifYar API",
-    version="1.0.0",
+    title=APP_NAME,
+    version=APP_VERSION,
+    lifespan=lifespan,
 )
 
 
-# =========================================================
+# ============================================================
 # CORS
-# =========================================================
+# ============================================================
+
+allowed_origins = [
+    FRONTEND_URL,
+    "https://kifyar-web.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-        "https://kifyar-web.onrender.com",
-    ],
+    allow_origins=list(
+        dict.fromkeys(allowed_origins)
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# =========================================================
-# REQUEST MODELS
-# =========================================================
+# ============================================================
+# MODELS
+# ============================================================
 
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-
-class RegisterRequest(BaseModel):
-    username: str
-
-    password: str = Field(
-        min_length=6,
-        max_length=200,
-    )
-
-    email: Optional[str] = None
-    name: Optional[str] = None
-
-
-class ProfileUpdateRequest(BaseModel):
-    name: str = Field(
-        min_length=1,
+class NameUpdateRequest(BaseModel):
+    full_name: str = Field(
+        default="",
         max_length=100,
     )
 
 
-class PasswordChangeRequest(BaseModel):
+class PasswordUpdateRequest(BaseModel):
     current_password: str
-
     new_password: str = Field(
         min_length=6,
         max_length=200,
     )
 
 
-class TransactionRequest(BaseModel):
-    title: str
-    amount: float
-    transaction_type: str
-    category: Optional[str] = None
-
-
-class BankCardRequest(BaseModel):
-    holder_name: str
-    bank_name: str
+class AddCardRequest(BaseModel):
     card_number: str
-
-
-class CardDepositRequest(BaseModel):
-    card_id: int
-    amount: float
-    request_id: str
-
-
-class WalletAmountRequest(BaseModel):
-    amount: float
-
-
-class WalletWithdrawRequest(BaseModel):
-    amount: float
-
-
-class WalletCardTransferRequest(BaseModel):
-    card_id: int
-    amount: float
-    request_id: str
-
-
-# =========================================================
-# ADMIN SETTLEMENT MODELS
-# =========================================================
-
-
-class SettlementRejectRequest(BaseModel):
-    reason: str = Field(
-        min_length=1,
-        max_length=500,
-    )
-
-
-class SettlementCompleteRequest(BaseModel):
-    provider_transfer_id: str = Field(
-        min_length=1,
-        max_length=200,
-    )
-
-    provider_status: str = Field(
-        default="completed",
+    title: str = Field(
+        default="",
         max_length=100,
     )
 
 
-class SettlementFailRequest(BaseModel):
+class DepositRequest(BaseModel):
+    amount: float = Field(gt=0)
+    request_id: str | None = None
+
+
+class TransferRequest(BaseModel):
+    card_id: int = Field(gt=0)
+    amount: float = Field(gt=0)
+
+
+class WithdrawRequest(BaseModel):
+    card_id: int = Field(gt=0)
+    amount: float = Field(gt=0)
+
+
+class AdminActionRequest(BaseModel):
     reason: str = Field(
-        min_length=1,
+        default="",
         max_length=500,
     )
 
 
-# =========================================================
-# HELPERS
-# =========================================================
+class ZarinPalRequest(BaseModel):
+    amount: float = Field(gt=0)
 
-
-def normalize_request_id(
-    request_id: str | None,
-) -> str:
-
-    if request_id:
-
-        value = request_id.strip()
-
-        if value:
-            return value[:200]
-
-    return str(uuid.uuid4())
-
-
-def validate_amount(
-    amount: float,
-) -> float:
-
-    if amount <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail="مبلغ باید بیشتر از صفر باشد.",
-        )
-
-    if amount > 100_000_000:
-        raise HTTPException(
-            status_code=400,
-            detail="حداکثر مبلغ ۱۰۰٬۰۰۰٬۰۰۰ تومان است.",
-        )
-
-    return float(amount)
-
-
-def require_admin(
-    request: Request,
-) -> None:
-
-    admin_key = request.headers.get(
-        "X-Admin-Key"
+    description: str = Field(
+        default="افزایش موجودی کیف‌یار",
+        max_length=500,
     )
 
-    expected_key = os.getenv(
-        "ADMIN_KEY",
-        "",
-    )
 
-    if (
-        not expected_key
-        or admin_key != expected_key
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="دسترسی مدیریت مجاز نیست.",
-        )
-
-
-# =========================================================
+# ============================================================
 # BASIC
-# =========================================================
-
+# ============================================================
 
 @app.get("/")
 def root():
 
     return {
-        "name": "KifYar API",
-        "status": "ok",
-        "admin": False,
+        "ok": True,
+        "success": True,
+        "app": APP_NAME,
+        "version": APP_VERSION,
+        "database": bool(DATABASE_URL),
+        "frontend": bool(FRONTEND_URL),
     }
 
 
@@ -261,219 +343,32 @@ def root():
 def health():
 
     return {
-        "status": "ok",
-    }
-
-
-# =========================================================
-# AUTH - LOGIN
-# =========================================================
-
-
-@app.post("/api/login")
-def login(
-    payload: LoginRequest,
-):
-
-    username = payload.username.strip()
-    password = payload.password
-
-    if not username or not password:
-
-        raise HTTPException(
-            status_code=400,
-            detail="نام کاربری و رمز عبور را وارد کنید.",
-        )
-
-    user = verify_user_password(
-        username,
-        password,
-    )
-
-    if user is None:
-
-        raise HTTPException(
-            status_code=401,
-            detail="نام کاربری یا رمز عبور نادرست است.",
-        )
-
-    token = create_token(
-        int(user["id"])
-    )
-
-    return {
+        "ok": True,
         "success": True,
-        "message": "ورود با موفقیت انجام شد.",
-        "token": token,
-        "user": {
-            "id": int(user["id"]),
-            "username": user["username"],
-            "email": user["email"],
-            "name": user["name"],
-        },
+        "app": APP_NAME,
+        "version": APP_VERSION,
+        "database": bool(DATABASE_URL),
+        "frontend": bool(FRONTEND_URL),
+        "zarinpal_configured": bool(
+            ZARINPAL_MERCHANT_ID
+        ),
+        "time": now_iso(),
     }
 
 
-# =========================================================
-# AUTH - REGISTER
-# =========================================================
+# ============================================================
+# USER HELPERS
+# ============================================================
 
-
-@app.post("/api/register")
-def register(
-    payload: RegisterRequest,
-):
-
-    username = payload.username.strip()
-    password = payload.password
-
-    email = (
-        payload.email.strip()
-        if payload.email
-        else None
-    )
-
-    name = (
-        payload.name.strip()
-        if payload.name
-        else username
-    )
-
-    if not username:
-
-        raise HTTPException(
-            status_code=400,
-            detail="نام کاربری را وارد کنید.",
-        )
-
-    if not password:
-
-        raise HTTPException(
-            status_code=400,
-            detail="رمز عبور را وارد کنید.",
-        )
-
-    if len(password) < 6:
-
-        raise HTTPException(
-            status_code=400,
-            detail="رمز عبور باید حداقل ۶ کاراکتر باشد.",
-        )
-
-    existing_username = find_user_by_username(
-        username
-    )
-
-    if existing_username:
-
-        raise HTTPException(
-            status_code=409,
-            detail="این نام کاربری قبلاً ثبت شده است.",
-        )
-
-    if email:
-
-        existing_email = find_user_by_email(
-            email
-        )
-
-        if existing_email:
-
-            raise HTTPException(
-                status_code=409,
-                detail="این ایمیل قبلاً ثبت شده است.",
-            )
-
-    try:
-
-        user_id = create_user(
-            username=username,
-            password=password,
-            email=email,
-            name=name,
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    user = find_user_by_id(
-        int(user_id)
-    )
-
-    if not user:
-
-        raise HTTPException(
-            status_code=500,
-            detail="کاربر ساخته شد اما اطلاعات آن پیدا نشد.",
-        )
-
-    token = create_token(
-        int(user["id"])
-    )
-
-    return {
-        "success": True,
-        "message": "حساب کاربری با موفقیت ساخته شد.",
-        "token": token,
-        "user": {
-            "id": int(user["id"]),
-            "username": user["username"],
-            "email": user["email"],
-            "name": user["name"],
-        },
-    }
-
-
-# =========================================================
-# AUTH - LOGOUT
-# =========================================================
-
-
-@app.post("/api/logout")
-def logout(
+def get_current_user(
     request: Request,
-):
-
-    authorization = request.headers.get(
-        "Authorization"
-    )
-
-    if authorization and authorization.startswith(
-        "Bearer "
-    ):
-
-        token = authorization[7:].strip()
-
-        if token:
-            remove_token(token)
-
-    return {
-        "success": True,
-        "message": "با موفقیت خارج شدید.",
-    }
-
-
-# =========================================================
-# PROFILE
-# =========================================================
-
-
-@app.get("/api/profile")
-def get_profile(
-    request: Request,
-):
+) -> dict[str, Any]:
 
     user_id = require_session_user_id(
         request
     )
 
-    user = find_user_by_id(
-        user_id
-    )
+    user = find_user_by_id(user_id)
 
     if not user:
 
@@ -482,61 +377,183 @@ def get_profile(
             detail="کاربر پیدا نشد.",
         )
 
+    return user
+
+
+def public_user(
+    user: dict[str, Any],
+) -> dict[str, Any]:
+
     return {
-        "id": user["id"],
-        "username": user["username"],
-        "email": user["email"],
-        "name": user["name"],
-        "created_at": user["created_at"],
+        "id": user.get("id"),
+        "username": user.get("username"),
+        "email": user.get("email"),
+        "name": user.get(
+            "full_name",
+            "",
+        ),
+        "full_name": user.get(
+            "full_name",
+            "",
+        ),
+        "is_admin": bool(
+            user.get(
+                "is_admin",
+                False,
+            )
+        ),
+        "created_at": user.get(
+            "created_at"
+        ),
+    }
+
+
+# ============================================================
+# ADMIN AUTH
+# ============================================================
+
+def require_admin(
+    request: Request,
+) -> None:
+
+    if not ADMIN_KEY:
+
+        raise HTTPException(
+            status_code=503,
+            detail="ADMIN_KEY روی سرور تنظیم نشده است.",
+        )
+
+    supplied = request.headers.get(
+        "X-Admin-Key",
+        "",
+    )
+
+    if not supplied:
+
+        raise HTTPException(
+            status_code=401,
+            detail="کلید مدیر ارسال نشده است.",
+        )
+
+    if not secrets.compare_digest(
+        supplied,
+        ADMIN_KEY,
+    ):
+
+        raise HTTPException(
+            status_code=403,
+            detail="کلید مدیر نامعتبر است.",
+        )
+
+
+# ============================================================
+# BALANCE
+# ============================================================
+
+@app.get("/api/balance")
+def api_balance(
+    request: Request,
+):
+
+    user_id = require_session_user_id(
+        request
+    )
+
+    balance = get_balance(user_id)
+
+    reserved = get_reserved_amount(
+        user_id
+    )
+
+    available = get_available_balance(
+        user_id
+    )
+
+    return {
+        "success": True,
+        "balance": balance,
+        "reserved": reserved,
+        "available": available,
+    }
+
+
+# ============================================================
+# TRANSACTIONS
+# ============================================================
+
+@app.get("/api/transactions")
+def api_transactions(
+    request: Request,
+):
+
+    user_id = require_session_user_id(
+        request
+    )
+
+    transactions = get_transactions(
+        user_id
+    )
+
+    return {
+        "success": True,
+        "transactions": transactions,
+    }
+
+
+# ============================================================
+# PROFILE
+# ============================================================
+
+@app.get("/api/profile")
+def api_profile(
+    request: Request,
+):
+
+    user = get_current_user(
+        request
+    )
+
+    return {
+        "success": True,
+        "user": public_user(user),
     }
 
 
 @app.put("/api/profile")
-def update_profile(
+def api_update_profile(
+    payload: NameUpdateRequest,
     request: Request,
-    payload: ProfileUpdateRequest,
 ):
 
     user_id = require_session_user_id(
         request
     )
 
-    name = payload.name.strip()
+    name = payload.full_name.strip()
 
-    if not name:
-
-        raise HTTPException(
-            status_code=400,
-            detail="نام نمی‌تواند خالی باشد.",
-        )
-
-    ok = update_user_name(
+    update_user_name(
         user_id,
         name,
     )
 
-    if not ok:
-
-        raise HTTPException(
-            status_code=404,
-            detail="کاربر پیدا نشد.",
-        )
+    user = find_user_by_id(
+        user_id
+    )
 
     return {
         "success": True,
-        "message": "پروفایل با موفقیت بروزرسانی شد.",
+        "user": public_user(user),
     }
 
 
-# =========================================================
-# PASSWORD
-# =========================================================
+# ============================================================
+# CHANGE PASSWORD
+# ============================================================
 
-
-@app.put("/api/password")
-def change_password(
+@app.post("/api/change-password")
+def api_change_password(
+    payload: PasswordUpdateRequest,
     request: Request,
-    payload: PasswordChangeRequest,
 ):
 
     user_id = require_session_user_id(
@@ -554,46 +571,22 @@ def change_password(
             detail="کاربر پیدا نشد.",
         )
 
-    current_password = payload.current_password
-    new_password = payload.new_password
-
-    if not current_password:
-
-        raise HTTPException(
-            status_code=400,
-            detail="رمز عبور فعلی را وارد کنید.",
-        )
-
-    if current_password == new_password:
-
-        raise HTTPException(
-            status_code=400,
-            detail="رمز عبور جدید باید با رمز قبلی متفاوت باشد.",
-        )
-
-    verified_user = verify_user_password(
+    verified = verify_user_password(
         user["username"],
-        current_password,
+        payload.current_password,
     )
 
-    if verified_user is None:
+    if not verified:
 
         raise HTTPException(
             status_code=400,
-            detail="رمز عبور فعلی صحیح نیست.",
+            detail="رمز فعلی اشتباه است.",
         )
 
-    ok = update_user_password(
+    update_user_password(
         user_id,
-        new_password,
+        payload.new_password,
     )
-
-    if not ok:
-
-        raise HTTPException(
-            status_code=500,
-            detail="تغییر رمز عبور انجام نشد.",
-        )
 
     return {
         "success": True,
@@ -601,13 +594,12 @@ def change_password(
     }
 
 
-# =========================================================
-# ACCOUNT DELETE
-# =========================================================
-
+# ============================================================
+# DELETE ACCOUNT
+# ============================================================
 
 @app.delete("/api/account")
-def remove_account(
+def api_delete_account(
     request: Request,
 ):
 
@@ -615,29 +607,23 @@ def remove_account(
         request
     )
 
-    ok = delete_user(
+    result = delete_user(
         user_id
     )
 
-    if not ok:
-
-        raise HTTPException(
-            status_code=404,
-            detail="کاربر پیدا نشد.",
-        )
-
     return {
+        "success": True,
+        "deleted": result,
         "message": "حساب کاربری حذف شد.",
     }
 
 
-# =========================================================
-# WALLET
-# =========================================================
+# ============================================================
+# BANK CARDS
+# ============================================================
 
-
-@app.get("/api/wallet/balance")
-def wallet_balance(
+@app.get("/api/cards")
+def api_cards(
     request: Request,
 ):
 
@@ -646,176 +632,168 @@ def wallet_balance(
     )
 
     return {
-        "balance": get_balance(
-            user_id
-        )
+        "success": True,
+        "cards": get_bank_cards(user_id),
     }
 
 
-@app.post("/api/wallet/add")
-def wallet_add(
+@app.post("/api/cards")
+def api_add_card(
+    payload: AddCardRequest,
     request: Request,
-    payload: WalletAmountRequest,
 ):
 
     user_id = require_session_user_id(
         request
     )
 
-    amount = validate_amount(
-        payload.amount
+    card_number = "".join(
+        ch
+        for ch in payload.card_number
+        if ch.isdigit()
     )
 
-    balance = add_wallet_balance_with_transaction(
-        user_id,
-        amount,
-    )
-
-    return {
-        "message": "موجودی افزایش یافت.",
-        "balance": balance,
-    }
-
-
-@app.post("/api/wallet/subtract")
-def wallet_subtract(
-    request: Request,
-    payload: WalletAmountRequest,
-):
-
-    user_id = require_session_user_id(
-        request
-    )
-
-    amount = validate_amount(
-        payload.amount
-    )
-
-    try:
-
-        balance = subtract_wallet_balance_with_transaction(
-            user_id,
-            amount,
-        )
-
-    except ValueError as exc:
+    if len(card_number) != 16:
 
         raise HTTPException(
             status_code=400,
-            detail=str(exc),
+            detail="شماره کارت باید ۱۶ رقم باشد.",
         )
+
+    card_id = add_bank_card(
+        user_id=user_id,
+        card_number=card_number,
+        title=payload.title.strip(),
+    )
 
     return {
-        "message": "موجودی کاهش یافت.",
-        "balance": balance,
+        "success": True,
+        "card_id": card_id,
+        "cards": get_bank_cards(user_id),
     }
-
-
-@app.post("/api/wallet/deposit")
-def wallet_deposit(
-    request: Request,
-    payload: CardDepositRequest,
-):
-
-    user_id = require_session_user_id(
-        request
-    )
-
-    amount = validate_amount(
-        payload.amount
-    )
-
-    request_id = normalize_request_id(
-        payload.request_id
-    )
-
-    try:
-
-        result = deposit_by_card_once(
-            user_id=user_id,
-            card_id=payload.card_id,
-            amount=amount,
-            request_id=request_id,
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return result
-
-
-@app.post("/api/wallet/withdraw")
-def wallet_withdraw(
-    request: Request,
-    payload: WalletWithdrawRequest,
-):
-
-    user_id = require_session_user_id(
-        request
-    )
-
-    amount = validate_amount(
-        payload.amount
-    )
-
-    try:
-
-        balance = subtract_wallet_balance_with_transaction(
-            user_id,
-            amount,
-            title="برداشت از کیف پول",
-            category="withdraw",
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return {
-        "message": "برداشت ثبت شد.",
-        "balance": balance,
-    }
-
-
-# =========================================================
-# WALLET -> CARD SETTLEMENT
-# =========================================================
 
 
 @app.post(
-    "/api/wallet/transfer-to-card"
+    "/api/cards/{card_id}/default"
 )
-def wallet_transfer_to_card(
+def api_default_card(
+    card_id: int,
     request: Request,
-    payload: WalletCardTransferRequest,
 ):
 
     user_id = require_session_user_id(
         request
     )
 
-    amount = validate_amount(
+    result = set_default_bank_card(
+        user_id,
+        card_id,
+    )
+
+    return {
+        "success": True,
+        "result": result,
+        "cards": get_bank_cards(user_id),
+    }
+
+
+@app.delete(
+    "/api/cards/{card_id}"
+)
+def api_delete_card(
+    card_id: int,
+    request: Request,
+):
+
+    user_id = require_session_user_id(
+        request
+    )
+
+    result = delete_bank_card(
+        user_id,
+        card_id,
+    )
+
+    return {
+        "success": True,
+        "result": result,
+        "cards": get_bank_cards(user_id),
+    }
+
+
+# ============================================================
+# MANUAL DEPOSIT
+# ============================================================
+
+@app.post("/api/deposit")
+def api_deposit(
+    payload: DepositRequest,
+    request: Request,
+):
+
+    user_id = require_session_user_id(
+        request
+    )
+
+    amount = float(
         payload.amount
     )
 
-    request_id = normalize_request_id(
-        payload.request_id
+    request_id = (
+        payload.request_id.strip()
+        if payload.request_id
+        else secrets.token_urlsafe(24)
     )
+
+    result = add_wallet_balance_with_transaction(
+        user_id,
+        amount,
+        request_id,
+    )
+
+    return {
+        "success": True,
+        "result": result,
+        "balance": get_balance(user_id),
+        "available": get_available_balance(
+            user_id
+        ),
+    }
+
+
+# ============================================================
+# TRANSFERS
+# ============================================================
+
+@app.post("/api/transfers")
+def api_create_transfer(
+    payload: TransferRequest,
+    request: Request,
+):
+
+    user_id = require_session_user_id(
+        request
+    )
+
+    available = get_available_balance(
+        user_id
+    )
+
+    if payload.amount > available:
+
+        raise HTTPException(
+            status_code=400,
+            detail="موجودی قابل برداشت کافی نیست.",
+        )
 
     try:
 
         result = transfer_wallet_to_card_once(
             user_id=user_id,
             card_id=payload.card_id,
-            amount=amount,
-            request_id=request_id,
+            amount=float(
+                payload.amount
+            ),
         )
 
     except ValueError as exc:
@@ -825,13 +803,23 @@ def wallet_transfer_to_card(
             detail=str(exc),
         )
 
-    return result
+    return {
+        "success": True,
+        "transfer": result,
+        "balance": get_balance(
+            user_id
+        ),
+        "reserved": get_reserved_amount(
+            user_id
+        ),
+        "available": get_available_balance(
+            user_id
+        ),
+    }
 
 
-@app.get(
-    "/api/wallet/card-transfers"
-)
-def wallet_card_transfers(
+@app.get("/api/transfers")
+def api_transfers(
     request: Request,
 ):
 
@@ -839,17 +827,20 @@ def wallet_card_transfers(
         request
     )
 
-    return get_card_transfer_requests(
-        user_id
-    )
+    return {
+        "success": True,
+        "transfers": get_card_transfer_requests(
+            user_id
+        ),
+    }
 
 
 @app.get(
-    "/api/wallet/card-transfers/{transfer_id}"
+    "/api/transfers/{transfer_id}"
 )
-def wallet_card_transfer(
-    request: Request,
+def api_transfer(
     transfer_id: int,
+    request: Request,
 ):
 
     user_id = require_session_user_id(
@@ -857,8 +848,8 @@ def wallet_card_transfer(
     )
 
     transfer = get_card_transfer_request(
-        user_id,
         transfer_id,
+        user_id=user_id,
     )
 
     if not transfer:
@@ -868,271 +859,213 @@ def wallet_card_transfer(
             detail="درخواست انتقال پیدا نشد.",
         )
 
-    return transfer
+    return {
+        "success": True,
+        "transfer": transfer,
+    }
 
 
-# =========================================================
-# ADMIN - SETTLEMENT LIST
-# =========================================================
+# ============================================================
+# WITHDRAW
+# ============================================================
 
-
-@app.get(
-    "/api/admin/settlements"
-)
-def admin_get_settlements(
+@app.post("/api/withdraw")
+def api_withdraw(
+    payload: WithdrawRequest,
     request: Request,
 ):
 
-    require_admin(
+    user_id = require_session_user_id(
+        request
+    )
+
+    amount = float(
+        payload.amount
+    )
+
+    if amount <= 0:
+
+        raise HTTPException(
+            status_code=400,
+            detail="مبلغ برداشت نامعتبر است.",
+        )
+
+    if amount < 1000:
+
+        raise HTTPException(
+            status_code=400,
+            detail="حداقل مبلغ برداشت ۱۰۰۰ تومان است.",
+        )
+
+    available = get_available_balance(
+        user_id
+    )
+
+    if amount > available:
+
+        raise HTTPException(
+            status_code=400,
+            detail="موجودی قابل برداشت کافی نیست.",
+        )
+
+    cards = get_bank_cards(
+        user_id
+    )
+
+    selected_card = None
+
+    for card in cards:
+
+        try:
+            card_id = int(
+                card.get("id")
+            )
+        except (
+            TypeError,
+            ValueError,
+        ):
+            continue
+
+        if card_id == int(
+            payload.card_id
+        ):
+
+            selected_card = card
+            break
+
+    if selected_card is None:
+
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "کارت بانکی پیدا نشد "
+                "یا متعلق به این حساب نیست."
+            ),
+        )
+
+    try:
+
+        result = transfer_wallet_to_card_once(
+            user_id=user_id,
+            card_id=payload.card_id,
+            amount=amount,
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except Exception as exc:
+
+        print(
+            "WITHDRAW ERROR:",
+            repr(exc),
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="ثبت درخواست برداشت انجام نشد.",
+        )
+
+    return {
+        "success": True,
+        "message": (
+            "درخواست برداشت ثبت شد "
+            "و مبلغ رزرو شد."
+        ),
+        "withdrawal": result,
+        "amount": amount,
+        "balance": get_balance(
+            user_id
+        ),
+        "reserved": get_reserved_amount(
+            user_id
+        ),
+        "available": get_available_balance(
+            user_id
+        ),
+    }
+
+
+# ============================================================
+# MY WITHDRAWALS
+# ============================================================
+
+@app.get("/api/withdrawals")
+def api_withdrawals(
+    request: Request,
+):
+
+    user_id = require_session_user_id(
         request
     )
 
     return {
         "success": True,
-        "items": get_all_card_transfer_requests(),
+        "withdrawals": get_card_transfer_requests(
+            user_id
+        ),
     }
 
 
-# =========================================================
-# ADMIN - APPROVE SETTLEMENT
-# =========================================================
-
-
-@app.post(
-    "/api/admin/settlements/{transfer_id}/approve"
+@app.get(
+    "/api/withdrawals/{withdrawal_id}"
 )
-def admin_approve_settlement(
+def api_withdrawal(
+    withdrawal_id: int,
     request: Request,
-    transfer_id: int,
-):
-
-    require_admin(
-        request
-    )
-
-    try:
-
-        result = settlement_service.approve(
-            transfer_id
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# ADMIN - REJECT SETTLEMENT
-# =========================================================
-
-
-@app.post(
-    "/api/admin/settlements/{transfer_id}/reject"
-)
-def admin_reject_settlement(
-    request: Request,
-    transfer_id: int,
-    payload: SettlementRejectRequest,
-):
-
-    require_admin(
-        request
-    )
-
-    try:
-
-        result = reject_card_transfer(
-            transfer_id=transfer_id,
-            reason=payload.reason,
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# ADMIN - START PROCESSING
-# =========================================================
-
-
-@app.post(
-    "/api/admin/settlements/{transfer_id}/processing"
-)
-def admin_processing_settlement(
-    request: Request,
-    transfer_id: int,
-):
-
-    require_admin(
-        request
-    )
-
-    try:
-
-        result = settlement_service.start_processing(
-            transfer_id
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# ADMIN - PROCESS WITH PROVIDER
-# =========================================================
-
-
-@app.post(
-    "/api/admin/settlements/{transfer_id}/process"
-)
-def admin_process_settlement(
-    request: Request,
-    transfer_id: int,
-):
-
-    require_admin(
-        request
-    )
-
-    try:
-
-        result = settlement_service.process(
-            transfer_id
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# ADMIN - COMPLETE
-# =========================================================
-
-
-@app.post(
-    "/api/admin/settlements/{transfer_id}/complete"
-)
-def admin_complete_settlement(
-    request: Request,
-    transfer_id: int,
-    payload: SettlementCompleteRequest,
-):
-
-    require_admin(
-        request
-    )
-
-    try:
-
-        result = settlement_service.complete(
-            transfer_id=transfer_id,
-            provider_transfer_id=(
-                payload.provider_transfer_id
-            ),
-            provider_status=(
-                payload.provider_status
-            ),
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# ADMIN - FAIL
-# =========================================================
-
-
-@app.post(
-    "/api/admin/settlements/{transfer_id}/fail"
-)
-def admin_fail_settlement(
-    request: Request,
-    transfer_id: int,
-    payload: SettlementFailRequest,
-):
-
-    require_admin(
-        request
-    )
-
-    try:
-
-        result = settlement_service.fail(
-            transfer_id=transfer_id,
-            reason=payload.reason,
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# NOTIFICATIONS
-# =========================================================
-
-
-@app.get("/api/notifications")
-def notifications(
-    request: Request,
-    limit: int = 100,
 ):
 
     user_id = require_session_user_id(
         request
     )
 
-    if limit < 1:
-        limit = 1
-
-    if limit > 200:
-        limit = 200
-
-    return get_notifications(
+    withdrawal = get_card_transfer_request(
+        withdrawal_id,
         user_id=user_id,
-        limit=limit,
     )
+
+    if not withdrawal:
+
+        raise HTTPException(
+            status_code=404,
+            detail="درخواست برداشت پیدا نشد.",
+        )
+
+    return {
+        "success": True,
+        "withdrawal": withdrawal,
+    }
+
+
+# ============================================================
+# NOTIFICATIONS
+# ============================================================
+
+@app.get("/api/notifications")
+def api_notifications(
+    request: Request,
+):
+
+    user_id = require_session_user_id(
+        request
+    )
+
+    return {
+        "success": True,
+        "notifications": get_notifications(
+            user_id
+        ),
+    }
 
 
 @app.get(
     "/api/notifications/unread-count"
 )
-def notification_unread_count(
+def api_unread_count(
     request: Request,
 ):
 
@@ -1141,47 +1074,40 @@ def notification_unread_count(
     )
 
     return {
-        "unread_count":
-            get_unread_notification_count(
-                user_id
-            ),
+        "success": True,
+        "count": get_unread_notification_count(
+            user_id
+        ),
     }
 
 
-@app.patch(
+@app.post(
     "/api/notifications/{notification_id}/read"
 )
-def notification_read(
-    request: Request,
+def api_read_notification(
     notification_id: int,
+    request: Request,
 ):
 
     user_id = require_session_user_id(
         request
     )
 
-    ok = mark_notification_as_read(
-        user_id=user_id,
-        notification_id=notification_id,
+    result = mark_notification_as_read(
+        user_id,
+        notification_id,
     )
 
-    if not ok:
-
-        raise HTTPException(
-            status_code=404,
-            detail="اعلان پیدا نشد.",
-        )
-
     return {
-        "message":
-            "اعلان به عنوان خوانده‌شده ثبت شد.",
+        "success": True,
+        "result": result,
     }
 
 
-@app.patch(
+@app.post(
     "/api/notifications/read-all"
 )
-def notifications_read_all(
+def api_read_all_notifications(
     request: Request,
 ):
 
@@ -1189,53 +1115,21 @@ def notifications_read_all(
         request
     )
 
-    count = mark_all_notifications_as_read(
+    result = mark_all_notifications_as_read(
         user_id
     )
 
     return {
-        "message":
-            "همه اعلان‌ها خوانده شدند.",
-        "updated": count,
+        "success": True,
+        "result": result,
     }
 
 
 @app.delete(
     "/api/notifications/{notification_id}"
 )
-def notification_delete(
-    request: Request,
+def api_delete_notification(
     notification_id: int,
-):
-
-    user_id = require_session_user_id(
-        request
-    )
-
-    ok = delete_notification(
-        user_id=user_id,
-        notification_id=notification_id,
-    )
-
-    if not ok:
-
-        raise HTTPException(
-            status_code=404,
-            detail="اعلان پیدا نشد.",
-        )
-
-    return {
-        "message": "اعلان حذف شد.",
-    }
-
-
-# =========================================================
-# TRANSACTIONS
-# =========================================================
-
-
-@app.get("/api/transactions")
-def transactions(
     request: Request,
 ):
 
@@ -1243,59 +1137,187 @@ def transactions(
         request
     )
 
-    return get_transactions(
-        user_id
-    )
-
-
-@app.post("/api/transactions")
-def create_transaction(
-    request: Request,
-    payload: TransactionRequest,
-):
-
-    user_id = require_session_user_id(
-        request
-    )
-
-    if payload.amount <= 0:
-
-        raise HTTPException(
-            status_code=400,
-            detail="مبلغ نامعتبر است.",
-        )
-
-    if payload.transaction_type not in {
-        "income",
-        "expense",
-    }:
-
-        raise HTTPException(
-            status_code=400,
-            detail="نوع تراکنش نامعتبر است.",
-        )
-
-    transaction_id = add_transaction(
-        user_id=user_id,
-        title=payload.title,
-        amount=payload.amount,
-        transaction_type=payload.transaction_type,
-        category=payload.category,
+    result = delete_notification(
+        user_id,
+        notification_id,
     )
 
     return {
-        "id": transaction_id,
-        "message": "تراکنش ثبت شد.",
+        "success": True,
+        "result": result,
     }
 
 
-# =========================================================
-# BANK CARDS
-# =========================================================
+# ============================================================
+# ZARINPAL
+# ============================================================
+
+def zarinpal_urls():
+
+    if ZARINPAL_SANDBOX:
+
+        return {
+            "request": (
+                "https://sandbox.zarinpal.com"
+                "/pg/v4/payment/request.json"
+            ),
+            "verify": (
+                "https://sandbox.zarinpal.com"
+                "/pg/v4/payment/verify.json"
+            ),
+            "start": (
+                "https://sandbox.zarinpal.com"
+                "/pg/StartPay/"
+            ),
+        }
+
+    return {
+        "request": (
+            "https://payment.zarinpal.com"
+            "/pg/v4/payment/request.json"
+        ),
+        "verify": (
+            "https://payment.zarinpal.com"
+            "/pg/v4/payment/verify.json"
+        ),
+        "start": (
+            "https://www.zarinpal.com"
+            "/pg/StartPay/"
+        ),
+    }
 
 
-@app.get("/api/cards")
-def cards(
+def create_zarinpal_payment(
+    user_id: int,
+    amount_toman: float,
+    amount_rial: int,
+    request_id: str,
+) -> int:
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            INSERT INTO zarinpal_payments (
+                user_id,
+                amount_toman,
+                amount_rial,
+                request_id,
+                status,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            RETURNING id
+            """,
+            (
+                user_id,
+                amount_toman,
+                amount_rial,
+                request_id,
+                "created",
+                now_iso(),
+                now_iso(),
+            ),
+        ).fetchone()
+
+        return int(
+            row["id"]
+        )
+
+
+def get_zarinpal_payment(
+    payment_id: int,
+) -> dict[str, Any] | None:
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM zarinpal_payments
+            WHERE id = %s
+            """,
+            (payment_id,),
+        ).fetchone()
+
+        if not row:
+            return None
+
+        return dict(row)
+
+
+def update_zarinpal_payment(
+    payment_id: int,
+    **fields: Any,
+) -> None:
+
+    if not fields:
+        return
+
+    fields["updated_at"] = now_iso()
+
+    allowed = {
+        "authority",
+        "status",
+        "ref_id",
+        "response_code",
+        "fee",
+        "error_message",
+        "paid_at",
+        "updated_at",
+    }
+
+    fields = {
+        key: value
+        for key, value in fields.items()
+        if key in allowed
+    }
+
+    if not fields:
+        return
+
+    columns = []
+
+    values = []
+
+    for key, value in fields.items():
+
+        columns.append(
+            f"{key} = %s"
+        )
+
+        values.append(value)
+
+    values.append(
+        payment_id
+    )
+
+    with get_connection() as conn:
+
+        conn.execute(
+            f"""
+            UPDATE zarinpal_payments
+            SET {", ".join(columns)}
+            WHERE id = %s
+            """,
+            tuple(values),
+        )
+
+
+@app.post(
+    "/api/payment/zarinpal/request"
+)
+async def api_zarinpal_request(
+    payload: ZarinPalRequest,
     request: Request,
 ):
 
@@ -1303,132 +1325,712 @@ def cards(
         request
     )
 
-    return get_bank_cards(
-        user_id
+    if not ZARINPAL_MERCHANT_ID:
+
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "ZARINPAL_MERCHANT_ID "
+                "روی سرور تنظیم نشده است."
+            ),
+        )
+
+    amount_toman = float(
+        payload.amount
     )
 
+    if amount_toman < 1000:
 
-@app.post("/api/cards")
-def create_card(
+        raise HTTPException(
+            status_code=400,
+            detail="حداقل مبلغ پرداخت ۱۰۰۰ تومان است.",
+        )
+
+    amount_rial = int(
+        round(
+            amount_toman * 10
+        )
+    )
+
+    request_id = secrets.token_urlsafe(
+        24
+    )
+
+    payment_id = create_zarinpal_payment(
+        user_id,
+        amount_toman,
+        amount_rial,
+        request_id,
+    )
+
+    urls = zarinpal_urls()
+
+    body = {
+        "merchant_id":
+            ZARINPAL_MERCHANT_ID,
+
+        "amount":
+            amount_rial,
+
+        "description":
+            payload.description,
+
+        "callback_url":
+            (
+                f"{ZARINPAL_CALLBACK_URL}"
+                f"?payment_id={payment_id}"
+            ),
+
+        "metadata": {},
+    }
+
+    try:
+
+        async with httpx.AsyncClient(
+            timeout=30
+        ) as client:
+
+            response = await client.post(
+                urls["request"],
+                json=body,
+                headers={
+                    "Content-Type":
+                        "application/json",
+                    "Accept":
+                        "application/json",
+                },
+            )
+
+            response.raise_for_status()
+
+            data = response.json()
+
+    except Exception as exc:
+
+        update_zarinpal_payment(
+            payment_id,
+            status="failed",
+            error_message=str(exc),
+        )
+
+        raise HTTPException(
+            status_code=502,
+            detail="ارتباط با زرین‌پال برقرار نشد.",
+        )
+
+    data_block = (
+        data.get("data")
+        or {}
+    )
+
+    code = data_block.get(
+        "code"
+    )
+
+    authority = data_block.get(
+        "authority"
+    )
+
+    if code != 100 or not authority:
+
+        update_zarinpal_payment(
+            payment_id,
+            status="failed",
+            response_code=code,
+            error_message=str(
+                data.get("errors")
+                or {}
+            ),
+        )
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "زرین‌پال درخواست پرداخت را "
+                "قبول نکرد."
+            ),
+        )
+
+    update_zarinpal_payment(
+        payment_id,
+        authority=authority,
+        status="gateway_created",
+        response_code=code,
+    )
+
+    return {
+        "success": True,
+        "payment_id": payment_id,
+        "authority": authority,
+        "amount_toman": amount_toman,
+        "amount_rial": amount_rial,
+        "payment_url": (
+            f"{urls['start']}"
+            f"{authority}"
+        ),
+    }
+
+
+# ============================================================
+# ZARINPAL CALLBACK
+# ============================================================
+
+@app.get(
+    "/api/payment/zarinpal/callback"
+)
+async def api_zarinpal_callback(
     request: Request,
-    payload: BankCardRequest,
 ):
 
-    user_id = require_session_user_id(
-        request
+    payment_id_raw = (
+        request.query_params.get(
+            "payment_id"
+        )
     )
 
-    holder_name = payload.holder_name.strip()
-    bank_name = payload.bank_name.strip()
-    card_number = payload.card_number.strip()
-
-    if not holder_name:
-
-        raise HTTPException(
-            status_code=400,
-            detail="نام صاحب کارت را وارد کنید.",
+    authority = (
+        request.query_params.get(
+            "Authority"
         )
+    )
 
-    if not bank_name:
-
-        raise HTTPException(
-            status_code=400,
-            detail="نام بانک را وارد کنید.",
+    status = (
+        request.query_params.get(
+            "Status"
         )
+    )
 
-    if not card_number:
+    if not payment_id_raw:
 
         raise HTTPException(
             status_code=400,
-            detail="شماره کارت را وارد کنید.",
+            detail="شناسه پرداخت ارسال نشده است.",
         )
 
     try:
 
-        card_id = add_bank_card(
-            user_id=user_id,
-            holder_name=holder_name,
-            bank_name=bank_name,
-            card_number=card_number,
+        payment_id = int(
+            payment_id_raw
         )
 
-    except ValueError as exc:
+    except ValueError:
 
         raise HTTPException(
             status_code=400,
-            detail=str(exc),
+            detail="شناسه پرداخت نامعتبر است.",
         )
 
+    payment = get_zarinpal_payment(
+        payment_id
+    )
+
+    if not payment:
+
+        raise HTTPException(
+            status_code=404,
+            detail="پرداخت پیدا نشد.",
+        )
+
+    if payment["status"] == "completed":
+
+        return {
+            "success": True,
+            "message":
+                "پرداخت قبلاً ثبت شده است.",
+            "payment_id":
+                payment_id,
+            "ref_id":
+                payment.get("ref_id"),
+        }
+
+    if status != "OK":
+
+        update_zarinpal_payment(
+            payment_id,
+            authority=authority,
+            status="cancelled",
+            error_message=(
+                "پرداخت تکمیل نشد."
+            ),
+        )
+
+        return {
+            "success": False,
+            "message":
+                "پرداخت لغو یا ناموفق شد.",
+            "payment_id":
+                payment_id,
+        }
+
+    if not authority:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Authority دریافت نشد.",
+        )
+
+    if not ZARINPAL_MERCHANT_ID:
+
+        raise HTTPException(
+            status_code=503,
+            detail="تنظیمات زرین‌پال ناقص است.",
+        )
+
+    urls = zarinpal_urls()
+
+    verify_body = {
+        "merchant_id":
+            ZARINPAL_MERCHANT_ID,
+
+        "amount":
+            int(
+                payment["amount_rial"]
+            ),
+
+        "authority":
+            authority,
+    }
+
+    try:
+
+        async with httpx.AsyncClient(
+            timeout=30
+        ) as client:
+
+            response = await client.post(
+                urls["verify"],
+                json=verify_body,
+                headers={
+                    "Content-Type":
+                        "application/json",
+                    "Accept":
+                        "application/json",
+                },
+            )
+
+            response.raise_for_status()
+
+            result = response.json()
+
+    except Exception as exc:
+
+        update_zarinpal_payment(
+            payment_id,
+            authority=authority,
+            status="verify_error",
+            error_message=str(exc),
+        )
+
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "استعلام پرداخت از "
+                "زرین‌پال ناموفق بود."
+            ),
+        )
+
+    data_block = (
+        result.get("data")
+        or {}
+    )
+
+    verify_code = data_block.get(
+        "code"
+    )
+
+    ref_id = data_block.get(
+        "ref_id"
+    )
+
+    if verify_code not in {
+        100,
+        101,
+    }:
+
+        update_zarinpal_payment(
+            payment_id,
+            authority=authority,
+            status="verify_failed",
+            response_code=verify_code,
+            error_message=str(
+                result.get("errors")
+                or {}
+            ),
+        )
+
+        return {
+            "success": False,
+            "message":
+                "پرداخت تأیید نشد.",
+            "code":
+                verify_code,
+            "payment_id":
+                payment_id,
+        }
+
+    latest = get_zarinpal_payment(
+        payment_id
+    )
+
+    if not latest:
+
+        raise HTTPException(
+            status_code=404,
+            detail="پرداخت پیدا نشد.",
+        )
+
+    if latest["status"] == "completed":
+
+        return {
+            "success": True,
+            "message":
+                "پرداخت قبلاً ثبت شده است.",
+            "payment_id":
+                payment_id,
+            "ref_id":
+                latest.get("ref_id"),
+        }
+
+    user_id = int(
+        latest["user_id"]
+    )
+
+    amount_toman = float(
+        latest["amount_toman"]
+    )
+
+    add_wallet_balance_with_transaction(
+        user_id,
+        amount_toman,
+        f"zarinpal:{payment_id}",
+    )
+
+    update_zarinpal_payment(
+        payment_id,
+        authority=authority,
+        status="completed",
+        response_code=verify_code,
+        ref_id=(
+            str(ref_id)
+            if ref_id is not None
+            else None
+        ),
+        paid_at=now_iso(),
+    )
+
     return {
-        "id": card_id,
-        "message": "کارت بانکی اضافه شد.",
+        "success": True,
+        "message":
+            "پرداخت تأیید شد و موجودی افزایش یافت.",
+        "payment_id":
+            payment_id,
+        "ref_id":
+            ref_id,
+        "amount_toman":
+            amount_toman,
+        "balance":
+            get_balance(user_id),
+        "available":
+            get_available_balance(
+                user_id
+            ),
     }
 
 
-@app.put(
-    "/api/cards/{card_id}/default"
+@app.get(
+    "/api/payment/zarinpal/{payment_id}"
 )
-def default_card(
+def api_zarinpal_status(
+    payment_id: int,
     request: Request,
-    card_id: int,
 ):
 
     user_id = require_session_user_id(
         request
     )
 
-    ok = set_default_bank_card(
-        user_id,
-        card_id,
+    payment = get_zarinpal_payment(
+        payment_id
     )
 
-    if not ok:
+    if not payment:
 
         raise HTTPException(
             status_code=404,
-            detail="کارت پیدا نشد.",
+            detail="پرداخت پیدا نشد.",
+        )
+
+    if int(
+        payment["user_id"]
+    ) != int(user_id):
+
+        raise HTTPException(
+            status_code=403,
+            detail="دسترسی غیرمجاز.",
         )
 
     return {
-        "message": "کارت پیش‌فرض شد.",
+        "success": True,
+        "payment": payment,
     }
 
 
-@app.delete(
-    "/api/cards/{card_id}"
+# ============================================================
+# ADMIN SETTLEMENTS
+# ============================================================
+
+@app.get(
+    "/api/admin/settlements"
 )
-def remove_card(
+def admin_settlements(
     request: Request,
-    card_id: int,
 ):
 
-    user_id = require_session_user_id(
-        request
+    require_admin(request)
+
+    transfers = get_card_transfer_requests(
+        None
     )
-
-    ok = delete_bank_card(
-        user_id,
-        card_id,
-    )
-
-    if not ok:
-
-        raise HTTPException(
-            status_code=404,
-            detail="کارت پیدا نشد.",
-        )
 
     return {
-        "message": "کارت حذف شد.",
+        "success": True,
+        "transfers": transfers,
+        "total": len(transfers),
+        "pending": sum(
+            1
+            for item in transfers
+            if item.get("status")
+            == "pending"
+        ),
+        "processing": sum(
+            1
+            for item in transfers
+            if item.get("status")
+            == "processing"
+        ),
+        "completed": sum(
+            1
+            for item in transfers
+            if item.get("status")
+            == "completed"
+        ),
     }
 
 
-# =========================================================
-# STARTUP
-# =========================================================
+@app.post(
+    "/api/admin/settlements/{transfer_id}/approve"
+)
+def admin_approve_settlement(
+    transfer_id: int,
+    request: Request,
+):
+
+    require_admin(request)
+
+    result = approve_card_transfer(
+        transfer_id
+    )
+
+    return {
+        "success": True,
+        "transfer": result,
+    }
 
 
-@app.on_event("startup")
-def startup():
+@app.post(
+    "/api/admin/settlements/{transfer_id}/reject"
+)
+def admin_reject_settlement(
+    transfer_id: int,
+    payload: AdminActionRequest,
+    request: Request,
+):
 
-    initialize_database()
+    require_admin(request)
+
+    result = reject_card_transfer(
+        transfer_id,
+        payload.reason.strip(),
+    )
+
+    return {
+        "success": True,
+        "transfer": result,
+    }
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/processing"
+)
+def admin_processing_settlement(
+    transfer_id: int,
+    request: Request,
+):
+
+    require_admin(request)
+
+    result = mark_transfer_processing(
+        transfer_id
+    )
+
+    return {
+        "success": True,
+        "transfer": result,
+    }
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/complete"
+)
+def admin_complete_settlement(
+    transfer_id: int,
+    request: Request,
+):
+
+    require_admin(request)
+
+    result = complete_card_transfer(
+        transfer_id,
+        provider_transfer_id=None,
+        provider_status="manual_completed",
+    )
+
+    return {
+        "success": True,
+        "transfer": result,
+    }
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/fail"
+)
+def admin_fail_settlement(
+    transfer_id: int,
+    payload: AdminActionRequest,
+    request: Request,
+):
+
+    require_admin(request)
+
+    result = fail_card_transfer(
+        transfer_id,
+        payload.reason.strip(),
+    )
+
+    return {
+        "success": True,
+        "transfer": result,
+    }
+
+
+# ============================================================
+# ADMIN USERS
+# ============================================================
+
+@app.get(
+    "/api/admin/users"
+)
+def admin_users(
+    request: Request,
+):
+
+    require_admin(request)
+
+    with get_connection() as conn:
+
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                full_name,
+                balance,
+                is_admin,
+                created_at,
+                updated_at
+            FROM users
+            ORDER BY id DESC
+            """
+        ).fetchall()
+
+    return {
+        "success": True,
+        "users": [
+            dict(row)
+            for row in rows
+        ],
+    }
+
+
+# ============================================================
+# ADMIN ZARINPAL PAYMENTS
+# ============================================================
+
+@app.get(
+    "/api/admin/payments/zarinpal"
+)
+def admin_zarinpal_payments(
+    request: Request,
+):
+
+    require_admin(request)
+
+    with get_connection() as conn:
+
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                user_id,
+                amount_toman,
+                amount_rial,
+                request_id,
+                authority,
+                status,
+                ref_id,
+                response_code,
+                fee,
+                error_message,
+                created_at,
+                updated_at,
+                paid_at
+            FROM zarinpal_payments
+            ORDER BY id DESC
+            LIMIT 500
+            """
+        ).fetchall()
+
+    return {
+        "success": True,
+        "payments": [
+            dict(row)
+            for row in rows
+        ],
+    }
+
+
+# ============================================================
+# ROUTES DEBUG
+# ============================================================
+
+@app.get("/api/routes")
+def api_routes():
+
+    return {
+        "success": True,
+        "routes": [
+            route.path
+            for route in app.routes
+            if hasattr(route, "path")
+        ],
+    }
+
+
+# ============================================================
+# AUTH ROUTER
+# ============================================================
+
+app.include_router(
+    auth_router
+)

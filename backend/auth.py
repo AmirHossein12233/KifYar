@@ -8,8 +8,9 @@ from pydantic import BaseModel
 
 from backend.database import (
     create_user,
+    find_user_by_email,
     find_user_by_id,
-    get_connection,
+    find_user_by_username,
     verify_user_password,
 )
 
@@ -33,56 +34,64 @@ tokens: dict[str, int] = {}
 
 
 # =========================================================
-# DATABASE USER LOOKUP
+# USER LOOKUP
 # =========================================================
+
+def user_to_public_dict(
+    user: dict[str, Any],
+) -> dict[str, Any]:
+
+    return {
+        "id": int(user["id"]),
+        "username": user.get("username"),
+        "name": user.get(
+            "full_name",
+            "",
+        ),
+        "full_name": user.get(
+            "full_name",
+            "",
+        ),
+        "email": user.get("email"),
+        "is_admin": bool(
+            user.get(
+                "is_admin",
+                False,
+            )
+        ),
+        "created_at": user.get(
+            "created_at"
+        ),
+        "updated_at": user.get(
+            "updated_at"
+        ),
+    }
+
 
 def find_user(
     identifier: str,
 ) -> dict[str, Any] | None:
     """
     پیدا کردن کاربر با ایمیل یا نام کاربری.
-
-    این تابع داخل auth.py قرار گرفته تا با database.py فعلی
-    که تابع find_user ندارد، سازگار باشد.
     """
 
-    value = str(identifier).strip()
+    value = str(
+        identifier
+    ).strip()
 
     if not value:
         return None
 
-    connection = get_connection()
+    user = find_user_by_email(
+        value.lower()
+    )
 
-    try:
-        row = connection.execute(
-            """
-            SELECT
-                id,
-                username,
-                email,
-                name,
-                password_hash,
-                is_admin,
-                created_at,
-                updated_at
-            FROM users
-            WHERE LOWER(email) = LOWER(?)
-               OR LOWER(username) = LOWER(?)
-            LIMIT 1
-            """,
-            (
-                value,
-                value,
-            ),
-        ).fetchone()
+    if user is not None:
+        return user
 
-        if row is None:
-            return None
-
-        return dict(row)
-
-    finally:
-        connection.close()
+    return find_user_by_username(
+        value
+    )
 
 
 # =========================================================
@@ -93,9 +102,13 @@ def create_token(
     user_id: int,
 ) -> str:
 
-    token = secrets.token_urlsafe(32)
+    token = secrets.token_urlsafe(
+        32
+    )
 
-    tokens[token] = int(user_id)
+    tokens[token] = int(
+        user_id
+    )
 
     return token
 
@@ -120,13 +133,17 @@ def get_bearer_token(
             detail="ورود لازم است.",
         )
 
-    if not authorization.startswith("Bearer "):
+    if not authorization.startswith(
+        "Bearer "
+    ):
         raise HTTPException(
             status_code=401,
             detail="توکن نامعتبر است.",
         )
 
-    token = authorization[7:].strip()
+    token = authorization[
+        7:
+    ].strip()
 
     if not token:
         raise HTTPException(
@@ -145,7 +162,9 @@ def require_user_id(
         authorization
     )
 
-    user_id = tokens.get(token)
+    user_id = tokens.get(
+        token
+    )
 
     if user_id is None:
         raise HTTPException(
@@ -153,7 +172,9 @@ def require_user_id(
             detail="جلسه ورود معتبر نیست.",
         )
 
-    return int(user_id)
+    return int(
+        user_id
+    )
 
 
 # =========================================================
@@ -167,6 +188,8 @@ class RegisterRequest(BaseModel):
     email: str
 
     password: str
+
+    full_name: str = ""
 
 
 # =========================================================
@@ -203,11 +226,19 @@ def register(
     data: RegisterRequest,
 ):
 
-    username = data.username.strip()
+    username = (
+        data.username.strip()
+    )
 
-    email = data.email.strip().lower()
+    email = (
+        data.email.strip().lower()
+    )
 
     password = data.password
+
+    full_name = (
+        data.full_name.strip()
+    )
 
     if not username:
         raise HTTPException(
@@ -230,48 +261,91 @@ def register(
     if len(password) < 6:
         raise HTTPException(
             status_code=400,
-            detail="رمز عبور باید حداقل ۶ کاراکتر باشد.",
+            detail=(
+                "رمز عبور باید حداقل "
+                "۶ کاراکتر باشد."
+            ),
         )
 
-    # بررسی ایمیل یا نام کاربری تکراری
-    existing_user = find_user(email)
+    # -----------------------------------------------------
+    # Duplicate username
+    # -----------------------------------------------------
 
-    if existing_user is None:
-        existing_user = find_user(username)
+    existing_user = (
+        find_user_by_username(
+            username
+        )
+    )
 
     if existing_user is not None:
         raise HTTPException(
             status_code=409,
-            detail="این ایمیل یا نام کاربری قبلاً ثبت شده است.",
+            detail=(
+                "این نام کاربری "
+                "قبلاً ثبت شده است."
+            ),
         )
 
-    # create_user خودش رمز را هش می‌کند.
+    # -----------------------------------------------------
+    # Duplicate email
+    # -----------------------------------------------------
+
+    existing_user = (
+        find_user_by_email(
+            email
+        )
+    )
+
+    if existing_user is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "این ایمیل "
+                "قبلاً ثبت شده است."
+            ),
+        )
+
+    # -----------------------------------------------------
+    # Create user
+    # -----------------------------------------------------
+
     try:
 
-        user = create_user(
+        user_id = create_user(
             username=username,
             email=email,
             password=password,
+            full_name=full_name,
         )
 
     except Exception as exc:
 
-        error_text = str(exc).lower()
+        error_text = str(
+            exc
+        ).lower()
 
         if (
             "unique" in error_text
-            or "already exists" in error_text
             or "duplicate" in error_text
+            or "already exists" in error_text
         ):
             raise HTTPException(
                 status_code=409,
-                detail="این ایمیل یا نام کاربری قبلاً ثبت شده است.",
-            )
+                detail=(
+                    "این ایمیل یا "
+                    "نام کاربری قبلاً "
+                    "ثبت شده است."
+                ),
+            ) from exc
 
         raise HTTPException(
             status_code=500,
             detail="ثبت‌نام انجام نشد.",
         ) from exc
+
+    user = find_user_by_id(
+        int(user_id)
+    )
 
     if user is None:
         raise HTTPException(
@@ -281,14 +355,12 @@ def register(
 
     return {
         "success": True,
-        "message": "ثبت‌نام با موفقیت انجام شد.",
-        "user": {
-            "id": int(user["id"]),
-            "username": user.get("username"),
-            "name": user.get("name"),
-            "email": user.get("email"),
-            "created_at": user.get("created_at"),
-        },
+        "message": (
+            "ثبت‌نام با موفقیت انجام شد."
+        ),
+        "user": user_to_public_dict(
+            user
+        ),
     }
 
 
@@ -315,26 +387,43 @@ async def login(
 
         raise HTTPException(
             status_code=400,
-            detail="بدنه درخواست ورود نامعتبر است.",
+            detail=(
+                "بدنه درخواست "
+                "ورود نامعتبر است."
+            ),
         ) from exc
 
-    if not isinstance(body, dict):
+    if not isinstance(
+        body,
+        dict,
+    ):
         raise HTTPException(
             status_code=400,
-            detail="اطلاعات ورود نامعتبر است.",
+            detail=(
+                "اطلاعات ورود "
+                "نامعتبر است."
+            ),
         )
 
     # -----------------------------------------------------
-    # Read possible field names
+    # Read fields
     # -----------------------------------------------------
 
-    email = body.get("email")
+    email = body.get(
+        "email"
+    )
 
-    username = body.get("username")
+    username = body.get(
+        "username"
+    )
 
-    identifier = body.get("identifier")
+    identifier = body.get(
+        "identifier"
+    )
 
-    password = body.get("password")
+    password = body.get(
+        "password"
+    )
 
     # -----------------------------------------------------
     # Normalize
@@ -364,10 +453,6 @@ async def login(
         else ""
     )
 
-    # -----------------------------------------------------
-    # Determine identifier
-    # -----------------------------------------------------
-
     login_identifier = (
         email
         or identifier
@@ -377,13 +462,18 @@ async def login(
     if not login_identifier:
         raise HTTPException(
             status_code=400,
-            detail="ایمیل یا نام کاربری الزامی است.",
+            detail=(
+                "ایمیل یا نام کاربری "
+                "الزامی است."
+            ),
         )
 
     if not password:
         raise HTTPException(
             status_code=400,
-            detail="رمز عبور الزامی است.",
+            detail=(
+                "رمز عبور الزامی است."
+            ),
         )
 
     # -----------------------------------------------------
@@ -397,7 +487,10 @@ async def login(
     if user is None:
         raise HTTPException(
             status_code=401,
-            detail="ایمیل یا نام کاربری یا رمز عبور اشتباه است.",
+            detail=(
+                "ایمیل یا نام کاربری "
+                "یا رمز عبور اشتباه است."
+            ),
         )
 
     # -----------------------------------------------------
@@ -406,34 +499,24 @@ async def login(
 
     try:
 
-        valid_password = verify_user_password(
-            int(user["id"]),
-            password,
-        )
-
-    except TypeError:
-
-        # سازگاری در صورتی که ترتیب آرگومان تابع
-        # database.py متفاوت باشد.
-        try:
-
-            valid_password = verify_user_password(
+        verified_user = (
+            verify_user_password(
+                login_identifier,
                 password,
-                int(user["id"]),
             )
-
-        except Exception:
-
-            valid_password = False
+        )
 
     except Exception:
 
-        valid_password = False
+        verified_user = None
 
-    if not valid_password:
+    if verified_user is None:
         raise HTTPException(
             status_code=401,
-            detail="ایمیل یا نام کاربری یا رمز عبور اشتباه است.",
+            detail=(
+                "ایمیل یا نام کاربری "
+                "یا رمز عبور اشتباه است."
+            ),
         )
 
     # -----------------------------------------------------
@@ -442,8 +525,10 @@ async def login(
 
     old_tokens = [
         token
-        for token, stored_user_id in tokens.items()
-        if int(stored_user_id) == int(user["id"])
+        for token, stored_user_id
+        in tokens.items()
+        if int(stored_user_id)
+        == int(user["id"])
     ]
 
     for token in old_tokens:
@@ -470,15 +555,9 @@ async def login(
         "message": "ورود موفق بود.",
         "token": token,
         "access_token": token,
-        "user": {
-            "id": int(user["id"]),
-            "username": user.get("username"),
-            "name": user.get("name"),
-            "email": user.get("email"),
-            "is_admin": bool(
-                user.get("is_admin", 0)
-            ),
-        },
+        "user": user_to_public_dict(
+            user
+        ),
     }
 
 
@@ -511,7 +590,9 @@ def me(
 
     return {
         "success": True,
-        "user": user,
+        "user": user_to_public_dict(
+            user
+        ),
     }
 
 
@@ -538,5 +619,7 @@ def logout(
 
     return {
         "success": True,
-        "message": "با موفقیت خارج شدید.",
+        "message": (
+            "با موفقیت خارج شدید."
+        ),
     }

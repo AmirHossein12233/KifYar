@@ -1,2832 +1,725 @@
-﻿```html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="theme-color"
-        content="#111827"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>پروفایل | KifYar</title>
 
     <style>
-
         * {
             box-sizing: border-box;
         }
 
-        html,
         body {
             margin: 0;
-            padding: 0;
-            min-height: 100%;
-            font-family:
-                Tahoma,
-                Arial,
-                sans-serif;
-            background:
-                linear-gradient(
-                    180deg,
-                    #0b1120 0%,
-                    #111827 45%,
-                    #0f172a 100%
-                );
-            color: #f8fafc;
+            padding: 20px;
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111827;
         }
 
-        body {
-            min-height: 100vh;
-        }
-
-        button,
-        input,
-        textarea {
-            font: inherit;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        .page {
+        .container {
             width: 100%;
-            max-width: 1050px;
+            max-width: 700px;
             margin: 0 auto;
-            padding: 24px;
         }
 
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 22px;
+        .header {
+            background: #111827;
+            color: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 18px;
         }
 
-        .brand {
+        .header h1 {
+            margin: 0 0 8px;
             font-size: 25px;
-            font-weight: 900;
         }
 
-        .top-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            border: 0;
-            border-radius: 14px;
-            padding: 11px 16px;
-            color: #fff;
-            transition:
-                transform .15s ease,
-                opacity .15s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .btn:active {
-            transform: scale(.98);
-        }
-
-        .btn-dark {
-            background: #1f2937;
-        }
-
-        .btn-blue {
-            background: #2563eb;
-        }
-
-        .btn-green {
-            background: #16a34a;
-        }
-
-        .btn-red {
-            background: #dc2626;
-        }
-
-        .btn:disabled {
-            opacity: .55;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 330px 1fr;
-            gap: 18px;
+        .header p {
+            margin: 0;
+            color: #cbd5e1;
         }
 
         .card {
-            background: rgba(
-                15,
-                23,
-                42,
-                .92
-            );
-            border:
-                1px solid
-                rgba(
-                    148,
-                    163,
-                    184,
-                    .15
-                );
-            border-radius: 24px;
-            padding: 22px;
-            box-shadow:
-                0 18px 45px
-                rgba(
-                    0,
-                    0,
-                    0,
-                    .22
-                );
-            backdrop-filter: blur(10px);
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
         }
 
-        .profile-card {
-            text-align: center;
+        .profile-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .avatar {
-            width: 115px;
-            height: 115px;
-            margin:
-                0 auto 16px;
+            width: 75px;
+            height: 75px;
             border-radius: 50%;
-            background:
-                linear-gradient(
-                    135deg,
-                    #2563eb,
-                    #7c3aed
-                );
+            background: #2563eb;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            font-size: 42px;
-            font-weight: 900;
+            font-size: 30px;
+            font-weight: bold;
+            flex-shrink: 0;
         }
 
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .profile-info {
+            min-width: 0;
         }
 
-        .display-name {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 900;
+        .profile-info h2 {
+            margin: 0 0 7px;
+            font-size: 21px;
         }
 
-        .username {
-            margin-top: 7px;
-            color: #94a3b8;
-            direction: ltr;
-        }
-
-        .status {
-            margin-top: 15px;
-            color: #cbd5e1;
-            line-height: 1.8;
-        }
-
-        .profile-buttons {
-            display: grid;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .wallet-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .wallet-card::before {
-            content: "";
-            position: absolute;
-            width: 190px;
-            height: 190px;
-            left: -75px;
-            top: -75px;
-            border-radius: 50%;
-            background:
-                rgba(
-                    37,
-                    99,
-                    235,
-                    .12
-                );
-        }
-
-        .section-title {
-            margin:
-                0 0 16px;
-            font-size: 20px;
-            font-weight: 900;
+        .profile-info p {
+            margin: 4px 0;
+            color: #64748b;
+            word-break: break-word;
         }
 
         .balance-box {
-            background:
-                linear-gradient(
-                    135deg,
-                    #1d4ed8,
-                    #4f46e5
-                );
-            border-radius: 22px;
-            padding: 23px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .balance-label {
-            color:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    .78
-                );
-            font-size: 14px;
-        }
-
-        .balance-number {
-            margin-top: 9px;
-            font-size: 39px;
-            font-weight: 900;
-            letter-spacing: .5px;
-        }
-
-        .balance-unit {
-            font-size: 15px;
-            margin-right: 7px;
-            color:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    .83
-                );
-        }
-
-        .wallet-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .transactions {
-            margin-top: 22px;
-        }
-
-        .transactions-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .refresh {
-            border:
-                1px solid
-                #334155;
-            background: #0f172a;
-            color: #cbd5e1;
-            border-radius: 11px;
-            padding: 8px 12px;
-        }
-
-        .transaction-list {
-            display: grid;
-            gap: 10px;
-            max-height: 480px;
-            overflow-y: auto;
-        }
-
-        .transaction {
-            display: grid;
-            grid-template-columns:
-                52px 1fr auto;
-            align-items: center;
-            gap: 11px;
-            padding: 13px;
+            background: #eff6ff;
             border-radius: 16px;
-            background: #111827;
-            border:
-                1px solid
-                rgba(
-                    148,
-                    163,
-                    184,
-                    .12
-                );
-        }
-
-        .transaction-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 13px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background:
-                rgba(
-                    22,
-                    163,
-                    74,
-                    .15
-                );
-            color: #4ade80;
-            font-size: 21px;
-            font-weight: 900;
-        }
-
-        .transaction-icon.expense {
-            background:
-                rgba(
-                    220,
-                    38,
-                    38,
-                    .15
-                );
-            color: #f87171;
-        }
-
-        .transaction-title {
-            font-weight: 800;
-        }
-
-        .transaction-description {
-            margin-top: 4px;
-            color: #94a3b8;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .transaction-date {
-            margin-top: 3px;
-            color: #64748b;
-            font-size: 11px;
-            direction: ltr;
-            text-align: right;
-        }
-
-        .transaction-amount {
-            text-align: left;
-            direction: ltr;
-            color: #4ade80;
-            font-weight: 900;
-            white-space: nowrap;
-        }
-
-        .transaction-amount.expense {
-            color: #f87171;
-        }
-
-        .transaction-balance {
-            margin-top: 5px;
-            text-align: left;
-            direction: ltr;
-            color: #64748b;
-            font-size: 11px;
-            white-space: nowrap;
-        }
-
-        .empty {
-            padding: 35px 15px;
-            text-align: center;
-            color: #64748b;
-            border:
-                1px dashed
-                #334155;
-            border-radius: 16px;
-        }
-
-        .loading {
             padding: 20px;
             text-align: center;
-            color: #94a3b8;
+        }
+
+        .balance-title {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .balance {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1d4ed8;
+        }
+
+        .balance-sub {
+            margin-top: 8px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .menu button {
+            width: 100%;
+            border: 0;
+            border-radius: 13px;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: right;
+            transition: 0.15s;
+        }
+
+        .menu button:hover {
+            transform: translateY(-1px);
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .primary:hover {
+            background: #1d4ed8;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .secondary:hover {
+            background: #d1d5db;
+        }
+
+        .danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .danger:hover {
+            background: #fecaca;
         }
 
         .message {
             display: none;
-            margin-bottom: 16px;
-            padding: 12px 15px;
-            border-radius: 13px;
-            line-height: 1.7;
-        }
-
-        .message.show {
-            display: block;
+            padding: 13px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            line-height: 1.8;
         }
 
         .message.success {
-            background:
-                rgba(
-                    22,
-                    163,
-                    74,
-                    .14
-                );
-            color: #86efac;
-            border:
-                1px solid
-                rgba(
-                    34,
-                    197,
-                    94,
-                    .2
-                );
+            display: block;
+            background: #dcfce7;
+            color: #166534;
         }
 
         .message.error {
-            background:
-                rgba(
-                    220,
-                    38,
-                    38,
-                    .14
-                );
-            color: #fca5a5;
-            border:
-                1px solid
-                rgba(
-                    248,
-                    113,
-                    113,
-                    .2
-                );
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background:
-                rgba(
-                    0,
-                    0,
-                    0,
-                    .68
-                );
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            z-index: 1000;
-        }
-
-        .modal-backdrop.show {
-            display: flex;
-        }
-
-        .modal {
-            width: 100%;
-            max-width: 430px;
-            background: #111827;
-            border:
-                1px solid
-                #334155;
-            border-radius: 24px;
-            padding: 22px;
-            box-shadow:
-                0 25px 70px
-                rgba(
-                    0,
-                    0,
-                    0,
-                    .45
-                );
-        }
-
-        .modal-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 18px;
-        }
-
-        .modal-head h3 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .close {
-            width: 38px;
-            height: 38px;
-            border: 0;
-            border-radius: 11px;
-            background: #1f2937;
-            color: #fff;
-            font-size: 19px;
-        }
-
-        .field {
-            margin-top: 15px;
-        }
-
-        .field label {
             display: block;
-            margin-bottom: 7px;
-            color: #cbd5e1;
-            font-size: 14px;
+            background: #fee2e2;
+            color: #991b1b;
         }
 
-        .field input,
-        .field textarea {
-            width: 100%;
-            border:
-                1px solid
-                #334155;
-            background: #0b1120;
-            color: #fff;
-            border-radius: 13px;
-            padding: 12px 13px;
-            outline: 0;
-        }
-
-        .field input:focus,
-        .field textarea:focus {
-            border-color: #2563eb;
-        }
-
-        .quick-amounts {
-            display: grid;
-            grid-template-columns:
-                repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .quick-amount {
-            border:
-                1px solid
-                #334155;
-            background: #172033;
-            color: #cbd5e1;
-            border-radius: 11px;
-            padding: 9px 5px;
-        }
-
-        .quick-amount:hover {
-            border-color: #2563eb;
-        }
-
-        .modal-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 18px;
-        }
-
-        .profile-info {
-            display: grid;
-            gap: 10px;
-            margin-top: 22px;
-            text-align: right;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            padding: 11px 0;
-            border-bottom:
-                1px solid
-                rgba(
-                    148,
-                    163,
-                    184,
-                    .1
-                );
-        }
-
-        .info-row:last-child {
-            border-bottom: 0;
-        }
-
-        .info-label {
+        .loading {
             color: #64748b;
+            text-align: center;
+            padding: 10px;
         }
 
-        .info-value {
-            color: #e2e8f0;
-            word-break: break-word;
-            text-align: left;
+        .footer {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+            padding: 10px;
         }
 
-        @media (max-width: 800px) {
-
-            .page {
-                padding: 14px;
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
             }
 
-            .layout {
-                grid-template-columns: 1fr;
+            .header {
+                padding: 20px;
             }
 
-            .topbar {
-                align-items: flex-start;
+            .balance {
+                font-size: 24px;
             }
-
         }
-
-        @media (max-width: 470px) {
-
-            .wallet-actions {
-                grid-template-columns: 1fr;
-            }
-
-            .transaction {
-                grid-template-columns:
-                    45px 1fr;
-            }
-
-            .transaction-amount,
-            .transaction-balance {
-                grid-column: 2;
-                text-align: right;
-            }
-
-            .quick-amounts {
-                grid-template-columns:
-                    repeat(2, 1fr);
-            }
-
-        }
-
     </style>
-
 </head>
 
 <body>
 
-<div class="page">
+<div class="container">
 
-    <div class="topbar">
-
-        <div class="brand">
-            KifYar
-        </div>
-
-        <div class="top-actions">
-
-            <button
-                class="btn btn-dark"
-                id="backButton"
-                type="button"
-            >
-                بازگشت
-            </button>
-
-            <button
-                class="btn btn-red"
-                id="logoutButton"
-                type="button"
-            >
-                خروج
-            </button>
-
-        </div>
-
+    <div class="header">
+        <h1>👤 پروفایل KifYar</h1>
+        <p>مدیریت حساب و کیف پول شما</p>
     </div>
 
-    <div
-        id="message"
-        class="message"
-    ></div>
+    <div id="message" class="message"></div>
 
-    <div class="layout">
+    <!-- PROFILE -->
+    <div class="card">
 
-        <section class="card profile-card">
+        <div class="profile-top">
 
-            <div
-                id="avatar"
-                class="avatar"
-            >
+            <div id="avatar" class="avatar">
                 ؟
-            </div>
-
-            <h1
-                id="displayName"
-                class="display-name"
-            >
-                در حال بارگذاری...
-            </h1>
-
-            <div
-                id="username"
-                class="username"
-            >
-                @...
-            </div>
-
-            <div
-                id="status"
-                class="status"
-            >
-                در حال دریافت اطلاعات...
             </div>
 
             <div class="profile-info">
 
-                <div class="info-row">
+                <h2 id="fullName">
+                    در حال دریافت...
+                </h2>
 
-                    <span class="info-label">
-                        شناسه
-                    </span>
+                <p id="username">
+                    نام کاربری: ...
+                </p>
 
-                    <span
-                        id="userId"
-                        class="info-value"
-                    >
-                        -
-                    </span>
-
-                </div>
-
-                <div class="info-row">
-
-                    <span class="info-label">
-                        تاریخ عضویت
-                    </span>
-
-                    <span
-                        id="createdAt"
-                        class="info-value"
-                    >
-                        -
-                    </span>
-
-                </div>
+                <p id="email">
+                    ایمیل: ...
+                </p>
 
             </div>
 
-            <div class="profile-buttons">
-
-                <button
-                    class="btn btn-blue"
-                    id="editProfileButton"
-                    type="button"
-                >
-                    ویرایش پروفایل
-                </button>
-
-                <button
-                    class="btn btn-dark"
-                    id="settingsButton"
-                    type="button"
-                >
-                    تنظیمات حساب
-                </button>
-
-            </div>
-
-        </section>
-
-        <section class="card wallet-card">
-
-            <h2 class="section-title">
-                کیف پول
-            </h2>
-
-            <div class="balance-box">
-
-                <div class="balance-label">
-                    موجودی فعلی
-                </div>
-
-                <div>
-
-                    <span
-                        id="balance"
-                        class="balance-number"
-                    >
-                        ۰
-                    </span>
-
-                    <span class="balance-unit">
-                        تومان
-                    </span>
-
-                </div>
-
-            </div>
-
-            <div class="wallet-actions">
-
-                <button
-                    id="addBalanceButton"
-                    class="btn btn-green"
-                    type="button"
-                >
-                    + افزایش موجودی
-                </button>
-
-                <button
-                    id="refreshWalletButton"
-                    class="btn btn-dark"
-                    type="button"
-                >
-                    بروزرسانی
-                </button>
-
-            </div>
-
-            <div class="transactions">
-
-                <div class="transactions-head">
-
-                    <h2
-                        class="section-title"
-                        style="margin:0;"
-                    >
-                        تراکنش‌ها
-                    </h2>
-
-                    <button
-                        id="refreshTransactionsButton"
-                        class="refresh"
-                        type="button"
-                    >
-                        تازه‌سازی
-                    </button>
-
-                </div>
-
-                <div
-                    id="transactions"
-                    class="transaction-list"
-                >
-
-                    <div class="loading">
-                        در حال دریافت تراکنش‌ها...
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
+        </div>
 
     </div>
 
-</div>
+    <!-- BALANCE -->
+    <div class="card">
 
-<div
-    id="walletModal"
-    class="modal-backdrop"
->
+        <h2>💰 کیف پول</h2>
 
-    <div class="modal">
+        <div class="balance-box">
 
-        <div class="modal-head">
+            <div class="balance-title">
+                موجودی فعلی
+            </div>
 
-            <h3>
-                افزایش موجودی
-            </h3>
+            <div id="balance" class="balance">
+                ۰ تومان
+            </div>
 
-            <button
-                id="closeWalletModal"
-                class="close"
-                type="button"
-            >
-                ×
-            </button>
-
-        </div>
-
-        <div
-            id="walletModalMessage"
-            class="message"
-        ></div>
-
-        <div class="field">
-
-            <label for="amount">
-                مبلغ
-            </label>
-
-            <input
-                id="amount"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="مثلاً 5000"
-                inputmode="numeric"
-            >
-
-            <div class="quick-amounts">
-
-                <button
-                    class="quick-amount"
-                    data-amount="5000"
-                    type="button"
-                >
-                    ۵٬۰۰۰
-                </button>
-
-                <button
-                    class="quick-amount"
-                    data-amount="10000"
-                    type="button"
-                >
-                    ۱۰٬۰۰۰
-                </button>
-
-                <button
-                    class="quick-amount"
-                    data-amount="20000"
-                    type="button"
-                >
-                    ۲۰٬۰۰۰
-                </button>
-
-                <button
-                    class="quick-amount"
-                    data-amount="50000"
-                    type="button"
-                >
-                    ۵۰٬۰۰۰
-                </button>
-
+            <div id="balanceInfo" class="balance-sub">
+                در حال دریافت موجودی...
             </div>
 
         </div>
 
-        <div class="field">
+    </div>
 
-            <label for="description">
-                توضیح تراکنش
-            </label>
+    <!-- MENU -->
+    <div class="card">
 
-            <textarea
-                id="description"
-                rows="3"
-                maxlength="200"
-                placeholder="مثلاً شارژ کیف پول"
-            ></textarea>
+        <h2>مدیریت حساب</h2>
 
-        </div>
+        <div class="menu">
 
-        <div class="modal-actions">
-
+            <!-- افزایش موجودی -->
             <button
-                id="cancelWalletButton"
-                class="btn btn-dark"
                 type="button"
+                class="primary"
+                onclick="goToDeposit()"
             >
-                انصراف
+                💰 افزایش موجودی
             </button>
 
+            <!-- برداشت -->
             <button
-                id="submitWalletButton"
-                class="btn btn-green"
                 type="button"
+                class="primary"
+                onclick="goToWithdraw()"
             >
-                ثبت افزایش
+                💳 برداشت وجه
+            </button>
+
+            <!-- تراکنش‌ها -->
+            <button
+                type="button"
+                class="secondary"
+                onclick="goToTransactions()"
+            >
+                📋 تراکنش‌های من
+            </button>
+
+            <!-- کارت‌ها -->
+            <button
+                type="button"
+                class="secondary"
+                onclick="goToCards()"
+            >
+                💳 کارت‌های بانکی
+            </button>
+
+            <!-- تنظیمات -->
+            <button
+                type="button"
+                class="secondary"
+                onclick="goToSettings()"
+            >
+                ⚙️ تنظیمات
+            </button>
+
+            <!-- خروج -->
+            <button
+                type="button"
+                class="danger"
+                onclick="logout()"
+            >
+                🚪 خروج از حساب
             </button>
 
         </div>
 
     </div>
 
-</div>
-
-<div
-    id="profileModal"
-    class="modal-backdrop"
->
-
-    <div class="modal">
-
-        <div class="modal-head">
-
-            <h3>
-                ویرایش پروفایل
-            </h3>
-
-            <button
-                id="closeProfileModal"
-                class="close"
-                type="button"
-            >
-                ×
-            </button>
-
-        </div>
-
-        <div
-            id="profileModalMessage"
-            class="message"
-        ></div>
-
-        <div class="field">
-
-            <label for="profileDisplayName">
-                نام نمایشی
-            </label>
-
-            <input
-                id="profileDisplayName"
-                type="text"
-                maxlength="100"
-            >
-
-        </div>
-
-        <div class="modal-actions">
-
-            <button
-                id="cancelProfileButton"
-                class="btn btn-dark"
-                type="button"
-            >
-                انصراف
-            </button>
-
-            <button
-                id="saveProfileButton"
-                class="btn btn-blue"
-                type="button"
-            >
-                ذخیره
-            </button>
-
-        </div>
-
+    <div class="footer">
+        KifYar — نسخه 1.0.0
     </div>
 
 </div>
 
 <script>
 
-"use strict";
+const API_URL = "https://kifyar-api.onrender.com";
 
 
-// =========================================================
-// API
-// =========================================================
-
-const API_BASE =
-    "https://kifyar-api.onrender.com";
-
-
-// =========================================================
-// STORAGE
-// =========================================================
-
-const TOKEN_KEY =
-    "kifyar_token";
-
-const USER_KEY =
-    "kifyar_user";
-
-
-// =========================================================
-// AUTH
-// =========================================================
+/* =========================================================
+   TOKEN
+========================================================= */
 
 function getToken() {
 
-    return localStorage.getItem(
-        TOKEN_KEY
-    ) || "";
-
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("kifyar_token") ||
+        ""
+    );
 }
 
 
-function clearSession() {
+/* =========================================================
+   HEADERS
+========================================================= */
 
-    localStorage.removeItem(
-        TOKEN_KEY
-    );
+function getHeaders() {
 
-    localStorage.removeItem(
-        USER_KEY
-    );
-
-    localStorage.removeItem(
-        "access_token"
-    );
-
-    localStorage.removeItem(
-        "auth_token"
-    );
-
-    localStorage.removeItem(
-        "gapino_token"
-    );
-
-    localStorage.removeItem(
-        "gapino_user"
-    );
-
-}
-
-
-function goToLogin() {
-
-    clearSession();
-
-    window.location.assign(
-        "login.html"
-    );
-
-}
-
-
-// =========================================================
-// API REQUEST
-// =========================================================
-
-async function api(
-    url,
-    options = {}
-) {
-
-    const token =
-        getToken();
-
-
-    if (!token) {
-
-        goToLogin();
-
-        throw new Error(
-            "ورود لازم است."
-        );
-
-    }
-
+    const token = getToken();
 
     const headers = {
-
-        "Accept":
-            "application/json",
-
-        ...(options.headers || {})
-
+        "Content-Type": "application/json"
     };
 
-
-    headers[
-        "Authorization"
-    ] =
-        `Bearer ${token}`;
-
-
-    if (
-        options.body &&
-        !headers[
-            "Content-Type"
-        ]
-    ) {
-
-        headers[
-            "Content-Type"
-        ] =
-            "application/json";
-
+    if (token) {
+        headers["Authorization"] =
+            "Bearer " + token;
     }
 
+    return headers;
+}
 
-    const response =
-        await fetch(
-            API_BASE + url,
-            {
-                ...options,
 
-                headers,
+/* =========================================================
+   API
+========================================================= */
 
-                cache:
-                    "no-store"
+async function apiFetch(url, options = {}) {
+
+    const response = await fetch(
+        API_URL + url,
+        {
+            ...options,
+            headers: {
+                ...getHeaders(),
+                ...(options.headers || {})
             }
-        );
-
+        }
+    );
 
     let data = {};
 
-
-    const contentType =
-        response.headers.get(
-            "content-type"
-        ) || "";
-
-
-    if (
-        contentType.includes(
-            "application/json"
-        )
-    ) {
-
-        try {
-
-            data =
-                await response.json();
-
-        } catch {
-
-            data = {};
-
-        }
-
-    } else {
-
-        const text =
-            await response.text();
-
-        data = {
-
-            detail:
-                text ||
-                "پاسخ نامعتبر از سرور."
-
-        };
-
+    try {
+        data = await response.json();
+    } catch {
+        data = {};
     }
 
-
-    if (
-        response.status === 401
-    ) {
-
-        clearSession();
-
-        window.location.assign(
-            "login.html"
-        );
+    if (!response.ok) {
 
         throw new Error(
-            "جلسه ورود منقضی شده است."
-        );
-
-    }
-
-
-    if (
-        !response.ok
-    ) {
-
-        const errorMessage =
             data.detail ||
             data.message ||
             data.error ||
-            `خطای سرور: ${response.status}`;
-
-
-        throw new Error(
-            typeof errorMessage ===
-            "string"
-                ? errorMessage
-                : JSON.stringify(
-                    errorMessage
-                )
+            "خطا در ارتباط با سرور"
         );
-
     }
-
 
     return data;
-
 }
 
 
-// =========================================================
-// ELEMENTS
-// =========================================================
+/* =========================================================
+   MESSAGE
+========================================================= */
 
-const messageEl =
-    document.getElementById(
-        "message"
-    );
-
-
-const avatarEl =
-    document.getElementById(
-        "avatar"
-    );
-
-
-const displayNameEl =
-    document.getElementById(
-        "displayName"
-    );
-
-
-const usernameEl =
-    document.getElementById(
-        "username"
-    );
-
-
-const statusEl =
-    document.getElementById(
-        "status"
-    );
-
-
-const userIdEl =
-    document.getElementById(
-        "userId"
-    );
-
-
-const createdAtEl =
-    document.getElementById(
-        "createdAt"
-    );
-
-
-const balanceEl =
-    document.getElementById(
-        "balance"
-    );
-
-
-const transactionsEl =
-    document.getElementById(
-        "transactions"
-    );
-
-
-let currentUser =
-    null;
-
-
-// =========================================================
-// MESSAGES
-// =========================================================
-
-function showMessage(
-    text,
-    type = "success"
-) {
-
-    messageEl.textContent =
-        text || "";
-
-    messageEl.className =
-        "message";
-
-
-    if (!text) {
-        return;
-    }
-
-
-    messageEl.classList.add(
-        "show",
-        type
-    );
-
-}
-
-
-function showWalletMessage(
-    text,
-    type = "error"
-) {
+function showMessage(text, type) {
 
     const element =
-        document.getElementById(
-            "walletModalMessage"
-        );
+        document.getElementById("message");
 
-
-    element.textContent =
-        text || "";
+    element.textContent = text;
 
     element.className =
-        "message";
+        "message " + type;
+}
 
 
-    if (!text) {
-        return;
-    }
+/* =========================================================
+   MONEY
+========================================================= */
 
+function formatMoney(value) {
 
-    element.classList.add(
-        "show",
-        type
+    const number =
+        Number(value || 0);
+
+    return (
+        new Intl.NumberFormat("fa-IR")
+            .format(number)
+        + " تومان"
     );
-
 }
 
 
-function showProfileMessage(
-    text,
-    type = "error"
-) {
-
-    const element =
-        document.getElementById(
-            "profileModalMessage"
-        );
-
-
-    element.textContent =
-        text || "";
-
-    element.className =
-        "message";
-
-
-    if (!text) {
-        return;
-    }
-
-
-    element.classList.add(
-        "show",
-        type
-    );
-
-}
-
-
-// =========================================================
-// HELPERS
-// =========================================================
-
-function escapeHtml(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
-}
-
-
-function formatNumber(
-    value
-) {
-
-    return new Intl.NumberFormat(
-        "fa-IR"
-    ).format(
-        Number(
-            value || 0
-        )
-    );
-
-}
-
-
-function formatDate(
-    value
-) {
-
-    if (!value) {
-        return "-";
-    }
-
-
-    const date =
-        new Date(value);
-
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return String(
-            value
-        );
-
-    }
-
-
-    return date.toLocaleString(
-        "fa-IR"
-    );
-
-}
-
-
-// =========================================================
-// AVATAR
-// =========================================================
-
-function renderAvatar(
-    user
-) {
-
-    avatarEl.innerHTML =
-        "";
-
-
-    const avatar =
-        String(
-            user?.avatar || ""
-        ).trim();
-
-
-    if (avatar) {
-
-        const image =
-            document.createElement(
-                "img"
-            );
-
-
-        image.src =
-            avatar;
-
-
-        image.alt =
-            user?.name ||
-            user?.username ||
-            "avatar";
-
-
-        image.onerror =
-            function() {
-
-                this.remove();
-
-                avatarEl.textContent =
-                    (
-                        user?.name ||
-                        user?.username ||
-                        "؟"
-                    ).substring(
-                        0,
-                        1
-                    );
-
-            };
-
-
-        avatarEl.appendChild(
-            image
-        );
-
-
-        return;
-
-    }
-
-
-    avatarEl.textContent =
-        (
-            user?.name ||
-            user?.username ||
-            "؟"
-        ).substring(
-            0,
-            1
-        );
-
-}
-
-
-// =========================================================
-// USER
-// =========================================================
-
-function renderUser(
-    user
-) {
-
-    if (
-        !user ||
-        typeof user !== "object"
-    ) {
-
-        throw new Error(
-            "اطلاعات کاربر نامعتبر است."
-        );
-
-    }
-
-
-    currentUser =
-        user;
-
-
-    renderAvatar(
-        user
-    );
-
-
-    const name =
-        user.name ||
-        user.username ||
-        "کاربر";
-
-
-    displayNameEl.textContent =
-        name;
-
-
-    usernameEl.textContent =
-        user.username
-            ? "@" +
-              user.username
-            : "@";
-
-
-    statusEl.textContent =
-        user.status ||
-        "حساب کیف‌یار فعال است.";
-
-
-    userIdEl.textContent =
-        String(
-            user.id ??
-            "-"
-        );
-
-
-    createdAtEl.textContent =
-        formatDate(
-            user.created_at
-        );
-
-
-    localStorage.setItem(
-        USER_KEY,
-        JSON.stringify(
-            user
-        )
-    );
-
-}
-
-
-// =========================================================
-// PROFILE LOAD
-// =========================================================
-
-async function loadCurrentUser() {
+/* =========================================================
+   PROFILE
+========================================================= */
+
+async function loadProfile() {
 
     try {
 
         const data =
-            await api(
-                "/api/profile"
-            );
+            await apiFetch("/api/me");
 
-
-        /*
-         * API فعلی KifYar اطلاعات کاربر را
-         * مستقیم برمی‌گرداند:
-         *
-         * {
-         *   id,
-         *   username,
-         *   email,
-         *   name,
-         *   is_admin,
-         *   created_at
-         * }
-         *
-         * بنابراین نباید data.user استفاده شود.
-         */
-
-        let user =
+        const user =
+            data.user ||
             data;
 
+        const fullName =
+            user.full_name ||
+            user.name ||
+            user.display_name ||
+            user.username ||
+            "کاربر";
 
-        /*
-         * برای سازگاری با نسخه‌های قدیمی
-         * اگر سرور data.user برگرداند
-         * آن را هم قبول می‌کنیم.
-         */
+        const username =
+            user.username ||
+            "-";
 
-        if (
-            data &&
-            data.user &&
-            typeof data.user === "object"
-        ) {
+        const email =
+            user.email ||
+            "-";
 
-            user =
-                data.user;
+        document.getElementById(
+            "fullName"
+        ).textContent = fullName;
 
-        }
+        document.getElementById(
+            "username"
+        ).textContent =
+            "نام کاربری: " + username;
 
+        document.getElementById(
+            "email"
+        ).textContent =
+            "ایمیل: " + email;
 
-        if (
-            !user ||
-            typeof user !== "object" ||
-            user.id === undefined ||
-            user.id === null
-        ) {
+        const avatar =
+            document.getElementById("avatar");
 
-            throw new Error(
-                "اطلاعات کاربر دریافت نشد."
-            );
+        const firstLetter =
+            String(fullName)
+                .trim()
+                .charAt(0);
 
-        }
+        avatar.textContent =
+            firstLetter || "👤";
 
-
-        renderUser(
-            user
+        localStorage.setItem(
+            "kifyar_user",
+            JSON.stringify(user)
         );
 
+    } catch (error) {
 
-        return true;
-
-
-    } catch (
-        error
-    ) {
-
-        console.error(
-            "PROFILE LOAD ERROR:",
-            error
-        );
-
+        console.error(error);
 
         showMessage(
             error.message ||
-            "دریافت اطلاعات کاربر ناموفق بود.",
+            "دریافت اطلاعات حساب ناموفق بود.",
             "error"
         );
-
-
-        return false;
-
     }
-
 }
 
 
-// =========================================================
-// BALANCE
-// =========================================================
+/* =========================================================
+   BALANCE
+========================================================= */
 
-async function loadBalance(
-    silent = false
-) {
+async function loadBalance() {
 
     try {
 
         const data =
-            await api(
-                "/api/wallet/balance"
-            );
-
+            await apiFetch("/api/balance");
 
         const balance =
-            Number(
-                data.balance ??
-                data.amount ??
+            data.balance ??
+            data.current_balance ??
+            0;
+
+        const reserved =
+            data.reserved ??
+            data.reserved_balance ??
+            0;
+
+        const available =
+            data.available ??
+            data.available_balance ??
+            Math.max(
+                Number(balance) -
+                Number(reserved),
                 0
             );
 
+        document.getElementById(
+            "balance"
+        ).textContent =
+            formatMoney(balance);
 
-        balanceEl.textContent =
-            formatNumber(
-                balance
-            );
+        document.getElementById(
+            "balanceInfo"
+        ).textContent =
+            "قابل برداشت: " +
+            formatMoney(available) +
+            " | رزرو شده: " +
+            formatMoney(reserved);
 
+    } catch (error) {
 
-        return balance;
+        console.error(error);
 
-
-    } catch (
-        error
-    ) {
-
-        console.error(
-            "BALANCE ERROR:",
-            error
-        );
-
-
-        balanceEl.textContent =
+        document.getElementById(
+            "balance"
+        ).textContent =
             "خطا";
 
-
-        if (!silent) {
-
-            showMessage(
-                error.message ||
-                "دریافت موجودی ناموفق بود.",
-                "error"
-            );
-
-        }
-
-
-        return null;
-
-    }
-
-}
-
-
-// =========================================================
-// TRANSACTIONS LOAD
-// =========================================================
-
-async function loadTransactions() {
-
-    transactionsEl.innerHTML = `
-
-        <div class="loading">
-            در حال دریافت تراکنش‌ها...
-        </div>
-
-    `;
-
-
-    try {
-
-        const data =
-            await api(
-                "/api/transactions"
-            );
-
-
-        const transactions =
-            Array.isArray(
-                data
-            )
-                ? data
-                : Array.isArray(
-                    data.transactions
-                )
-                    ? data.transactions
-                    : [];
-
-
-        renderTransactions(
-            transactions
-        );
-
-
-    } catch (
-        error
-    ) {
-
-        console.error(
-            "TRANSACTIONS ERROR:",
-            error
-        );
-
-
-        transactionsEl.innerHTML = `
-
-            <div class="empty">
-                دریافت تراکنش‌ها ناموفق بود.
-            </div>
-
-        `;
-
-    }
-
-}
-
-
-// =========================================================
-// TRANSACTIONS RENDER
-// =========================================================
-
-function renderTransactions(
-    transactions
-) {
-
-    if (
-        !transactions.length
-    ) {
-
-        transactionsEl.innerHTML = `
-
-            <div class="empty">
-                هنوز تراکنشی ثبت نشده است.
-            </div>
-
-        `;
-
-
-        return;
-
-    }
-
-
-    transactionsEl.innerHTML =
-        transactions
-            .map(
-                transaction => {
-
-                    const amount =
-                        Number(
-                            transaction.amount ||
-                            0
-                        );
-
-
-                    const type =
-                        String(
-                            transaction.transaction_type ??
-                            transaction.type ??
-                            ""
-                        )
-                            .toLowerCase()
-                            .trim();
-
-
-                    const isExpense =
-                        type === "expense" ||
-                        type === "withdraw" ||
-                        type === "withdrawal";
-
-
-                    const icon =
-                        isExpense
-                            ? "↑"
-                            : "↓";
-
-
-                    const sign =
-                        isExpense
-                            ? "-"
-                            : "+";
-
-
-                    const title =
-                        transaction.title ||
-                        (
-                            isExpense
-                                ? "برداشت"
-                                : "افزایش موجودی"
-                        );
-
-
-                    const description =
-                        transaction.description ||
-                        "";
-
-
-                    return `
-
-                        <div class="transaction">
-
-                            <div
-                                class="
-                                    transaction-icon
-                                    ${
-                                        isExpense
-                                            ? "expense"
-                                            : ""
-                                    }
-                                "
-                            >
-                                ${icon}
-                            </div>
-
-                            <div>
-
-                                <div class="transaction-title">
-
-                                    ${
-                                        escapeHtml(
-                                            title
-                                        )
-                                    }
-
-                                </div>
-
-                                <div
-                                    class="transaction-description"
-                                >
-
-                                    ${
-                                        escapeHtml(
-                                            description
-                                        )
-                                    }
-
-                                </div>
-
-                                <div
-                                    class="transaction-date"
-                                >
-
-                                    ${
-                                        escapeHtml(
-                                            formatDate(
-                                                transaction.created_at
-                                            )
-                                        )
-                                    }
-
-                                </div>
-
-                            </div>
-
-                            <div>
-
-                                <div
-                                    class="
-                                        transaction-amount
-                                        ${
-                                            isExpense
-                                                ? "expense"
-                                                : ""
-                                        }
-                                    "
-                                >
-
-                                    ${
-                                        sign
-                                    }${
-                                        formatNumber(
-                                            amount
-                                        )
-                                    }
-                                    تومان
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-                }
-            )
-            .join("");
-
-}
-
-
-// =========================================================
-// REFRESH WALLET
-// =========================================================
-
-async function refreshWallet() {
-
-    await Promise.all(
-        [
-            loadBalance(true),
-            loadTransactions()
-        ]
-    );
-
-
-    showMessage(
-        "اطلاعات کیف پول بروزرسانی شد.",
-        "success"
-    );
-
-}
-
-
-// =========================================================
-// WALLET MODAL
-// =========================================================
-
-const walletModal =
-    document.getElementById(
-        "walletModal"
-    );
-
-
-const amountInput =
-    document.getElementById(
-        "amount"
-    );
-
-
-const descriptionInput =
-    document.getElementById(
-        "description"
-    );
-
-
-function openWalletModal() {
-
-    showWalletMessage(
-        ""
-    );
-
-
-    amountInput.value =
-        "";
-
-
-    descriptionInput.value =
-        "افزایش موجودی";
-
-
-    walletModal.classList.add(
-        "show"
-    );
-
-
-    setTimeout(
-        () => {
-
-            amountInput.focus();
-
-        },
-        100
-    );
-
-}
-
-
-function closeWalletModal() {
-
-    walletModal.classList.remove(
-        "show"
-    );
-
-}
-
-
-// =========================================================
-// ADD BALANCE
-// =========================================================
-
-async function addBalance() {
-
-    showWalletMessage(
-        ""
-    );
-
-
-    const amount =
-        Number(
-            amountInput.value
-        );
-
-
-    if (
-        !Number.isInteger(
-            amount
-        ) ||
-        amount <= 0
-    ) {
-
-        showWalletMessage(
-            "مبلغ باید عدد صحیح بزرگ‌تر از صفر باشد."
-        );
-
-
-        return;
-
-    }
-
-
-    if (
-        amount >
-        100000000
-    ) {
-
-        showWalletMessage(
-            "مبلغ واردشده بیش از حد مجاز است."
-        );
-
-
-        return;
-
-    }
-
-
-    const button =
         document.getElementById(
-            "submitWalletButton"
-        );
-
-
-    button.disabled =
-        true;
-
-
-    button.textContent =
-        "در حال ثبت...";
-
-
-    try {
-
-        const data =
-            await api(
-                "/api/wallet/add",
-                {
-                    method:
-                        "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify(
-                            {
-                                amount:
-                                    amount
-                            }
-                        )
-                }
-            );
-
-
-        const newBalance =
-            Number(
-                data.balance ??
-                0
-            );
-
-
-        balanceEl.textContent =
-            formatNumber(
-                newBalance
-            );
-
-
-        closeWalletModal();
-
-
-        await loadTransactions();
-
-
-        showMessage(
-            `موجودی با موفقیت به ${
-                formatNumber(
-                    newBalance
-                )
-            } تومان رسید.`,
-            "success"
-        );
-
-
-    } catch (
-        error
-    ) {
-
-        console.error(
-            "ADD BALANCE ERROR:",
-            error
-        );
-
-
-        showWalletMessage(
-            error.message ||
-            "افزایش موجودی ناموفق بود."
-        );
-
-
-    } finally {
-
-        button.disabled =
-            false;
-
-
-        button.textContent =
-            "ثبت افزایش";
-
+            "balanceInfo"
+        ).textContent =
+            "امکان دریافت موجودی وجود ندارد.";
     }
-
 }
 
 
-// =========================================================
-// PROFILE MODAL
-// =========================================================
+/* =========================================================
+   NAVIGATION
+========================================================= */
 
-const profileModal =
-    document.getElementById(
-        "profileModal"
-    );
+function goToWithdraw() {
 
-
-const profileDisplayName =
-    document.getElementById(
-        "profileDisplayName"
-    );
-
-
-function openProfileModal() {
-
-    showProfileMessage(
-        ""
-    );
-
-
-    profileDisplayName.value =
-        currentUser?.name ||
-        currentUser?.username ||
-        "";
-
-
-    profileModal.classList.add(
-        "show"
-    );
-
+    window.location.href =
+        "withdraw.html";
 }
 
 
-function closeProfileModal() {
+function goToDeposit() {
 
-    profileModal.classList.remove(
-        "show"
-    );
-
+    window.location.href =
+        "deposit.html";
 }
 
 
-// =========================================================
-// SAVE PROFILE
-// =========================================================
+function goToTransactions() {
 
-async function saveProfile() {
-
-    showProfileMessage(
-        ""
-    );
-
-
-    const name =
-        profileDisplayName.value.trim();
-
-
-    if (!name) {
-
-        showProfileMessage(
-            "نام نمی‌تواند خالی باشد."
-        );
-
-
-        return;
-
-    }
-
-
-    if (
-        name.length >
-        100
-    ) {
-
-        showProfileMessage(
-            "نام خیلی طولانی است."
-        );
-
-
-        return;
-
-    }
-
-
-    const button =
-        document.getElementById(
-            "saveProfileButton"
-        );
-
-
-    button.disabled =
-        true;
-
-
-    button.textContent =
-        "در حال ذخیره...";
-
-
-    try {
-
-        const data =
-            await api(
-                "/api/profile",
-                {
-                    method:
-                        "PUT",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify(
-                            {
-                                name:
-                                    name
-                            }
-                        )
-                }
-            );
-
-
-        /*
-         * API فعلی بعد از PUT ممکن است
-         * فقط success/message برگرداند.
-         *
-         * بنابراین دوباره اطلاعات واقعی
-         * کاربر را از /api/profile می‌گیریم.
-         */
-
-        const userLoaded =
-            await loadCurrentUser();
-
-
-        if (!userLoaded) {
-
-            throw new Error(
-                "پروفایل ذخیره شد اما دریافت اطلاعات جدید ناموفق بود."
-            );
-
-        }
-
-
-        closeProfileModal();
-
-
-        showMessage(
-            data.message ||
-            "پروفایل با موفقیت ذخیره شد.",
-            "success"
-        );
-
-
-    } catch (
-        error
-    ) {
-
-        console.error(
-            "SAVE PROFILE ERROR:",
-            error
-        );
-
-
-        showProfileMessage(
-            error.message ||
-            "ذخیره پروفایل ناموفق بود."
-        );
-
-
-    } finally {
-
-        button.disabled =
-            false;
-
-
-        button.textContent =
-            "ذخیره";
-
-    }
-
+    window.location.href =
+        "transactions.html";
 }
 
 
-// =========================================================
-// LOGOUT
-// =========================================================
+function goToCards() {
+
+    window.location.href =
+        "cards.html";
+}
+
+
+function goToSettings() {
+
+    window.location.href =
+        "settings.html";
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
 
 async function logout() {
 
     try {
 
-        await api(
+        await apiFetch(
             "/api/logout",
             {
-                method:
-                    "POST"
+                method: "POST"
             }
         );
 
-    } catch (
-        error
-    ) {
+    } catch (error) {
 
-        console.error(
-            "LOGOUT ERROR:",
+        console.warn(
+            "Logout API:",
             error
         );
 
+    } finally {
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("kifyar_token");
+        localStorage.removeItem("kifyar_user");
+
+        window.location.href =
+            "login.html";
     }
-
-
-    goToLogin();
-
 }
 
 
-// =========================================================
-// EVENTS
-// =========================================================
+/* =========================================================
+   AUTH CHECK
+========================================================= */
 
-document
-    .getElementById(
-        "backButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
+async function checkAuth() {
 
-            window.location.assign(
-                "index.html"
-            );
+    const token =
+        getToken();
 
-        }
-    );
+    if (!token) {
 
+        showMessage(
+            "ابتدا وارد حساب خود شوید.",
+            "error"
+        );
 
-document
-    .getElementById(
-        "logoutButton"
-    )
-    .addEventListener(
-        "click",
-        logout
-    );
+        setTimeout(() => {
 
+            window.location.href =
+                "login.html";
 
-document
-    .getElementById(
-        "addBalanceButton"
-    )
-    .addEventListener(
-        "click",
-        openWalletModal
-    );
+        }, 1200);
 
-
-document
-    .getElementById(
-        "refreshWalletButton"
-    )
-    .addEventListener(
-        "click",
-        refreshWallet
-    );
-
-
-document
-    .getElementById(
-        "refreshTransactionsButton"
-    )
-    .addEventListener(
-        "click",
-        loadTransactions
-    );
-
-
-document
-    .getElementById(
-        "closeWalletModal"
-    )
-    .addEventListener(
-        "click",
-        closeWalletModal
-    );
-
-
-document
-    .getElementById(
-        "cancelWalletButton"
-    )
-    .addEventListener(
-        "click",
-        closeWalletModal
-    );
-
-
-document
-    .getElementById(
-        "submitWalletButton"
-    )
-    .addEventListener(
-        "click",
-        addBalance
-    );
-
-
-document
-    .querySelectorAll(
-        ".quick-amount"
-    )
-    .forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    amountInput.value =
-                        button.dataset.amount;
-
-                }
-            );
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "editProfileButton"
-    )
-    .addEventListener(
-        "click",
-        openProfileModal
-    );
-
-
-document
-    .getElementById(
-        "settingsButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            window.location.assign(
-                "settings.html"
-            );
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "closeProfileModal"
-    )
-    .addEventListener(
-        "click",
-        closeProfileModal
-    );
-
-
-document
-    .getElementById(
-        "cancelProfileButton"
-    )
-    .addEventListener(
-        "click",
-        closeProfileModal
-    );
-
-
-document
-    .getElementById(
-        "saveProfileButton"
-    )
-    .addEventListener(
-        "click",
-        saveProfile
-    );
-
-
-amountInput.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key ===
-            "Enter"
-        ) {
-
-            event.preventDefault();
-
-            addBalance();
-
-        }
-
-    }
-);
-
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key ===
-            "Escape"
-        ) {
-
-            closeWalletModal();
-
-            closeProfileModal();
-
-        }
-
-    }
-);
-
-
-walletModal.addEventListener(
-    "click",
-    event => {
-
-        if (
-            event.target ===
-            walletModal
-        ) {
-
-            closeWalletModal();
-
-        }
-
-    }
-);
-
-
-profileModal.addEventListener(
-    "click",
-    event => {
-
-        if (
-            event.target ===
-            profileModal
-        ) {
-
-            closeProfileModal();
-
-        }
-
-    }
-);
-
-
-// =========================================================
-// INIT
-// =========================================================
-
-async function init() {
-
-    if (
-        !getToken()
-    ) {
-
-        goToLogin();
-
-        return;
-
+        return false;
     }
 
-
-    const userLoaded =
-        await loadCurrentUser();
-
-
-    if (!userLoaded) {
-        return;
-    }
-
-
-    await Promise.all(
-        [
-            loadBalance(true),
-            loadTransactions()
-        ]
-    );
-
+    return true;
 }
 
 
-init();
+/* =========================================================
+   START
+========================================================= */
+
+async function startPage() {
+
+    const authenticated =
+        await checkAuth();
+
+    if (!authenticated) {
+        return;
+    }
+
+    await Promise.all([
+        loadProfile(),
+        loadBalance()
+    ]);
+}
+
+
+window.addEventListener(
+    "DOMContentLoaded",
+    startPage
+);
 
 </script>
 
 </body>
-
 </html>
-```
