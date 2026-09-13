@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -51,11 +51,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        # Local development
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-
-        # KifYar online frontend
         "https://kifyar-web.onrender.com",
     ],
     allow_credentials=True,
@@ -209,7 +206,9 @@ def validate_amount(
 
     try:
 
-        amount = float(amount)
+        amount = float(
+            amount
+        )
 
     except Exception:
 
@@ -301,7 +300,9 @@ def health():
 
 @app.get("/api/profile")
 def get_profile(
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     user = find_user_by_id(
@@ -324,7 +325,9 @@ def get_profile(
 @app.put("/api/profile")
 def update_profile(
     data: ProfileUpdateRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     name = data.name.strip()
@@ -366,7 +369,9 @@ def update_profile(
 @app.put("/api/password")
 def change_password(
     data: PasswordChangeRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     try:
@@ -396,7 +401,9 @@ def change_password(
 
 @app.delete("/api/account")
 def delete_account(
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     try:
@@ -428,7 +435,9 @@ def delete_account(
 
 @app.get("/api/wallet/balance")
 def wallet_balance(
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     balance = get_balance(
@@ -448,7 +457,9 @@ def wallet_balance(
 @app.post("/api/wallet/add")
 def wallet_add(
     data: WalletAmountRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     amount = validate_amount(
@@ -486,7 +497,9 @@ def wallet_add(
 @app.post("/api/wallet/subtract")
 def wallet_subtract(
     data: WalletAmountRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     amount = validate_amount(
@@ -524,7 +537,9 @@ def wallet_subtract(
 @app.post("/api/wallet/deposit")
 def wallet_deposit(
     data: CardDepositRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     amount = validate_amount(
@@ -568,7 +583,9 @@ def wallet_deposit(
 @app.post("/api/wallet/withdraw")
 def wallet_withdraw(
     data: WalletWithdrawRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     amount = validate_amount(
@@ -608,7 +625,9 @@ def wallet_withdraw(
 @app.post("/api/wallet/transfer-to-card")
 def wallet_transfer_to_card(
     data: WalletCardTransferRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     amount = validate_amount(
@@ -651,7 +670,9 @@ def wallet_transfer_to_card(
 
 @app.get("/api/wallet/card-transfers")
 def wallet_card_transfers(
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     transfers = get_card_transfer_requests(
@@ -673,7 +694,9 @@ def wallet_card_transfers(
 )
 def wallet_card_transfer(
     transfer_id: int,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     transfer = get_card_transfer_request(
@@ -704,7 +727,9 @@ def wallet_card_transfer(
 def change_card_transfer_status(
     transfer_id: int,
     data: TransferStatusRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     transfer = get_card_transfer_request(
@@ -760,7 +785,9 @@ def change_card_transfer_status(
 
 @app.get("/api/transactions")
 def transactions(
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     items = get_transactions(
@@ -776,7 +803,9 @@ def transactions(
 @app.post("/api/transactions")
 def create_transaction(
     data: TransactionRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     amount = validate_amount(
@@ -836,7 +865,9 @@ def create_transaction(
 
 @app.get("/api/cards")
 def cards(
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     items = get_bank_cards(
@@ -852,7 +883,9 @@ def cards(
 @app.post("/api/cards")
 def create_card(
     data: BankCardRequest,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     holder_name = (
@@ -885,6 +918,13 @@ def create_card(
             card_number=card_number,
         )
 
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
     except Exception as exc:
 
         raise HTTPException(
@@ -911,7 +951,9 @@ def create_card(
 @app.put("/api/cards/{card_id}/default")
 def default_card(
     card_id: int,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     updated = set_default_bank_card(
@@ -945,7 +987,9 @@ def default_card(
 @app.delete("/api/cards/{card_id}")
 def remove_card(
     card_id: int,
-    user_id: int = require_session_user_id,
+    user_id: int = Depends(
+        require_session_user_id
+    ),
 ):
 
     card = get_bank_card(
