@@ -1,216 +1,349 @@
-﻿```html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>گزارش مالی | KifYar</title>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>گزارش مالی | کیف‌یار</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
 
         body {
+
             margin: 0;
+
             padding: 20px;
-            font-family: Tahoma, Arial, sans-serif;
+
+            font-family:
+                Tahoma,
+                Arial,
+                sans-serif;
+
             background: #f4f6f8;
+
             color: #222;
         }
 
         .container {
+
             max-width: 700px;
+
             margin: 30px auto;
         }
 
         .card {
+
             background: #fff;
+
             border-radius: 18px;
+
             padding: 22px;
+
             margin-bottom: 18px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
         }
 
         h1 {
+
             text-align: center;
+
             margin: 0;
         }
 
         h2 {
+
             margin-top: 0;
+
             font-size: 20px;
         }
 
         .message {
+
             display: none;
+
             padding: 13px;
+
             border-radius: 10px;
+
             margin-bottom: 15px;
         }
 
         .message.success {
+
             display: block;
+
             background: #e8f5e9;
+
             color: #2e7d32;
         }
 
         .message.error {
+
             display: block;
+
             background: #ffebee;
+
             color: #c62828;
         }
 
         .stats {
+
             display: grid;
-            grid-template-columns: 1fr 1fr;
+
+            grid-template-columns:
+                1fr 1fr;
+
             gap: 12px;
         }
 
         .stat {
+
             padding: 18px;
+
             border-radius: 14px;
+
             text-align: center;
         }
 
         .balance {
+
             background: #e3f2fd;
+
             color: #1565c0;
         }
 
         .income {
+
             background: #e8f5e9;
+
             color: #2e7d32;
         }
 
         .expense {
+
             background: #ffebee;
+
             color: #c62828;
         }
 
         .count {
+
             background: #f3e5f5;
+
             color: #6a1b9a;
         }
 
         .stat-title {
+
             font-size: 14px;
+
             margin-bottom: 10px;
         }
 
         .stat-value {
+
             font-size: 22px;
+
             font-weight: bold;
+
             word-break: break-word;
         }
 
         .chart {
+
             margin-top: 15px;
         }
 
         .bar-row {
+
             margin-bottom: 18px;
         }
 
         .bar-header {
+
             display: flex;
+
             justify-content: space-between;
+
             margin-bottom: 7px;
+
             font-size: 14px;
         }
 
         .bar-background {
+
             width: 100%;
+
             height: 20px;
+
             background: #eeeeee;
+
             border-radius: 20px;
+
             overflow: hidden;
         }
 
         .bar {
+
             height: 100%;
+
             width: 0;
+
             border-radius: 20px;
-            transition: width 0.5s ease;
+
+            transition:
+                width 0.5s ease;
         }
 
         .income-bar {
+
             background: #43a047;
         }
 
         .expense-bar {
+
             background: #e53935;
         }
 
         .info {
+
             line-height: 2;
+
             color: #555;
         }
 
         button {
+
             width: 100%;
+
             border: none;
+
             border-radius: 12px;
+
             padding: 14px;
+
             margin-top: 10px;
+
             font-family: inherit;
+
             font-size: 16px;
+
             cursor: pointer;
         }
 
         button:disabled {
+
             opacity: 0.6;
+
             cursor: not-allowed;
         }
 
         #refreshButton {
+
             background: #1976d2;
+
             color: white;
         }
 
         #backButton {
+
             background: #eeeeee;
+
             color: #333;
         }
 
         .loading {
+
             text-align: center;
+
             color: #777;
+
             padding: 20px;
         }
 
         @media (max-width: 500px) {
+
             body {
+
                 padding: 12px;
             }
 
             .stats {
+
                 grid-template-columns: 1fr;
             }
 
             .stat-value {
+
                 font-size: 20px;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
 <div class="container">
 
+
+    <!-- =====================================================
+         TITLE
+         ===================================================== -->
+
     <div class="card">
-        <h1>📊 گزارش مالی</h1>
+
+        <h1>
+            📊 گزارش مالی
+        </h1>
+
     </div>
 
-    <div id="message" class="message"></div>
+
+    <!-- =====================================================
+         MESSAGE
+         ===================================================== -->
+
+    <div
+        id="message"
+        class="message"
+    ></div>
+
+
+    <!-- =====================================================
+         SUMMARY
+         ===================================================== -->
 
     <div class="card">
 
-        <h2>خلاصه مالی</h2>
+        <h2>
+            خلاصه مالی
+        </h2>
+
 
         <div class="stats">
+
 
             <div class="stat balance">
 
@@ -280,11 +413,20 @@
     </div>
 
 
+    <!-- =====================================================
+         CHART
+         ===================================================== -->
+
     <div class="card">
 
-        <h2>📈 نمودار درآمد و هزینه</h2>
+        <h2>
+            📈 نمودار درآمد و هزینه
+        </h2>
 
-        <div id="chart" class="chart">
+        <div
+            id="chart"
+            class="chart"
+        >
 
             <div class="loading">
                 در حال محاسبه...
@@ -295,9 +437,15 @@
     </div>
 
 
+    <!-- =====================================================
+         INFO
+         ===================================================== -->
+
     <div class="card">
 
-        <h2>ℹ️ توضیحات</h2>
+        <h2>
+            ℹ️ توضیحات
+        </h2>
 
         <div
             id="info"
@@ -309,6 +457,10 @@
     </div>
 
 
+    <!-- =====================================================
+         BUTTONS
+         ===================================================== -->
+
     <div class="card">
 
         <button
@@ -317,6 +469,7 @@
         >
             🔄 بروزرسانی گزارش
         </button>
+
 
         <button
             type="button"
@@ -332,51 +485,145 @@
 
 <script>
 
+// =========================================================
+// API
+// =========================================================
+
 const API_URL =
     "https://kifyar-api.onrender.com";
+
+
+// =========================================================
+// STORAGE
+// =========================================================
 
 const TOKEN_KEY =
     "kifyar_token";
 
 
+// =========================================================
+// ELEMENTS
+// =========================================================
+
 const messageElement =
-    document.getElementById("message");
+    document.getElementById(
+        "message"
+    );
+
 
 const balanceElement =
-    document.getElementById("balance");
+    document.getElementById(
+        "balance"
+    );
+
 
 const totalIncomeElement =
-    document.getElementById("totalIncome");
+    document.getElementById(
+        "totalIncome"
+    );
+
 
 const totalExpenseElement =
-    document.getElementById("totalExpense");
+    document.getElementById(
+        "totalExpense"
+    );
+
 
 const transactionCountElement =
-    document.getElementById("transactionCount");
+    document.getElementById(
+        "transactionCount"
+    );
+
 
 const chartElement =
-    document.getElementById("chart");
+    document.getElementById(
+        "chart"
+    );
+
 
 const infoElement =
-    document.getElementById("info");
+    document.getElementById(
+        "info"
+    );
+
 
 const refreshButton =
-    document.getElementById("refreshButton");
+    document.getElementById(
+        "refreshButton"
+    );
+
 
 const backButton =
-    document.getElementById("backButton");
+    document.getElementById(
+        "backButton"
+    );
 
+
+// =========================================================
+// TOKEN
+// =========================================================
 
 function getToken() {
 
     return localStorage.getItem(
         TOKEN_KEY
-    );
+    ) || "";
 
 }
 
 
-function showMessage(text, type) {
+// =========================================================
+// AUTH CHECK
+// =========================================================
+
+function checkLogin() {
+
+    const token =
+        getToken();
+
+
+    if (!token) {
+
+        window.location.href =
+            "login.html";
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+// =========================================================
+// AUTH HEADERS
+// =========================================================
+
+function authHeaders() {
+
+    return {
+
+        "Authorization":
+            "Bearer " + getToken(),
+
+        "Accept":
+            "application/json"
+
+    };
+
+}
+
+
+// =========================================================
+// MESSAGE
+// =========================================================
+
+function showMessage(
+    text,
+    type
+) {
 
     messageElement.textContent =
         text;
@@ -398,59 +645,72 @@ function hideMessage() {
 }
 
 
-function formatMoney(value) {
+// =========================================================
+// MONEY
+// =========================================================
+
+function formatMoney(
+    value
+) {
 
     const number =
         Number(value) || 0;
 
+
     return (
-        number.toLocaleString("fa-IR") +
+        number.toLocaleString(
+            "fa-IR"
+        )
+        +
         " تومان"
     );
 
 }
 
 
-function formatNumber(value) {
+// =========================================================
+// NUMBER
+// =========================================================
+
+function formatNumber(
+    value
+) {
 
     const number =
         Number(value) || 0;
 
-    return number.toLocaleString("fa-IR");
+
+    return number.toLocaleString(
+        "fa-IR"
+    );
 
 }
 
 
-function checkLogin() {
+// =========================================================
+// JSON
+// =========================================================
 
-    const token =
-        getToken();
-
-    if (!token) {
-
-        window.location.href =
-            "/frontend/login.html";
-
-        return false;
-    }
-
-    return true;
-
-}
-
-
-async function readJSON(response) {
+async function readJSON(
+    response
+) {
 
     const text =
         await response.text();
 
+
     if (!text) {
+
         return {};
+
     }
+
 
     try {
 
-        return JSON.parse(text);
+        return JSON.parse(
+            text
+        );
 
     } catch {
 
@@ -463,25 +723,42 @@ async function readJSON(response) {
 }
 
 
-async function loadBalance(token) {
+// =========================================================
+// API REQUEST
+// =========================================================
+
+async function apiRequest(
+    endpoint
+) {
 
     const response =
         await fetch(
-            API_URL + "/api/balance",
+            API_URL +
+            endpoint,
             {
                 method: "GET",
 
-                headers: {
-                    "Authorization":
-                        "Bearer " + token
-                },
+                headers:
+                    authHeaders(),
 
-                cache: "no-store"
+                cache:
+                    "no-store"
             }
         );
 
 
-    if (response.status === 401) {
+    if (
+        response.status ===
+        401
+    ) {
+
+        localStorage.removeItem(
+            TOKEN_KEY
+        );
+
+        localStorage.removeItem(
+            "kifyar_user"
+        );
 
         throw new Error(
             "SESSION_EXPIRED"
@@ -490,8 +767,27 @@ async function loadBalance(token) {
     }
 
 
+    return response;
+
+}
+
+
+// =========================================================
+// LOAD BALANCE
+// =========================================================
+
+async function loadBalance() {
+
+    const response =
+        await apiRequest(
+            "/api/wallet/balance"
+        );
+
+
     const data =
-        await readJSON(response);
+        await readJSON(
+            response
+        );
 
 
     if (!response.ok) {
@@ -505,27 +801,12 @@ async function loadBalance(token) {
     }
 
 
-    let balance = 0;
-
-
-    if (
-        typeof data.balance !==
-        "undefined"
-    ) {
-
-        balance =
-            Number(data.balance) || 0;
-
-    } else if (
-        data.data &&
-        typeof data.data.balance !==
-        "undefined"
-    ) {
-
-        balance =
-            Number(data.data.balance) || 0;
-
-    }
+    const balance =
+        Number(
+            data.balance ??
+            data.amount ??
+            0
+        );
 
 
     return balance;
@@ -533,36 +814,22 @@ async function loadBalance(token) {
 }
 
 
-async function loadTransactions(token) {
+// =========================================================
+// LOAD TRANSACTIONS
+// =========================================================
+
+async function loadTransactions() {
 
     const response =
-        await fetch(
-            API_URL +
-            "/api/transactions",
-            {
-                method: "GET",
-
-                headers: {
-                    "Authorization":
-                        "Bearer " + token
-                },
-
-                cache: "no-store"
-            }
+        await apiRequest(
+            "/api/transactions"
         );
-
-
-    if (response.status === 401) {
-
-        throw new Error(
-            "SESSION_EXPIRED"
-        );
-
-    }
 
 
     const data =
-        await readJSON(response);
+        await readJSON(
+            response
+        );
 
 
     if (!response.ok) {
@@ -576,25 +843,95 @@ async function loadTransactions(token) {
     }
 
 
-    return Array.isArray(
-        data.transactions
-    )
-        ? data.transactions
-        : [];
+    if (
+        Array.isArray(
+            data
+        )
+    ) {
+
+        return data;
+
+    }
+
+
+    if (
+        data &&
+        Array.isArray(
+            data.transactions
+        )
+    ) {
+
+        return data.transactions;
+
+    }
+
+
+    return [];
 
 }
 
+
+// =========================================================
+// NORMALIZE TYPE
+// =========================================================
+
+function normalizeTransactionType(
+    transaction
+) {
+
+    const type =
+        String(
+            transaction.transaction_type ??
+            transaction.type ??
+            ""
+        )
+            .toLowerCase()
+            .trim();
+
+
+    if (
+        type === "income" ||
+        type === "deposit" ||
+        type === "credit"
+    ) {
+
+        return "income";
+
+    }
+
+
+    if (
+        type === "expense" ||
+        type === "withdraw" ||
+        type === "withdrawal" ||
+        type === "debit"
+    ) {
+
+        return "expense";
+
+    }
+
+
+    return "unknown";
+
+}
+
+
+// =========================================================
+// CALCULATE REPORT
+// =========================================================
 
 function calculateReport(
     transactions
 ) {
 
     let totalIncome = 0;
+
     let totalExpense = 0;
 
 
     transactions.forEach(
-        function (transaction) {
+        function(transaction) {
 
             const amount =
                 Number(
@@ -602,15 +939,25 @@ function calculateReport(
                 ) || 0;
 
 
+            const type =
+                normalizeTransactionType(
+                    transaction
+                );
+
+
             if (
-                transaction.type ===
-                "income"
+                type === "income"
             ) {
 
                 totalIncome +=
                     amount;
 
-            } else {
+            }
+
+
+            else if (
+                type === "expense"
+            ) {
 
                 totalExpense +=
                     amount;
@@ -622,12 +969,19 @@ function calculateReport(
 
 
     return {
+
         totalIncome,
+
         totalExpense
+
     };
 
 }
 
+
+// =========================================================
+// RENDER CHART
+// =========================================================
 
 function renderChart(
     totalIncome,
@@ -639,10 +993,17 @@ function renderChart(
         totalExpense;
 
 
-    if (total <= 0) {
+    if (
+        total <= 0
+    ) {
 
-        chartElement.innerHTML =
-            '<div class="loading">هنوز درآمد یا هزینه‌ای ثبت نشده است.</div>';
+        chartElement.innerHTML = `
+
+            <div class="loading">
+                هنوز درآمد یا هزینه‌ای ثبت نشده است.
+            </div>
+
+        `;
 
         return;
 
@@ -667,6 +1028,7 @@ function renderChart(
 
         <div class="bar-row">
 
+
             <div class="bar-header">
 
                 <span>
@@ -674,18 +1036,28 @@ function renderChart(
                 </span>
 
                 <strong>
-                    ${formatNumber(
-                        incomePercent.toFixed(1)
-                    )}٪
+                    ${
+                        incomePercent.toLocaleString(
+                            "fa-IR",
+                            {
+                                maximumFractionDigits:
+                                    1
+                            }
+                        )
+                    }٪
                 </strong>
 
             </div>
+
 
             <div class="bar-background">
 
                 <div
                     class="bar income-bar"
-                    style="width: ${incomePercent}%"
+                    style="
+                        width:
+                        ${incomePercent}%;
+                    "
                 ></div>
 
             </div>
@@ -695,6 +1067,7 @@ function renderChart(
 
         <div class="bar-row">
 
+
             <div class="bar-header">
 
                 <span>
@@ -702,18 +1075,28 @@ function renderChart(
                 </span>
 
                 <strong>
-                    ${formatNumber(
-                        expensePercent.toFixed(1)
-                    )}٪
+                    ${
+                        expensePercent.toLocaleString(
+                            "fa-IR",
+                            {
+                                maximumFractionDigits:
+                                    1
+                            }
+                        )
+                    }٪
                 </strong>
 
             </div>
+
 
             <div class="bar-background">
 
                 <div
                     class="bar expense-bar"
-                    style="width: ${expensePercent}%"
+                    style="
+                        width:
+                        ${expensePercent}%;
+                    "
                 ></div>
 
             </div>
@@ -724,6 +1107,10 @@ function renderChart(
 
 }
 
+
+// =========================================================
+// INFO
+// =========================================================
 
 function renderInfo(
     balance,
@@ -740,17 +1127,27 @@ function renderInfo(
     let statusText;
 
 
-    if (difference > 0) {
+    if (
+        difference > 0
+    ) {
 
         statusText =
             "درآمد ثبت‌شده بیشتر از هزینه‌های ثبت‌شده است.";
 
-    } else if (difference < 0) {
+    }
+
+
+    else if (
+        difference < 0
+    ) {
 
         statusText =
             "هزینه‌های ثبت‌شده بیشتر از درآمدهای ثبت‌شده است.";
 
-    } else {
+    }
+
+
+    else {
 
         statusText =
             "مجموع درآمد و هزینه برابر است.";
@@ -767,12 +1164,14 @@ function renderInfo(
             </strong>
         </div>
 
+
         <div>
             🟢 مجموع درآمد:
             <strong>
                 ${formatMoney(totalIncome)}
             </strong>
         </div>
+
 
         <div>
             🔴 مجموع هزینه:
@@ -781,6 +1180,7 @@ function renderInfo(
             </strong>
         </div>
 
+
         <div>
             🧾 تعداد تراکنش:
             <strong>
@@ -788,12 +1188,14 @@ function renderInfo(
             </strong>
         </div>
 
+
         <div>
             📊 خالص درآمد:
             <strong>
                 ${formatMoney(difference)}
             </strong>
         </div>
+
 
         <div>
             ℹ️ ${statusText}
@@ -804,13 +1206,23 @@ function renderInfo(
 }
 
 
+// =========================================================
+// LOAD REPORT
+// =========================================================
+
 async function loadReport() {
 
     const token =
         getToken();
 
+
     if (!token) {
+
+        window.location.href =
+            "login.html";
+
         return;
+
     }
 
 
@@ -820,11 +1232,14 @@ async function loadReport() {
     balanceElement.textContent =
         "در حال دریافت...";
 
+
     totalIncomeElement.textContent =
         "در حال دریافت...";
 
+
     totalExpenseElement.textContent =
         "در حال دریافت...";
+
 
     transactionCountElement.textContent =
         "در حال دریافت...";
@@ -832,16 +1247,15 @@ async function loadReport() {
 
     try {
 
-        const balance =
-            await loadBalance(
-                token
-            );
-
-
-        const transactions =
-            await loadTransactions(
-                token
-            );
+        const [
+            balance,
+            transactions
+        ] = await Promise.all(
+            [
+                loadBalance(),
+                loadTransactions()
+            ]
+        );
 
 
         const report =
@@ -888,23 +1302,23 @@ async function loadReport() {
         );
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Report error:",
+            error
+        );
+
 
         if (
             error.message ===
             "SESSION_EXPIRED"
         ) {
 
-            localStorage.removeItem(
-                TOKEN_KEY
-            );
-
-            localStorage.removeItem(
-                "kifyar_user"
-            );
-
             window.location.href =
-                "/frontend/login.html";
+                "login.html";
 
             return;
 
@@ -912,13 +1326,19 @@ async function loadReport() {
 
 
         showMessage(
-            error.message,
+            error.message ||
+            "دریافت گزارش ناموفق بود.",
             "error"
         );
 
 
-        chartElement.innerHTML =
-            '<div class="loading">گزارش قابل دریافت نیست.</div>';
+        chartElement.innerHTML = `
+
+            <div class="loading">
+                گزارش قابل دریافت نیست.
+            </div>
+
+        `;
 
 
         infoElement.textContent =
@@ -929,16 +1349,25 @@ async function loadReport() {
 }
 
 
+// =========================================================
+// REFRESH
+// =========================================================
+
 refreshButton.addEventListener(
     "click",
-    async function () {
+    async function() {
 
         refreshButton.disabled =
             true;
 
+        refreshButton.textContent =
+            "🔄 در حال بروزرسانی...";
+
+
         try {
 
             await loadReport();
+
 
             if (
                 messageElement.className ===
@@ -957,24 +1386,37 @@ refreshButton.addEventListener(
             refreshButton.disabled =
                 false;
 
+            refreshButton.textContent =
+                "🔄 بروزرسانی گزارش";
+
         }
 
     }
 );
 
 
+// =========================================================
+// BACK
+// =========================================================
+
 backButton.addEventListener(
     "click",
-    function () {
+    function() {
 
         window.location.href =
-            "/frontend/index.html";
+            "index.html";
 
     }
 );
 
 
-if (checkLogin()) {
+// =========================================================
+// INIT
+// =========================================================
+
+if (
+    checkLogin()
+) {
 
     loadReport();
 
@@ -983,6 +1425,5 @@ if (checkLogin()) {
 </script>
 
 </body>
-</html>
-```
 
+</html>

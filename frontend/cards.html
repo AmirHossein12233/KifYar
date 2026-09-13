@@ -1,5 +1,4 @@
-﻿```html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 
 <head>
@@ -18,6 +17,186 @@
         href="style.css"
     >
 
+    <style>
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+        }
+
+        .page-header a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow:
+                0 5px 20px
+                rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        label {
+            display: block;
+            margin:
+                14px 0 7px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            height: 48px;
+            border:
+                1px solid
+                #d1d5db;
+            border-radius: 12px;
+            padding:
+                0 12px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.1
+                );
+        }
+
+        .card-button {
+            width: 100%;
+            height: 50px;
+            margin-top: 18px;
+            border: none;
+            border-radius: 12px;
+            background: #2563eb;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .card-button:hover {
+            background: #1d4ed8;
+        }
+
+        .card-button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        .message {
+            display: none;
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            line-height: 1.7;
+        }
+
+        .message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .bank-card {
+            border:
+                1px solid
+                #e5e7eb;
+            border-radius: 15px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #fafafa;
+        }
+
+        .bank-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .bank-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .bank-card-row {
+            margin-top: 7px;
+            color: #555;
+        }
+
+        .bank-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .small-button {
+            border: none;
+            border-radius: 10px;
+            padding: 9px 12px;
+            font-family: inherit;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #222;
+        }
+
+        .small-button.primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .small-button.danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .empty {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+        }
+
+        .loading {
+            color: #777;
+            padding: 15px 0;
+        }
+
+    </style>
+
 </head>
 
 
@@ -26,9 +205,15 @@
 <div class="container">
 
 
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
     <header class="page-header">
 
-        <h1>💳 کارت‌های بانکی</h1>
+        <h1>
+            💳 کارت‌های بانکی
+        </h1>
 
         <a href="index.html">
             بازگشت
@@ -37,11 +222,15 @@
     </header>
 
 
-    <!-- افزودن کارت -->
+    <!-- =====================================================
+         ADD CARD
+         ===================================================== -->
 
     <section class="card">
 
-        <h2>➕ افزودن کارت بانکی</h2>
+        <h2>
+            ➕ افزودن کارت بانکی
+        </h2>
 
         <p>
             اطلاعات کارت خودت را برای استفاده در کیف‌یار ثبت کن.
@@ -87,6 +276,7 @@
 
         <button
             id="addCardButton"
+            class="card-button"
             type="button"
         >
             افزودن کارت
@@ -101,38 +291,65 @@
     </section>
 
 
-    <!-- کارت‌ها -->
+    <!-- =====================================================
+         CARDS LIST
+         ===================================================== -->
 
     <section class="card">
 
-        <h2>💳 کارت‌های من</h2>
+        <h2>
+            💳 کارت‌های من
+        </h2>
 
         <div id="cardsList">
-            در حال دریافت کارت‌ها...
+
+            <div class="loading">
+                در حال دریافت کارت‌ها...
+            </div>
+
         </div>
 
     </section>
-
 
 </div>
 
 
 <script>
 
+// =========================================================
+// API
+// =========================================================
+
 const API_URL =
     "https://kifyar-api.onrender.com";
 
 
+// =========================================================
+// TOKEN
+// =========================================================
+
+const TOKEN_KEY =
+    "kifyar_token";
+
+
+// =========================================================
+// GET TOKEN
+// =========================================================
+
 function getToken() {
 
     return (
-        localStorage.getItem("token") ||
-        localStorage.getItem("access_token") ||
-        ""
+        localStorage.getItem(
+            TOKEN_KEY
+        ) || ""
     );
 
 }
 
+
+// =========================================================
+// AUTH HEADERS
+// =========================================================
 
 function authHeaders() {
 
@@ -141,13 +358,94 @@ function authHeaders() {
         "Content-Type":
             "application/json",
 
+        "Accept":
+            "application/json",
+
         "Authorization":
-            "Bearer " + getToken()
+            "Bearer " +
+            getToken()
 
     };
 
 }
 
+
+// =========================================================
+// AUTH CHECK
+// =========================================================
+
+function ensureLoggedIn() {
+
+    const token =
+        getToken();
+
+    if (!token) {
+
+        window.location.href =
+            "login.html";
+
+        return false;
+    }
+
+    return true;
+}
+
+
+// =========================================================
+// API REQUEST
+// =========================================================
+
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+
+    const response =
+        await fetch(
+            API_URL +
+            endpoint,
+            {
+                ...options,
+
+                headers: {
+                    ...authHeaders(),
+                    ...(options.headers || {})
+                }
+            }
+        );
+
+
+    if (
+        response.status ===
+        401
+    ) {
+
+        localStorage.removeItem(
+            TOKEN_KEY
+        );
+
+        localStorage.removeItem(
+            "kifyar_user"
+        );
+
+        window.location.href =
+            "login.html";
+
+        throw new Error(
+            "جلسه ورود معتبر نیست."
+        );
+
+    }
+
+
+    return response;
+
+}
+
+
+// =========================================================
+// MESSAGE
+// =========================================================
 
 function showMessage(
     element,
@@ -166,27 +464,77 @@ function showMessage(
 }
 
 
+// =========================================================
+// ESCAPE HTML
+// =========================================================
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+// =========================================================
+// FORMAT CARD NUMBER
+// =========================================================
+
 function formatCardNumber(
     value
 ) {
 
     const digits =
-        String(value || "")
-            .replace(/\D/g, "")
-            .slice(0, 16);
-
-    return digits
-        .replace(
-            /(.{4})/g,
-            "$1-"
+        String(
+            value || ""
         )
-        .replace(
-            /-$/,
-            ""
-        );
+            .replace(
+                /\D/g,
+                ""
+            )
+            .slice(
+                0,
+                16
+            );
+
+
+    return digits.replace(
+        /(.{4})/g,
+        "$1-"
+    ).replace(
+        /-$/,
+        ""
+    );
 
 }
 
+
+// =========================================================
+// CARD NUMBER INPUT
+// =========================================================
 
 document
     .getElementById(
@@ -194,7 +542,7 @@ document
     )
     .addEventListener(
         "input",
-        function () {
+        function() {
 
             this.value =
                 formatCardNumber(
@@ -205,6 +553,10 @@ document
     );
 
 
+// =========================================================
+// LOAD CARDS
+// =========================================================
+
 async function loadCards() {
 
     const list =
@@ -213,16 +565,18 @@ async function loadCards() {
         );
 
 
+    list.innerHTML = `
+        <div class="loading">
+            در حال دریافت کارت‌ها...
+        </div>
+    `;
+
+
     try {
 
         const response =
-            await fetch(
-                API_URL +
-                "/api/cards",
-                {
-                    headers:
-                        authHeaders()
-                }
+            await apiRequest(
+                "/api/cards"
             );
 
 
@@ -240,13 +594,20 @@ async function loadCards() {
         }
 
 
+        const cards =
+            Array.isArray(
+                data.cards
+            )
+                ? data.cards
+                : [];
+
+
         if (
-            !data.cards ||
-            data.cards.length === 0
+            cards.length === 0
         ) {
 
             list.innerHTML = `
-                <div class="message">
+                <div class="empty">
                     هنوز هیچ کارت بانکی ثبت نشده است.
                 </div>
             `;
@@ -256,10 +617,11 @@ async function loadCards() {
         }
 
 
-        list.innerHTML = "";
+        list.innerHTML =
+            "";
 
 
-        data.cards.forEach(
+        cards.forEach(
             card => {
 
                 const item =
@@ -269,72 +631,73 @@ async function loadCards() {
 
 
                 item.className =
-                    "transaction-item";
+                    "bank-card";
 
 
                 const isDefault =
-                    Boolean(
-                        card.is_default
-                    );
+                    Number(
+                        card.is_default || 0
+                    ) === 1;
 
 
                 item.innerHTML = `
 
-                    <div>
-
-                        <strong>
-                            ${escapeHtml(
+                    <div
+                        class="bank-card-title"
+                    >
+                        💳 ${
+                            escapeHtml(
                                 card.bank_name ||
                                 "بانک"
-                            )}
-                        </strong>
-
+                            )
+                        }
                     </div>
 
 
-                    <div>
-
+                    <div
+                        class="bank-card-row"
+                    >
                         صاحب کارت:
-                        ${escapeHtml(
-                            card.holder_name ||
-                            "-"
-                        )}
-
+                        <strong>
+                            ${
+                                escapeHtml(
+                                    card.holder_name ||
+                                    "-"
+                                )
+                            }
+                        </strong>
                     </div>
 
 
-                    <div>
-
+                    <div
+                        class="bank-card-row"
+                    >
                         شماره کارت:
                         <strong>
-                            ${escapeHtml(
-                                card.masked_card_number ||
-                                "****"
-                            )}
+                            ${
+                                escapeHtml(
+                                    card.masked_card_number ||
+                                    "****"
+                                )
+                            }
                         </strong>
-
                     </div>
 
 
-                    <div>
-
+                    <div
+                        class="bank-card-row"
+                    >
                         وضعیت:
                         ${
                             isDefault
                                 ? "⭐ کارت پیش‌فرض"
                                 : "کارت عادی"
                         }
-
                     </div>
 
 
                     <div
-                        style="
-                            display:flex;
-                            gap:8px;
-                            flex-wrap:wrap;
-                            margin-top:10px;
-                        "
+                        class="bank-card-actions"
                     >
 
                         ${
@@ -342,17 +705,19 @@ async function loadCards() {
                                 ? `
                                     <button
                                         type="button"
+                                        class="small-button primary"
                                         data-default="${card.id}"
                                     >
                                         ⭐ انتخاب به‌عنوان پیش‌فرض
                                     </button>
-                                `
+                                  `
                                 : ""
                         }
 
 
                         <button
                             type="button"
+                            class="small-button danger"
                             data-delete="${card.id}"
                         >
                             🗑 حذف کارت
@@ -380,7 +745,7 @@ async function loadCards() {
 
                     button.addEventListener(
                         "click",
-                        function () {
+                        function() {
 
                             const cardId =
                                 Number(
@@ -407,7 +772,7 @@ async function loadCards() {
 
                     button.addEventListener(
                         "click",
-                        function () {
+                        function() {
 
                             const cardId =
                                 Number(
@@ -424,17 +789,25 @@ async function loadCards() {
                 }
             );
 
-    }
-    catch (error) {
 
-        console.error(error);
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Load cards error:",
+            error
+        );
+
 
         list.innerHTML = `
             <div class="message error">
-                ${escapeHtml(
-                    error.message ||
-                    "خطا در دریافت کارت‌ها."
-                )}
+                ${
+                    escapeHtml(
+                        error.message ||
+                        "خطا در دریافت کارت‌ها."
+                    )
+                }
             </div>
         `;
 
@@ -443,34 +816,9 @@ async function loadCards() {
 }
 
 
-function escapeHtml(
-    value
-) {
-
-    return String(value ?? "")
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
+// =========================================================
+// ADD CARD
+// =========================================================
 
 async function addCard() {
 
@@ -505,17 +853,15 @@ async function addCard() {
 
 
     const message =
-        document
-            .getElementById(
-                "addMessage"
-            );
+        document.getElementById(
+            "addMessage"
+        );
 
 
     const button =
-        document
-            .getElementById(
-                "addCardButton"
-            );
+        document.getElementById(
+            "addCardButton"
+        );
 
 
     if (!holderName) {
@@ -558,7 +904,8 @@ async function addCard() {
     }
 
 
-    button.disabled = true;
+    button.disabled =
+        true;
 
     button.textContent =
         "در حال افزودن...";
@@ -567,29 +914,25 @@ async function addCard() {
     try {
 
         const response =
-            await fetch(
-                API_URL +
+            await apiRequest(
                 "/api/cards",
                 {
-                    method: "POST",
-
-                    headers:
-                        authHeaders(),
+                    method:
+                        "POST",
 
                     body:
-                        JSON.stringify({
+                        JSON.stringify(
+                            {
+                                holder_name:
+                                    holderName,
 
-                            holder_name:
-                                holderName,
+                                bank_name:
+                                    bankName,
 
-                            bank_name:
-                                bankName,
-
-                            card_number:
-                                cardNumber
-
-                        })
-
+                                card_number:
+                                    cardNumber
+                            }
+                        )
                 }
             );
 
@@ -615,31 +958,33 @@ async function addCard() {
         );
 
 
-        document
-            .getElementById(
-                "holderName"
-            )
-            .value = "";
+        document.getElementById(
+            "holderName"
+        ).value = "";
 
 
-        document
-            .getElementById(
-                "bankName"
-            )
-            .value = "";
+        document.getElementById(
+            "bankName"
+        ).value = "";
 
 
-        document
-            .getElementById(
-                "cardNumber"
-            )
-            .value = "";
+        document.getElementById(
+            "cardNumber"
+        ).value = "";
 
 
         await loadCards();
 
-    }
-    catch (error) {
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Add card error:",
+            error
+        );
+
 
         showMessage(
             message,
@@ -647,10 +992,11 @@ async function addCard() {
             "افزودن کارت انجام نشد."
         );
 
-    }
-    finally {
 
-        button.disabled = false;
+    } finally {
+
+        button.disabled =
+            false;
 
         button.textContent =
             "افزودن کارت";
@@ -660,6 +1006,10 @@ async function addCard() {
 }
 
 
+// =========================================================
+// DEFAULT CARD
+// =========================================================
+
 async function setDefaultCard(
     cardId
 ) {
@@ -667,16 +1017,13 @@ async function setDefaultCard(
     try {
 
         const response =
-            await fetch(
-                API_URL +
+            await apiRequest(
                 "/api/cards/" +
                 cardId +
                 "/default",
                 {
-                    method: "POST",
-
-                    headers:
-                        authHeaders()
+                    method:
+                        "PUT"
                 }
             );
 
@@ -697,8 +1044,16 @@ async function setDefaultCard(
 
         await loadCards();
 
-    }
-    catch (error) {
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Default card error:",
+            error
+        );
+
 
         alert(
             error.message ||
@@ -710,33 +1065,36 @@ async function setDefaultCard(
 }
 
 
+// =========================================================
+// DELETE CARD
+// =========================================================
+
 async function deleteCard(
     cardId
 ) {
 
     const confirmed =
-        confirm(
+        window.confirm(
             "آیا از حذف این کارت مطمئن هستید؟"
         );
 
 
     if (!confirmed) {
+
         return;
+
     }
 
 
     try {
 
         const response =
-            await fetch(
-                API_URL +
+            await apiRequest(
                 "/api/cards/" +
                 cardId,
                 {
-                    method: "DELETE",
-
-                    headers:
-                        authHeaders()
+                    method:
+                        "DELETE"
                 }
             );
 
@@ -757,8 +1115,16 @@ async function deleteCard(
 
         await loadCards();
 
-    }
-    catch (error) {
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Delete card error:",
+            error
+        );
+
 
         alert(
             error.message ||
@@ -770,6 +1136,10 @@ async function deleteCard(
 }
 
 
+// =========================================================
+// EVENT
+// =========================================================
+
 document
     .getElementById(
         "addCardButton"
@@ -780,12 +1150,15 @@ document
     );
 
 
+// =========================================================
+// INIT
+// =========================================================
+
 async function init() {
 
-    if (!getToken()) {
-
-        window.location.href =
-            "login.html";
+    if (
+        !ensureLoggedIn()
+    ) {
 
         return;
 
@@ -804,5 +1177,3 @@ init();
 </body>
 
 </html>
-```
-
