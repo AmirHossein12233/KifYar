@@ -1,5 +1,4 @@
-﻿```html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 
 <head>
@@ -21,19 +20,13 @@
 
         body {
             margin: 0;
-            font-family:
-                Tahoma,
-                Arial,
-                sans-serif;
+            font-family: Tahoma, Arial, sans-serif;
             background: #f4f6f8;
             color: #222;
         }
 
         .container {
-            width: min(
-                1100px,
-                94%
-            );
+            width: min(1100px, 94%);
             margin: 30px auto;
         }
 
@@ -42,14 +35,7 @@
             border-radius: 20px;
             padding: 24px;
             margin-bottom: 20px;
-            box-shadow:
-                0 5px 20px
-                rgba(
-                    0,
-                    0,
-                    0,
-                    0.05
-                );
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
         }
 
         .header-top {
@@ -60,8 +46,7 @@
         }
 
         .header h1 {
-            margin:
-                0 0 8px;
+            margin: 0 0 8px;
             font-size: 25px;
         }
 
@@ -149,8 +134,7 @@
 
         .cards {
             display: grid;
-            grid-template-columns:
-                repeat(4, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -159,14 +143,7 @@
             background: white;
             border-radius: 18px;
             padding: 20px;
-            box-shadow:
-                0 5px 20px
-                rgba(
-                    0,
-                    0,
-                    0,
-                    0.05
-                );
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
         }
 
         .card-title {
@@ -202,14 +179,7 @@
             border-radius: 18px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow:
-                0 5px 20px
-                rgba(
-                    0,
-                    0,
-                    0,
-                    0.05
-                );
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
         }
 
         .section-header {
@@ -311,8 +281,7 @@
 
         .quick-actions {
             display: grid;
-            grid-template-columns:
-                repeat(4, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
         }
 
@@ -376,13 +345,11 @@
         @media (max-width: 900px) {
 
             .cards {
-                grid-template-columns:
-                    repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .quick-actions {
-                grid-template-columns:
-                    repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
         }
@@ -407,8 +374,7 @@
             }
 
             .quick-actions {
-                grid-template-columns:
-                    1fr 1fr;
+                grid-template-columns: 1fr 1fr;
             }
 
             .transaction {
@@ -430,10 +396,6 @@
 
 <div class="container">
 
-
-    <!-- =====================================================
-         HEADER
-         ===================================================== -->
 
     <div class="header">
 
@@ -481,14 +443,12 @@
                 ＋ تراکنش جدید
             </a>
 
-
             <a
                 href="wallet.html"
                 class="secondary"
             >
                 💰 کیف پول
             </a>
-
 
             <a
                 href="cards.html"
@@ -497,7 +457,6 @@
                 💳 کارت‌های بانکی
             </a>
 
-
             <a
                 href="reports.html"
                 class="secondary"
@@ -505,14 +464,12 @@
                 📊 گزارش‌ها
             </a>
 
-
             <a
                 href="profile.html"
                 class="secondary"
             >
                 👤 پروفایل
             </a>
-
 
             <a
                 href="settings.html"
@@ -526,12 +483,7 @@
     </div>
 
 
-    <!-- =====================================================
-         SUMMARY CARDS
-         ===================================================== -->
-
     <div class="cards">
-
 
         <div class="card">
 
@@ -598,10 +550,6 @@
 
     </div>
 
-
-    <!-- =====================================================
-         QUICK ACTIONS
-         ===================================================== -->
 
     <div class="section">
 
@@ -684,7 +632,6 @@
 
                 اعلان‌ها
 
-
                 <span
                     id="quickNotificationCount"
                     style="
@@ -732,10 +679,6 @@
 
     </div>
 
-
-    <!-- =====================================================
-         TRANSACTIONS
-         ===================================================== -->
 
     <div class="section">
 
@@ -787,18 +730,9 @@
 
 <script>
 
-
-// =========================================================
-// API
-// =========================================================
-
 const API_URL =
     "https://kifyar-api.onrender.com";
 
-
-// =========================================================
-// AUTH
-// =========================================================
 
 const token =
     localStorage.getItem(
@@ -814,50 +748,27 @@ if (!token) {
 }
 
 
-// =========================================================
-// CATEGORY NAMES
-// =========================================================
-
 const categoryNames = {
 
     food: "غذا",
-
     shopping: "خرید",
-
     transport: "حمل‌ونقل",
-
     internet: "اینترنت",
-
     entertainment: "سرگرمی",
-
     home: "خانه",
-
     work: "کار",
-
     education: "آموزش",
-
     bill: "قبض",
-
     income: "درآمد",
-
     deposit: "واریز",
-
     withdraw: "برداشت",
-
     transfer: "انتقال",
-
     other: "سایر"
 
 };
 
 
-// =========================================================
-// FORMAT MONEY
-// =========================================================
-
-function formatMoney(
-    value
-) {
+function formatMoney(value) {
 
     return (
         Number(
@@ -872,13 +783,7 @@ function formatMoney(
 }
 
 
-// =========================================================
-// FORMAT DATE
-// =========================================================
-
-function formatDate(
-    value
-) {
+function formatDate(value) {
 
     if (!value) {
 
@@ -897,9 +802,7 @@ function formatDate(
         )
     ) {
 
-        return String(
-            value
-        );
+        return String(value);
 
     }
 
@@ -918,48 +821,21 @@ function formatDate(
 }
 
 
-// =========================================================
-// ESCAPE HTML
-// =========================================================
-
-function escapeHtml(
-    value
-) {
+function escapeHtml(value) {
 
     return String(
         value ?? ""
     )
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
 
 
-// =========================================================
-// TRANSACTION TYPE
-// =========================================================
-
-function normalizeTransactionType(
-    type
-) {
+function normalizeTransactionType(type) {
 
     const value =
         String(
@@ -997,10 +873,6 @@ function normalizeTransactionType(
 }
 
 
-// =========================================================
-// API REQUEST
-// =========================================================
-
 async function apiRequest(
     endpoint,
     options = {}
@@ -1027,8 +899,7 @@ async function apiRequest(
 
 
     if (
-        response.status ===
-        401
+        response.status === 401
     ) {
 
         localStorage.removeItem(
@@ -1042,7 +913,6 @@ async function apiRequest(
         window.location.href =
             "login.html";
 
-
         throw new Error(
             "جلسه ورود منقضی شده است."
         );
@@ -1054,10 +924,6 @@ async function apiRequest(
 
 }
 
-
-// =========================================================
-// PROFILE
-// =========================================================
 
 async function loadProfile() {
 
@@ -1101,7 +967,9 @@ async function loadProfile() {
             welcome.textContent =
                 `سلام ${user.name} 👋`;
 
-        } else if (
+        }
+
+        else if (
             user &&
             user.username
         ) {
@@ -1111,9 +979,9 @@ async function loadProfile() {
 
         }
 
-    } catch (
-        error
-    ) {
+    }
+
+    catch (error) {
 
         console.error(
             "Profile error:",
@@ -1125,17 +993,7 @@ async function loadProfile() {
 }
 
 
-// =========================================================
-// BALANCE
-// =========================================================
-
 async function loadBalance() {
-
-    /*
-     * مسیر صحیح موجودی در backend/main.py:
-     *
-     * /api/wallet/balance
-     */
 
     const response =
         await apiRequest(
@@ -1176,10 +1034,6 @@ async function loadBalance() {
 }
 
 
-// =========================================================
-// TRANSACTIONS
-// =========================================================
-
 async function loadTransactions() {
 
     const response =
@@ -1207,13 +1061,10 @@ async function loadTransactions() {
 
 
     if (
-        Array.isArray(
-            data
-        )
+        Array.isArray(data)
     ) {
 
-        transactions =
-            data;
+        transactions = data;
 
     }
 
@@ -1231,10 +1082,7 @@ async function loadTransactions() {
 
 
     transactions.sort(
-        (
-            a,
-            b
-        ) => {
+        (a, b) => {
 
             const dateA =
                 new Date(
@@ -1254,10 +1102,7 @@ async function loadTransactions() {
                 ).getTime();
 
 
-            return (
-                dateB -
-                dateA
-            );
+            return dateB - dateA;
 
         }
     );
@@ -1274,10 +1119,6 @@ async function loadTransactions() {
 
 }
 
-
-// =========================================================
-// SUMMARY
-// =========================================================
 
 function calculateSummary(
     transactions
@@ -1309,8 +1150,7 @@ function calculateSummary(
                 type === "income"
             ) {
 
-                income +=
-                    amount;
+                income += amount;
 
             }
 
@@ -1318,8 +1158,7 @@ function calculateSummary(
                 type === "expense"
             ) {
 
-                expense +=
-                    amount;
+                expense += amount;
 
             }
 
@@ -1346,17 +1185,12 @@ function calculateSummary(
     document.getElementById(
         "transactionCount"
     ).textContent =
-        transactions.length
-            .toLocaleString(
-                "fa-IR"
-            );
+        transactions.length.toLocaleString(
+            "fa-IR"
+        );
 
 }
 
-
-// =========================================================
-// WALLET WITHDRAWAL
-// =========================================================
 
 function isWalletWithdrawal(
     transaction
@@ -1377,36 +1211,14 @@ function isWalletWithdrawal(
 
 
     return (
-
-        title.includes(
-            "برداشت"
-        )
-
-        ||
-
-        title.includes(
-            "کیف پول"
-        )
-
-        ||
-
-        title.includes(
-            "withdraw"
-        )
-
-        ||
-
-        category ===
-            "withdraw"
-
+        title.includes("برداشت") ||
+        title.includes("کیف پول") ||
+        title.includes("withdraw") ||
+        category === "withdraw"
     );
 
 }
 
-
-// =========================================================
-// RENDER TRANSACTIONS
-// =========================================================
 
 function renderLatestTransactions(
     transactions
@@ -1462,7 +1274,6 @@ function renderLatestTransactions(
 
 
     container.innerHTML =
-
         latest.map(
             transaction => {
 
@@ -1507,9 +1318,7 @@ function renderLatestTransactions(
 
                     <div class="transaction">
 
-
                         <div class="transaction-info">
-
 
                             <div class="transaction-title">
 
@@ -1519,7 +1328,6 @@ function renderLatestTransactions(
                                 )}
 
                             </div>
-
 
                             <div class="transaction-date">
 
@@ -1533,9 +1341,7 @@ function renderLatestTransactions(
 
                             </div>
 
-
                             <div class="transaction-meta">
-
 
                                 <span
                                     class="badge ${
@@ -1566,20 +1372,16 @@ function renderLatestTransactions(
                                 ${
                                     walletWithdrawal
                                         ? `
-
                                             <span
                                                 class="badge wallet-badge"
                                             >
                                                 برداشت کیف پول
                                             </span>
-
                                           `
                                         : ""
                                 }
 
-
                             </div>
-
 
                         </div>
 
@@ -1604,71 +1406,62 @@ function renderLatestTransactions(
 
                         </div>
 
-
                     </div>
 
                 `;
 
             }
-        )
-        .join(
-            ""
-        );
+        ).join("");
 
 }
 
 
-// =========================================================
-// NOTIFICATIONS
-// =========================================================
+/* =========================================================
+   اعلان‌ها - از سرور
+   ========================================================= */
 
-function getUnreadNotificationCount() {
+
+async function getUnreadNotificationCount() {
 
     try {
 
-        const saved =
-            localStorage.getItem(
-                "kifyar_notifications"
-            );
-
-
-        if (!saved) {
-
-            return 0;
-
-        }
-
-
-        const notifications =
-            JSON.parse(
-                saved
+        const response =
+            await apiRequest(
+                "/api/notifications/unread-count"
             );
 
 
         if (
-            !Array.isArray(
-                notifications
-            )
+            !response.ok
         ) {
+
+            console.error(
+                "Unread notification request failed:",
+                response.status
+            );
 
             return 0;
 
         }
 
 
-        return notifications.filter(
-            item =>
-                item &&
-                item.read !== true
-        ).length;
+        const data =
+            await response.json();
 
 
-    } catch (
-        error
-    ) {
+        return Number(
+            data.count ??
+            data.unread_count ??
+            0
+        );
+
+
+    }
+
+    catch (error) {
 
         console.error(
-            "Notification error:",
+            "Notification count error:",
             error
         );
 
@@ -1679,15 +1472,7 @@ function getUnreadNotificationCount() {
 }
 
 
-// =========================================================
-// UPDATE NOTIFICATION
-// =========================================================
-
-function updateNotificationBadge() {
-
-    const count =
-        getUnreadNotificationCount();
-
+async function updateNotificationBadge() {
 
     const badge =
         document.getElementById(
@@ -1701,16 +1486,24 @@ function updateNotificationBadge() {
         );
 
 
+    if (!badge) {
+
+        return;
+
+    }
+
+
+    const count =
+        await getUnreadNotificationCount();
+
+
     if (
         count > 0
     ) {
 
         badge.textContent =
-
             count > 99
-
                 ? "۹۹+"
-
                 : count.toLocaleString(
                     "fa-IR"
                 );
@@ -1721,19 +1514,22 @@ function updateNotificationBadge() {
         );
 
 
-        quickBadge.textContent =
+        if (
+            quickBadge
+        ) {
 
-            count.toLocaleString(
-                "fa-IR"
-            )
+            quickBadge.textContent =
+                count.toLocaleString(
+                    "fa-IR"
+                )
+                +
+                " اعلان خوانده‌نشده";
 
-            +
 
-            " اعلان خوانده‌نشده";
+            quickBadge.style.display =
+                "block";
 
-
-        quickBadge.style.display =
-            "block";
+        }
 
     }
 
@@ -1744,17 +1540,24 @@ function updateNotificationBadge() {
         );
 
 
-        quickBadge.style.display =
-            "none";
+        if (
+            quickBadge
+        ) {
+
+            quickBadge.style.display =
+                "none";
+
+        }
 
     }
 
 }
 
 
-// =========================================================
-// LOAD DASHBOARD
-// =========================================================
+/* =========================================================
+   بروزرسانی داشبورد
+   ========================================================= */
+
 
 async function loadDashboard() {
 
@@ -1805,12 +1608,11 @@ async function loadDashboard() {
         );
 
 
-        updateNotificationBadge();
+        await updateNotificationBadge();
 
+    }
 
-    } catch (
-        error
-    ) {
+    catch (error) {
 
         console.error(
             error
@@ -1865,9 +1667,9 @@ async function loadDashboard() {
 }
 
 
-// =========================================================
-// PAGE SHOW
-// =========================================================
+/* =========================================================
+   وقتی صفحه دوباره باز می‌شود
+   ========================================================= */
 
 window.addEventListener(
     "pageshow",
@@ -1879,30 +1681,9 @@ window.addEventListener(
 );
 
 
-// =========================================================
-// STORAGE
-// =========================================================
-
-window.addEventListener(
-    "storage",
-    function(event) {
-
-        if (
-            event.key ===
-            "kifyar_notifications"
-        ) {
-
-            updateNotificationBadge();
-
-        }
-
-    }
-);
-
-
-// =========================================================
-// VISIBILITY
-// =========================================================
+/* =========================================================
+   وقتی کاربر به صفحه برمی‌گردد
+   ========================================================= */
 
 document.addEventListener(
     "visibilitychange",
@@ -1923,9 +1704,30 @@ document.addEventListener(
 );
 
 
-// =========================================================
-// INITIAL LOAD
-// =========================================================
+/* =========================================================
+   هر ۱۵ ثانیه تعداد اعلان‌ها را از سرور بگیر
+   ========================================================= */
+
+setInterval(
+    function() {
+
+        if (
+            document.visibilityState ===
+            "visible"
+        ) {
+
+            updateNotificationBadge();
+
+        }
+
+    },
+    15000
+);
+
+
+/* =========================================================
+   شروع
+   ========================================================= */
 
 loadDashboard();
 
@@ -1937,4 +1739,3 @@ updateNotificationBadge();
 </body>
 
 </html>
-```
