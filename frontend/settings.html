@@ -1,12 +1,19 @@
 ﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>تنظیمات | KifYar</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -14,7 +21,10 @@
         body {
             margin: 0;
             padding: 20px;
-            font-family: Tahoma, Arial, sans-serif;
+            font-family:
+                Tahoma,
+                Arial,
+                sans-serif;
             background: #f4f6f8;
             color: #222;
         }
@@ -29,7 +39,14 @@
             border-radius: 18px;
             padding: 22px;
             margin-bottom: 18px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
         }
 
         h1 {
@@ -82,6 +99,11 @@
             cursor: pointer;
         }
 
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
         #logoutButton {
             background: #d32f2f;
             color: white;
@@ -91,25 +113,66 @@
             background: #eeeeee;
             color: #333;
         }
+
+        .message {
+            display: none;
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
     </style>
+
 </head>
+
 
 <body>
 
 <div class="container">
 
+
+    <!-- =====================================================
+         SETTINGS
+         ===================================================== -->
+
     <div class="card">
 
-        <h1>⚙️ تنظیمات</h1>
+        <h1>
+            ⚙️ تنظیمات
+        </h1>
 
         <div class="subtitle">
             مدیریت حساب و کیف‌یار
         </div>
 
+
+        <div
+            id="message"
+            class="message"
+        ></div>
+
+
         <a
             class="setting-item"
-            href="/frontend/profile.html"
+            href="profile.html"
         >
+
             <div class="setting-title">
                 👤 پروفایل
             </div>
@@ -117,27 +180,31 @@
             <div class="setting-description">
                 مشاهده اطلاعات حساب کاربری
             </div>
+
         </a>
 
 
         <a
             class="setting-item"
-            href="/frontend/edit-profile.html"
+            href="profile.html"
         >
+
             <div class="setting-title">
                 ✏️ ویرایش پروفایل
             </div>
 
             <div class="setting-description">
-                تغییر نام کاربری نمایشی
+                تغییر نام نمایشی حساب
             </div>
+
         </a>
 
 
         <a
             class="setting-item"
-            href="/frontend/change-password.html"
+            href="change-password.html"
         >
+
             <div class="setting-title">
                 🔐 تغییر رمز عبور
             </div>
@@ -145,13 +212,15 @@
             <div class="setting-description">
                 تغییر رمز عبور حساب
             </div>
+
         </a>
 
 
         <a
             class="setting-item"
-            href="/frontend/wallet.html"
+            href="wallet.html"
         >
+
             <div class="setting-title">
                 💰 کیف پول
             </div>
@@ -159,13 +228,15 @@
             <div class="setting-description">
                 مشاهده موجودی و مدیریت کیف پول
             </div>
+
         </a>
 
 
         <a
             class="setting-item"
-            href="/frontend/transactions.html"
+            href="transactions.html"
         >
+
             <div class="setting-title">
                 🧾 تراکنش‌ها
             </div>
@@ -173,13 +244,15 @@
             <div class="setting-description">
                 مشاهده و مدیریت تراکنش‌های مالی
             </div>
+
         </a>
 
 
         <a
             class="setting-item"
-            href="/frontend/reports.html"
+            href="reports.html"
         >
+
             <div class="setting-title">
                 📊 گزارش مالی
             </div>
@@ -187,13 +260,15 @@
             <div class="setting-description">
                 مشاهده درآمد، هزینه، موجودی و خلاصه مالی
             </div>
+
         </a>
 
 
         <a
             class="setting-item"
-            href="/frontend/delete-account.html"
+            href="delete-account.html"
         >
+
             <div class="setting-title">
                 🗑️ حذف حساب
             </div>
@@ -201,10 +276,15 @@
             <div class="setting-description">
                 حذف دائمی حساب کاربری
             </div>
+
         </a>
 
     </div>
 
+
+    <!-- =====================================================
+         ACTIONS
+         ===================================================== -->
 
     <div class="card">
 
@@ -214,6 +294,7 @@
         >
             🚪 خروج از حساب
         </button>
+
 
         <button
             type="button"
@@ -229,8 +310,20 @@
 
 <script>
 
+"use strict";
+
+
+// =========================================================
+// API
+// =========================================================
+
 const API_URL =
     "https://kifyar-api.onrender.com";
+
+
+// =========================================================
+// STORAGE
+// =========================================================
 
 const TOKEN_KEY =
     "kifyar_token";
@@ -239,10 +332,15 @@ const USER_KEY =
     "kifyar_user";
 
 
+// =========================================================
+// ELEMENTS
+// =========================================================
+
 const logoutButton =
     document.getElementById(
         "logoutButton"
     );
+
 
 const backButton =
     document.getElementById(
@@ -250,14 +348,30 @@ const backButton =
     );
 
 
+const message =
+    document.getElementById(
+        "message"
+    );
+
+
+// =========================================================
+// TOKEN
+// =========================================================
+
 function getToken() {
 
-    return localStorage.getItem(
-        TOKEN_KEY
+    return (
+        localStorage.getItem(
+            TOKEN_KEY
+        ) || ""
     );
 
 }
 
+
+// =========================================================
+// SESSION CLEAR
+// =========================================================
 
 function clearSession() {
 
@@ -269,40 +383,80 @@ function clearSession() {
         USER_KEY
     );
 
+    localStorage.removeItem(
+        "access_token"
+    );
+
+    localStorage.removeItem(
+        "auth_token"
+    );
+
+    localStorage.removeItem(
+        "gapino_token"
+    );
+
+    localStorage.removeItem(
+        "gapino_user"
+    );
+
 }
 
+
+// =========================================================
+// LOGIN
+// =========================================================
 
 function goToLogin() {
 
-    window.location.href =
-        "/frontend/login.html";
+    window.location.assign(
+        "login.html"
+    );
 
 }
 
 
-if (!getToken()) {
+// =========================================================
+// MESSAGE
+// =========================================================
+
+function showMessage(
+    text,
+    type
+) {
+
+    message.textContent =
+        text;
+
+    message.className =
+        "message show " +
+        type;
+
+}
+
+
+// =========================================================
+// AUTH CHECK
+// =========================================================
+
+if (
+    !getToken()
+) {
 
     goToLogin();
 
 }
 
 
+// =========================================================
+// LOGOUT
+// =========================================================
+
 logoutButton.addEventListener(
     "click",
-    async function () {
+    async function() {
 
         const token =
             getToken();
-
-        if (!token) {
-
-            clearSession();
-
-            goToLogin();
-
-            return;
-
-        }
 
 
         logoutButton.disabled =
@@ -314,22 +468,34 @@ logoutButton.addEventListener(
 
         try {
 
-            await fetch(
-                API_URL + "/api/logout",
-                {
-                    method: "POST",
+            if (token) {
 
-                    headers: {
-                        "Authorization":
-                            "Bearer " + token
+                await fetch(
+                    API_URL +
+                    "/api/logout",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Authorization":
+                                "Bearer " +
+                                token,
+
+                            "Accept":
+                                "application/json"
+                        }
                     }
-                }
-            );
+                );
 
-        } catch (error) {
+            }
 
-            console.log(
-                "Logout request failed:",
+        } catch (
+            error
+        ) {
+
+            console.error(
+                "Logout error:",
                 error
             );
 
@@ -338,18 +504,36 @@ logoutButton.addEventListener(
 
         clearSession();
 
-        goToLogin();
+        showMessage(
+            "با موفقیت خارج شدید.",
+            "success"
+        );
+
+
+        setTimeout(
+            function() {
+
+                goToLogin();
+
+            },
+            500
+        );
 
     }
 );
 
 
+// =========================================================
+// BACK
+// =========================================================
+
 backButton.addEventListener(
     "click",
-    function () {
+    function() {
 
-        window.location.href =
-            "/frontend/index.html";
+        window.location.assign(
+            "index.html"
+        );
 
     }
 );
@@ -357,4 +541,5 @@ backButton.addEventListener(
 </script>
 
 </body>
+
 </html>
