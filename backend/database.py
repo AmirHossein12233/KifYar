@@ -46,7 +46,12 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# =========================================================
+# PASSWORDS
+# =========================================================
+
 def hash_password(password: str) -> str:
+
     salt = secrets.token_bytes(16)
 
     digest = hashlib.pbkdf2_hmac(
@@ -68,6 +73,7 @@ def verify_password(
 ) -> bool:
 
     try:
+
         algorithm, iterations, salt_hex, digest_hex = (
             stored_hash.split("$")
         )
@@ -97,6 +103,10 @@ def verify_password(
         return False
 
 
+# =========================================================
+# DATABASE HELPERS
+# =========================================================
+
 def _ensure_column(
     conn: sqlite3.Connection,
     table: str,
@@ -114,6 +124,7 @@ def _ensure_column(
     }
 
     if column not in existing:
+
         conn.execute(
             f"""
             ALTER TABLE {table}
@@ -121,6 +132,10 @@ def _ensure_column(
             """
         )
 
+
+# =========================================================
+# ADMIN LOG TABLE
+# =========================================================
 
 def initialize_admin_logs_table() -> None:
 
@@ -157,6 +172,62 @@ def initialize_admin_logs_table() -> None:
             """
         )
 
+
+# =========================================================
+# NOTIFICATIONS TABLE
+# =========================================================
+
+def initialize_notifications_table() -> None:
+
+    with get_connection() as conn:
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                message TEXT NOT NULL,
+                notification_type TEXT NOT NULL DEFAULT 'system',
+                transfer_id INTEGER,
+                is_read INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                read_at TEXT,
+                FOREIGN KEY(user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_notifications_user_created
+            ON notifications(user_id, created_at DESC)
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_notifications_user_read
+            ON notifications(user_id, is_read)
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_notifications_transfer
+            ON notifications(transfer_id)
+            """
+        )
+
+
+# =========================================================
+# INITIALIZE DATABASE
+# =========================================================
 
 def initialize_database() -> None:
 
@@ -322,6 +393,7 @@ def initialize_database() -> None:
         )
 
     initialize_admin_logs_table()
+    initialize_notifications_table()
 
 
 # =========================================================
@@ -1394,6 +1466,34 @@ def transfer_wallet_to_card_once(
             ),
         )
 
+        # اعلان ثبت درخواست انتقال
+        conn.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, 0, ?)
+            """,
+            (
+                user_id,
+                "درخواست انتقال ثبت شد",
+                (
+                    f"درخواست انتقال "
+                    f"{amount:,.0f} تومان "
+                    f"ثبت شد و در انتظار پردازش است."
+                ),
+                "transfer",
+                transfer_id,
+                created_at,
+            ),
+        )
+
         return {
             "transfer_id": transfer_id,
             "balance": balance - amount,
@@ -1695,6 +1795,12 @@ def update_card_transfer_status(
                 "این درخواست قبلاً پردازش شده است"
             )
 
+        current_time = now_iso()
+
+        # -------------------------------------------------
+        # REFUND FOR FAILED / CANCELLED
+        # -------------------------------------------------
+
         if new_status in {
             "failed",
             "cancelled",
@@ -1727,9 +1833,13 @@ def update_card_transfer_status(
                     row["user_id"],
                     refund_title,
                     row["amount"],
-                    now_iso(),
+                    current_time,
                 ),
             )
+
+        # -------------------------------------------------
+        # UPDATE TRANSFER
+        # -------------------------------------------------
 
         conn.execute(
             """
@@ -1740,12 +1850,335 @@ def update_card_transfer_status(
             """,
             (
                 new_status,
-                now_iso(),
+                current_time,
                 transfer_id,
             ),
         )
 
+        # -------------------------------------------------
+        # CREATE NOTIFICATION
+        # -------------------------------------------------
+
+        amount = float(
+            row["amount"] or 0
+        )
+
+        if new_status == "completed":
+
+            title = "انتقال تکمیل شد"
+
+            message = (
+                f"انتقال "
+                f"{amount:,.0f} تومان "
+                f"با موفقیت تکمیل شد."
+            )
+
+        elif new_status == "failed":
+
+            title = "انتقال ناموفق شد"
+
+            message = (
+                f"انتقال "
+                f"{amount:,.0f} تومان "
+                f"ناموفق شد و مبلغ آن "
+                f"به کیف پول بازگردانده شد."
+            )
+
+        elif new_status == "cancelled":
+
+            title = "انتقال لغو شد"
+
+            message = (
+                f"انتقال "
+                f"{amount:,.0f} تومان "
+                f"لغو شد و مبلغ آن "
+                f"به کیف پول بازگردانده شد."
+            )
+
+        else:
+
+            title = "وضعیت انتقال تغییر کرد"
+
+            message = (
+                f"وضعیت انتقال "
+                f"{amount:,.0f} تومان "
+                f"به «در انتظار پردازش» تغییر کرد."
+            )
+
+        conn.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, 0, ?)
+            """,
+            (
+                row["user_id"],
+                title,
+                message,
+                "transfer_status",
+                transfer_id,
+                current_time,
+            ),
+        )
+
         return True
+
+
+# =========================================================
+# NOTIFICATIONS
+# =========================================================
+
+def add_notification(
+    user_id: int,
+    title: str,
+    message: str,
+    notification_type: str = "system",
+    transfer_id: int | None = None,
+) -> int:
+
+    created_at = now_iso()
+
+    with get_connection() as conn:
+
+        cursor = conn.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, 0, ?)
+            """,
+            (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                created_at,
+            ),
+        )
+
+        return int(cursor.lastrowid)
+
+
+def get_notifications(
+    user_id: int,
+    limit: int = 100,
+    unread_only: bool = False,
+) -> list[dict[str, Any]]:
+
+    limit = max(
+        1,
+        min(int(limit), 500),
+    )
+
+    with get_connection() as conn:
+
+        if unread_only:
+
+            rows = conn.execute(
+                """
+                SELECT
+                    id,
+                    user_id,
+                    title,
+                    message,
+                    notification_type,
+                    transfer_id,
+                    is_read,
+                    created_at,
+                    read_at
+                FROM notifications
+                WHERE user_id = ?
+                  AND is_read = 0
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (
+                    user_id,
+                    limit,
+                ),
+            ).fetchall()
+
+        else:
+
+            rows = conn.execute(
+                """
+                SELECT
+                    id,
+                    user_id,
+                    title,
+                    message,
+                    notification_type,
+                    transfer_id,
+                    is_read,
+                    created_at,
+                    read_at
+                FROM notifications
+                WHERE user_id = ?
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (
+                    user_id,
+                    limit,
+                ),
+            ).fetchall()
+
+    return [
+        dict(row)
+        for row in rows
+    ]
+
+
+def get_notification(
+    user_id: int,
+    notification_id: int,
+) -> dict[str, Any] | None:
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at,
+                read_at
+            FROM notifications
+            WHERE id = ?
+              AND user_id = ?
+            """,
+            (
+                notification_id,
+                user_id,
+            ),
+        ).fetchone()
+
+    return dict(row) if row else None
+
+
+def get_unread_notification_count(
+    user_id: int,
+) -> int:
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM notifications
+            WHERE user_id = ?
+              AND is_read = 0
+            """,
+            (user_id,),
+        ).fetchone()
+
+    return int(row["count"] or 0)
+
+
+def mark_notification_as_read(
+    user_id: int,
+    notification_id: int,
+) -> bool:
+
+    with get_connection() as conn:
+
+        cursor = conn.execute(
+            """
+            UPDATE notifications
+            SET is_read = 1,
+                read_at = ?
+            WHERE id = ?
+              AND user_id = ?
+            """,
+            (
+                now_iso(),
+                notification_id,
+                user_id,
+            ),
+        )
+
+    return cursor.rowcount > 0
+
+
+def mark_all_notifications_as_read(
+    user_id: int,
+) -> int:
+
+    with get_connection() as conn:
+
+        cursor = conn.execute(
+            """
+            UPDATE notifications
+            SET is_read = 1,
+                read_at = ?
+            WHERE user_id = ?
+              AND is_read = 0
+            """,
+            (
+                now_iso(),
+                user_id,
+            ),
+        )
+
+    return cursor.rowcount
+
+
+def delete_notification(
+    user_id: int,
+    notification_id: int,
+) -> bool:
+
+    with get_connection() as conn:
+
+        cursor = conn.execute(
+            """
+            DELETE FROM notifications
+            WHERE id = ?
+              AND user_id = ?
+            """,
+            (
+                notification_id,
+                user_id,
+            ),
+        )
+
+    return cursor.rowcount > 0
+
+
+def delete_all_notifications(
+    user_id: int,
+) -> int:
+
+    with get_connection() as conn:
+
+        cursor = conn.execute(
+            """
+            DELETE FROM notifications
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        )
+
+    return cursor.rowcount
 
 
 # =========================================================
@@ -1824,5 +2257,35 @@ def get_admin_action_logs(
         for row in rows
     ]
 
+
+def get_admin_action_log(
+    log_id: int,
+) -> dict[str, Any] | None:
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                action,
+                transfer_id,
+                status_before,
+                status_after,
+                amount,
+                request_id,
+                created_at
+            FROM admin_action_logs
+            WHERE id = ?
+            """,
+            (log_id,),
+        ).fetchone()
+
+    return dict(row) if row else None
+
+
+# =========================================================
+# STARTUP
+# =========================================================
 
 initialize_database()
