@@ -1,19 +1,12 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>مدیریت KifYar</title>
+    <title>مدیریت کیف‌یار</title>
 
     <style>
-
         * {
             box-sizing: border-box;
         }
@@ -22,283 +15,329 @@
             margin: 0;
             padding: 20px;
             background: #f4f6f9;
+            color: #172033;
             font-family: Tahoma, Arial, sans-serif;
-            color: #222;
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: auto;
         }
 
-        .header {
-            background: white;
-            border-radius: 18px;
-            padding: 22px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.07);
+        h1 {
+            margin: 0 0 6px;
         }
 
-        .header h1 {
-            margin: 0 0 8px;
-            font-size: 25px;
-        }
-
-        .header p {
-            margin: 0;
-            color: #777;
-        }
-
-        .login-box {
-            background: white;
-            border-radius: 18px;
-            padding: 22px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.07);
+        .subtitle {
+            color: #667085;
             margin-bottom: 20px;
         }
 
-        .login-box h2 {
-            margin-top: 0;
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
         }
 
-        input {
+        input,
+        select,
+        button {
+            font-family: inherit;
+        }
+
+        input,
+        select {
             width: 100%;
-            padding: 13px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 15px;
-            margin-bottom: 10px;
-            direction: ltr;
-            text-align: left;
+            padding: 12px;
+            border: 1px solid #d0d5dd;
+            border-radius: 10px;
+            background: white;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #667eea;
         }
 
         button {
             border: 0;
             border-radius: 10px;
-            padding: 11px 15px;
+            padding: 11px 16px;
             cursor: pointer;
-            font-family: inherit;
-            font-size: 14px;
-            margin: 3px;
+            font-weight: bold;
         }
 
-        .primary {
-            background: #2563eb;
+        .btn-primary {
+            background: #667eea;
             color: white;
         }
 
-        .success {
+        .btn-success {
             background: #16a34a;
             color: white;
         }
 
-        .danger {
+        .btn-danger {
             background: #dc2626;
             color: white;
         }
 
-        .warning {
-            background: #d97706;
+        .btn-warning {
+            background: #f59e0b;
             color: white;
         }
 
-        .gray {
-            background: #64748b;
-            color: white;
-        }
-
-        .status {
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .status.ok {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .toolbar {
-            background: white;
-            border-radius: 18px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.07);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .count {
-            font-weight: bold;
-        }
-
-        .list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.07);
-        }
-
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
-        }
-
-        .title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .badge {
-            padding: 7px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .completed {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .failed,
-        .cancelled {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns: repeat(
-                auto-fit,
-                minmax(200px, 1fr)
-            );
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .item {
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 12px;
-        }
-
-        .label {
-            color: #777;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-
-        .value {
-            font-weight: bold;
-            word-break: break-word;
-        }
-
-        .actions {
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
-
-        .empty {
-            background: white;
-            padding: 40px;
-            text-align: center;
-            border-radius: 18px;
-            color: #777;
+        .btn-gray {
+            background: #e5e7eb;
+            color: #111827;
         }
 
         .hidden {
             display: none !important;
         }
 
-        .simulation {
-            background: #eff6ff;
-            color: #1d4ed8;
-            padding: 10px 14px;
+        .login-box {
+            max-width: 500px;
+            margin: 70px auto;
+        }
+
+        .login-box button {
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
             border-radius: 10px;
-            display: inline-block;
-            margin-top: 10px;
+            margin-top: 12px;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: 1fr 180px auto auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat {
+            background: white;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-title {
+            color: #667085;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .bulk-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .bulk-bar span {
+            color: #475467;
+            font-size: 14px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 950px;
+        }
+
+        th,
+        td {
+            padding: 13px 10px;
+            border-bottom: 1px solid #eaecf0;
+            text-align: right;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475467;
             font-size: 13px;
         }
 
-        @media (max-width: 600px) {
-
-            body {
-                padding: 10px;
-            }
-
-            .header,
-            .login-box,
-            .toolbar,
-            .card {
-                border-radius: 14px;
-            }
-
-            button {
-                width: 100%;
-                margin: 4px 0;
-            }
-
+        td {
+            font-size: 14px;
         }
 
-    </style>
+        tr:hover td {
+            background: #fafafa;
+        }
 
+        .amount {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-cancelled {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .actions button {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        .request-id {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            direction: ltr;
+            text-align: right;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #667085;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #667085;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .simulation {
+            display: inline-block;
+            background: #ede9fe;
+            color: #5b21b6;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .check-cell {
+            width: 40px;
+        }
+
+        .check-cell input {
+            width: auto;
+        }
+
+        @media (max-width: 800px) {
+            body {
+                padding: 12px;
+            }
+
+            .toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 13px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+<div id="loginView" class="login-box">
+    <div class="card">
+        <h1>ورود مدیریت</h1>
 
-    <div class="header">
-
-        <h1>
-            🛠️ مدیریت KifYar
-        </h1>
-
-        <p>
-            مدیریت شبیه‌سازی درخواست‌های انتقال به کارت
-        </p>
-
-        <div class="simulation">
-            این بخش شبیه‌سازی است و انتقال بانکی واقعی انجام نمی‌دهد.
+        <div class="subtitle">
+            پنل مدیریت درخواست‌های کیف‌یار
         </div>
-
-    </div>
-
-
-    <div
-        id="loginBox"
-        class="login-box"
-    >
-
-        <h2>
-            🔐 ورود مدیریت
-        </h2>
 
         <input
             id="adminKey"
@@ -308,67 +347,261 @@
         >
 
         <button
-            class="primary"
-            onclick="loginAdmin()"
+            class="btn-primary"
+            onclick="login()"
         >
-            ورود به پنل
+            ورود
         </button>
 
-        <div
-            id="loginStatus"
-            class="status"
-        ></div>
+        <div id="loginMessage"></div>
+    </div>
+</div>
+
+
+<div id="adminView" class="container hidden">
+
+    <div class="topbar">
+        <div>
+            <h1>مدیریت کیف‌یار</h1>
+
+            <div class="subtitle">
+                مدیریت درخواست‌های انتقال به کارت
+            </div>
+
+            <span class="simulation">
+                حالت شبیه‌سازی
+            </span>
+        </div>
+
+        <div class="topbar-actions">
+            <button
+                class="btn-primary"
+                onclick="loadTransfers()"
+            >
+                🔄 بروزرسانی
+            </button>
+
+            <button
+                class="btn-gray"
+                onclick="logout()"
+            >
+                خروج
+            </button>
+        </div>
+    </div>
+
+
+    <div class="stats">
+
+        <div class="stat">
+            <div class="stat-title">
+                کل درخواست‌ها
+            </div>
+
+            <div
+                id="totalCount"
+                class="stat-value"
+            >
+                ۰
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-title">
+                در انتظار پردازش
+            </div>
+
+            <div
+                id="pendingCount"
+                class="stat-value"
+            >
+                ۰
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-title">
+                مبلغ در انتظار
+            </div>
+
+            <div
+                id="pendingAmount"
+                class="stat-value"
+            >
+                ۰ تومان
+            </div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-title">
+                نمایش فعلی
+            </div>
+
+            <div
+                id="visibleCount"
+                class="stat-value"
+            >
+                ۰
+            </div>
+        </div>
 
     </div>
 
 
-    <div
-        id="panel"
-        class="hidden"
-    >
+    <div class="card">
 
         <div class="toolbar">
 
-            <div>
+            <input
+                id="searchInput"
+                type="text"
+                placeholder="جست‌وجو با شناسه، نام کاربر، ایمیل یا کارت..."
+                oninput="renderTransfers()"
+            >
 
-                <div class="count">
-                    درخواست‌ها:
-                    <span id="count">0</span>
-                </div>
+            <select
+                id="statusFilter"
+                onchange="renderTransfers()"
+            >
+                <option value="all">
+                    همه وضعیت‌ها
+                </option>
 
-            </div>
+                <option value="pending">
+                    در انتظار
+                </option>
 
-            <div>
+                <option value="completed">
+                    تکمیل‌شده
+                </option>
 
-                <button
-                    class="primary"
-                    onclick="loadTransfers()"
-                >
-                    🔄 بروزرسانی
-                </button>
+                <option value="failed">
+                    ردشده
+                </option>
 
-                <button
-                    class="gray"
-                    onclick="logoutAdmin()"
-                >
-                    خروج
-                </button>
+                <option value="cancelled">
+                    لغوشده
+                </option>
+            </select>
 
-            </div>
+            <button
+                class="btn-gray"
+                onclick="clearFilters()"
+            >
+                پاک کردن فیلتر
+            </button>
+
+            <button
+                class="btn-gray"
+                onclick="toggleAutoRefresh()"
+                id="autoRefreshButton"
+            >
+                بروزرسانی خودکار: روشن
+            </button>
 
         </div>
 
 
-        <div
-            id="status"
-            class="status"
-        ></div>
+        <div class="bulk-bar">
+
+            <button
+                class="btn-gray"
+                onclick="selectAllPending()"
+            >
+                انتخاب همه در انتظار
+            </button>
+
+            <button
+                class="btn-success"
+                onclick="bulkChangeStatus('completed')"
+            >
+                تأیید انتخاب‌شده‌ها
+            </button>
+
+            <button
+                class="btn-danger"
+                onclick="bulkChangeStatus('failed')"
+            >
+                رد انتخاب‌شده‌ها
+            </button>
+
+            <button
+                class="btn-warning"
+                onclick="bulkChangeStatus('cancelled')"
+            >
+                لغو انتخاب‌شده‌ها
+            </button>
+
+            <span id="selectedInfo">
+                ۰ مورد انتخاب شده
+            </span>
+
+        </div>
+
+    </div>
 
 
+    <div class="card">
+
+        <div id="message"></div>
+
         <div
-            id="list"
-            class="list"
-        ></div>
+            id="loading"
+            class="loading"
+        >
+            در حال دریافت اطلاعات...
+        </div>
+
+        <div
+            id="tableContainer"
+            class="table-wrap hidden"
+        >
+
+            <table>
+
+                <thead>
+                <tr>
+
+                    <th class="check-cell">
+                        ✓
+                    </th>
+
+                    <th>
+                        شناسه
+                    </th>
+
+                    <th>
+                        کاربر
+                    </th>
+
+                    <th>
+                        کارت
+                    </th>
+
+                    <th>
+                        مبلغ
+                    </th>
+
+                    <th>
+                        وضعیت
+                    </th>
+
+                    <th>
+                        تاریخ
+                    </th>
+
+                    <th>
+                        عملیات
+                    </th>
+
+                </tr>
+                </thead>
+
+                <tbody id="transfersBody"></tbody>
+
+            </table>
+
+        </div>
 
     </div>
 
@@ -377,477 +610,602 @@
 
 <script>
 
-const API_URL =
-    "https://kifyar-api.onrender.com";
+const API_URL = "https://kifyar-api.onrender.com";
 
-let adminKey =
-    localStorage.getItem(
-        "kifyar_admin_key"
-    ) || "";
+const ADMIN_KEY_STORAGE = "kifyar_admin_key";
 
-
-const statusBox =
-    document.getElementById(
-        "status"
-    );
-
-const loginStatus =
-    document.getElementById(
-        "loginStatus"
-    );
+let adminKey = "";
+let transfers = [];
+let autoRefreshEnabled = true;
+let autoRefreshTimer = null;
 
 
-function showStatus(
-    element,
-    message,
-    type = "ok"
-) {
+function escapeHtml(value) {
 
-    element.textContent =
-        message;
-
-    element.className =
-        "status " + type;
-
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 
-function loginAdmin() {
+function formatNumber(value) {
 
-    const input =
-        document.getElementById(
-            "adminKey"
-        );
+    return Number(value || 0).toLocaleString("fa-IR");
+}
 
-    const value =
-        input.value.trim();
+
+function formatAmount(value) {
+
+    return formatNumber(value) + " تومان";
+}
+
+
+function formatDate(value) {
 
     if (!value) {
+        return "-";
+    }
 
-        showStatus(
-            loginStatus,
-            "کلید مدیریت را وارد کنید.",
-            "error"
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return escapeHtml(value);
+    }
+
+    return date.toLocaleString("fa-IR");
+}
+
+
+function statusText(status) {
+
+    const map = {
+        pending: "در انتظار",
+        completed: "تکمیل‌شده",
+        failed: "ردشده",
+        cancelled: "لغوشده"
+    };
+
+    return map[status] || status;
+}
+
+
+function statusClass(status) {
+
+    return "status status-" + status;
+}
+
+
+function showMessage(text, type = "error") {
+
+    const element = document.getElementById("message");
+
+    if (!text) {
+        element.innerHTML = "";
+        return;
+    }
+
+    element.innerHTML = `
+        <div class="${type}">
+            ${escapeHtml(text)}
+        </div>
+    `;
+
+    setTimeout(() => {
+
+        if (element.innerHTML) {
+            element.innerHTML = "";
+        }
+
+    }, 5000);
+}
+
+
+function showLoginMessage(text, type = "error") {
+
+    const element = document.getElementById("loginMessage");
+
+    element.innerHTML = `
+        <div class="${type}">
+            ${escapeHtml(text)}
+        </div>
+    `;
+}
+
+
+async function apiFetch(path, options = {}) {
+
+    const headers = {
+        ...(options.headers || {}),
+        "X-Admin-Key": adminKey
+    };
+
+    const response = await fetch(
+        API_URL + path,
+        {
+            ...options,
+            headers
+        }
+    );
+
+    let data = null;
+
+    try {
+        data = await response.json();
+    } catch {
+        data = null;
+    }
+
+    if (!response.ok) {
+
+        let message = "خطا در ارتباط با سرور";
+
+        if (data?.detail) {
+            message = data.detail;
+        }
+
+        throw new Error(message);
+    }
+
+    return data;
+}
+
+
+async function login() {
+
+    const input = document.getElementById("adminKey");
+
+    const key = input.value.trim();
+
+    if (!key) {
+
+        showLoginMessage(
+            "کلید مدیریت را وارد کنید."
         );
 
         return;
     }
 
-    adminKey = value;
-
-    localStorage.setItem(
-        "kifyar_admin_key",
-        adminKey
-    );
-
-    verifyAdmin();
-
-}
-
-
-async function verifyAdmin() {
+    adminKey = key;
 
     try {
 
-        const response =
-            await fetch(
-                API_URL +
-                "/api/admin/card-transfers",
-                {
-                    method: "GET",
-
-                    headers: {
-                        "X-Admin-Key":
-                            adminKey
-                    }
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.detail ||
-                "دسترسی مدیریت رد شد."
-            );
-
-        }
-
-
-        document
-            .getElementById(
-                "loginBox"
-            )
-            .classList
-            .add("hidden");
-
-
-        document
-            .getElementById(
-                "panel"
-            )
-            .classList
-            .remove("hidden");
-
-
-        renderTransfers(
-            data.transfers || []
+        await apiFetch(
+            "/api/admin/card-transfers"
         );
 
+        localStorage.setItem(
+            ADMIN_KEY_STORAGE,
+            adminKey
+        );
+
+        document
+            .getElementById("loginView")
+            .classList.add("hidden");
+
+        document
+            .getElementById("adminView")
+            .classList.remove("hidden");
+
+        showMessage(
+            "ورود با موفقیت انجام شد.",
+            "success"
+        );
+
+        await loadTransfers();
+
+        startAutoRefresh();
 
     } catch (error) {
 
-        localStorage.removeItem(
-            "kifyar_admin_key"
-        );
-
         adminKey = "";
 
-        showStatus(
-            loginStatus,
-            error.message,
-            "error"
+        showLoginMessage(
+            error.message || "کلید مدیریت نادرست است."
         );
-
     }
+}
 
+
+function logout() {
+
+    stopAutoRefresh();
+
+    adminKey = "";
+
+    localStorage.removeItem(
+        ADMIN_KEY_STORAGE
+    );
+
+    document
+        .getElementById("adminView")
+        .classList.add("hidden");
+
+    document
+        .getElementById("loginView")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("adminKey")
+        .value = "";
+
+    transfers = [];
 }
 
 
 async function loadTransfers() {
 
+    const loading =
+        document.getElementById("loading");
+
+    const tableContainer =
+        document.getElementById("tableContainer");
+
+    loading.classList.remove("hidden");
+    tableContainer.classList.add("hidden");
+
     try {
 
-        const response =
-            await fetch(
-                API_URL +
-                "/api/admin/card-transfers",
-                {
-                    headers: {
-                        "X-Admin-Key":
-                            adminKey
-                    }
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.detail ||
-                "خطا در دریافت درخواست‌ها."
-            );
-
-        }
-
-
-        renderTransfers(
-            data.transfers || []
+        const data = await apiFetch(
+            "/api/admin/card-transfers"
         );
 
+        transfers =
+            Array.isArray(data)
+                ? data
+                : (data?.items || []);
 
-        showStatus(
-            statusBox,
-            "لیست با موفقیت بروزرسانی شد.",
-            "ok"
-        );
-
+        updateStats();
+        renderTransfers();
 
     } catch (error) {
 
-        showStatus(
-            statusBox,
-            error.message,
-            "error"
+        if (
+            error.message.includes("401") ||
+            error.message.includes("403") ||
+            error.message.includes("کلید")
+        ) {
+
+            logout();
+
+            showLoginMessage(
+                "دسترسی مدیریت معتبر نیست."
+            );
+
+            return;
+        }
+
+        showMessage(
+            error.message || "دریافت درخواست‌ها ناموفق بود."
         );
 
+    } finally {
+
+        loading.classList.add("hidden");
+        tableContainer.classList.remove("hidden");
     }
-
 }
 
 
-function statusText(
-    status
-) {
+function updateStats() {
 
-    const values = {
+    const total =
+        transfers.length;
 
-        pending:
-            "در انتظار پردازش",
-
-        completed:
-            "تکمیل شده",
-
-        failed:
-            "ناموفق",
-
-        cancelled:
-            "لغو شده"
-
-    };
-
-    return (
-        values[status] ||
-        status
-    );
-
-}
-
-
-function formatMoney(
-    amount
-) {
-
-    return Number(
-        amount || 0
-    ).toLocaleString(
-        "fa-IR"
-    );
-
-}
-
-
-function renderTransfers(
-    transfers
-) {
-
-    const list =
-        document.getElementById(
-            "list"
+    const pending =
+        transfers.filter(
+            item => item.status === "pending"
         );
 
-    const count =
-        document.getElementById(
-            "count"
+    const pendingTotal =
+        pending.reduce(
+            (sum, item) =>
+                sum + Number(item.amount || 0),
+            0
         );
 
+    document.getElementById(
+        "totalCount"
+    ).textContent =
+        formatNumber(total);
 
-    count.textContent =
-        transfers.length
-            .toLocaleString("fa-IR");
+    document.getElementById(
+        "pendingCount"
+    ).textContent =
+        formatNumber(pending.length);
+
+    document.getElementById(
+        "pendingAmount"
+    ).textContent =
+        formatAmount(pendingTotal);
+}
 
 
-    if (!transfers.length) {
+function getFilteredTransfers() {
 
-        list.innerHTML = `
-            <div class="empty">
-                هیچ درخواست انتقالی وجود ندارد.
-            </div>
+    const search =
+        document
+            .getElementById("searchInput")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const status =
+        document
+            .getElementById("statusFilter")
+            .value;
+
+    return transfers.filter(item => {
+
+        if (
+            status !== "all" &&
+            item.status !== status
+        ) {
+            return false;
+        }
+
+        if (!search) {
+            return true;
+        }
+
+        const text = [
+            item.id,
+            item.transfer_id,
+            item.request_id,
+            item.username,
+            item.name,
+            item.email,
+            item.masked_card_number,
+            item.card_number,
+            item.bank_name
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+        return text.includes(search);
+    });
+}
+
+
+function renderTransfers() {
+
+    const body =
+        document.getElementById("transfersBody");
+
+    const filtered =
+        getFilteredTransfers();
+
+    document.getElementById(
+        "visibleCount"
+    ).textContent =
+        formatNumber(filtered.length);
+
+    if (!filtered.length) {
+
+        body.innerHTML = `
+            <tr>
+                <td
+                    colspan="8"
+                    class="empty"
+                >
+                    موردی برای نمایش وجود ندارد.
+                </td>
+            </tr>
         `;
+
+        updateSelectedInfo();
 
         return;
     }
 
 
-    list.innerHTML =
-        transfers.map(
-            transferCard
-        ).join("");
+    body.innerHTML =
+        filtered.map(item => {
 
+            const id =
+                item.id ??
+                item.transfer_id ??
+                "";
+
+            const requestId =
+                item.request_id ??
+                "-";
+
+            const userName =
+                item.name ||
+                item.username ||
+                "-";
+
+            const email =
+                item.email ||
+                "";
+
+            const card =
+                item.masked_card_number ||
+                item.card_number ||
+                "-";
+
+            const bank =
+                item.bank_name ||
+                "";
+
+            const canSelect =
+                item.status === "pending";
+
+            return `
+                <tr>
+
+                    <td class="check-cell">
+
+                        ${
+                            canSelect
+                            ? `
+                                <input
+                                    type="checkbox"
+                                    class="transfer-checkbox"
+                                    value="${escapeHtml(id)}"
+                                    onchange="updateSelectedInfo()"
+                                >
+                              `
+                            : ""
+                        }
+
+                    </td>
+
+                    <td>
+
+                        <div>
+                            #${escapeHtml(id)}
+                        </div>
+
+                        <div class="request-id">
+                            ${escapeHtml(requestId)}
+                        </div>
+
+                    </td>
+
+                    <td>
+
+                        <strong>
+                            ${escapeHtml(userName)}
+                        </strong>
+
+                        ${
+                            email
+                            ? `
+                                <div style="color:#667085;font-size:12px;margin-top:4px;">
+                                    ${escapeHtml(email)}
+                                </div>
+                              `
+                            : ""
+                        }
+
+                    </td>
+
+                    <td>
+
+                        <div>
+                            ${escapeHtml(card)}
+                        </div>
+
+                        ${
+                            bank
+                            ? `
+                                <div style="color:#667085;font-size:12px;margin-top:4px;">
+                                    ${escapeHtml(bank)}
+                                </div>
+                              `
+                            : ""
+                        }
+
+                    </td>
+
+                    <td class="amount">
+
+                        ${formatAmount(item.amount)}
+
+                    </td>
+
+                    <td>
+
+                        <span class="${statusClass(item.status)}">
+                            ${escapeHtml(statusText(item.status))}
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        ${formatDate(item.created_at)}
+
+                    </td>
+
+                    <td>
+
+                        ${
+                            item.status === "pending"
+                            ? `
+                                <div class="actions">
+
+                                    <button
+                                        class="btn-success"
+                                        onclick="changeStatus('${escapeHtml(id)}', 'completed')"
+                                    >
+                                        تأیید
+                                    </button>
+
+                                    <button
+                                        class="btn-danger"
+                                        onclick="changeStatus('${escapeHtml(id)}', 'failed')"
+                                    >
+                                        رد
+                                    </button>
+
+                                    <button
+                                        class="btn-warning"
+                                        onclick="changeStatus('${escapeHtml(id)}', 'cancelled')"
+                                    >
+                                        لغو
+                                    </button>
+
+                                </div>
+                              `
+                            : "-"
+                        }
+
+                    </td>
+
+                </tr>
+            `;
+
+        }).join("");
+
+    updateSelectedInfo();
 }
 
 
-function transferCard(
-    transfer
-) {
+function getSelectedIds() {
 
-    const status =
-        String(
-            transfer.status ||
-            "pending"
-        ).toLowerCase();
-
-
-    const canProcess =
-        status === "pending";
+    return Array.from(
+        document.querySelectorAll(
+            ".transfer-checkbox:checked"
+        )
+    ).map(
+        checkbox => checkbox.value
+    );
+}
 
 
-    return `
+function updateSelectedInfo() {
 
-        <div class="card">
+    const selected =
+        getSelectedIds();
 
-            <div class="card-top">
-
-                <div class="title">
-                    💳 انتقال به کارت
-                </div>
-
-                <div class="badge ${escapeHtml(status)}">
-                    ${escapeHtml(
-                        statusText(status)
-                    )}
-                </div>
-
-            </div>
+    document.getElementById(
+        "selectedInfo"
+    ).textContent =
+        formatNumber(selected.length) +
+        " مورد انتخاب شده";
+}
 
 
-            <div class="row">
+function selectAllPending() {
 
-                <div class="item">
+    const checkboxes =
+        document.querySelectorAll(
+            ".transfer-checkbox"
+        );
 
-                    <div class="label">
-                        مبلغ
-                    </div>
+    checkboxes.forEach(
+        checkbox => {
+            checkbox.checked = true;
+        }
+    );
 
-                    <div class="value">
-                        ${formatMoney(
-                            transfer.amount
-                        )}
-                        تومان
-                    </div>
-
-                </div>
-
-
-                <div class="item">
-
-                    <div class="label">
-                        کارت
-                    </div>
-
-                    <div class="value">
-                        ${escapeHtml(
-                            transfer.masked_card_number ||
-                            "****"
-                        )}
-                    </div>
-
-                </div>
-
-
-                <div class="item">
-
-                    <div class="label">
-                        کاربر
-                    </div>
-
-                    <div class="value">
-                        ${escapeHtml(
-                            transfer.name ||
-                            transfer.username ||
-                            "-"
-                        )}
-                    </div>
-
-                </div>
-
-
-                <div class="item">
-
-                    <div class="label">
-                        شناسه درخواست
-                    </div>
-
-                    <div class="value">
-                        ${escapeHtml(
-                            transfer.request_id ||
-                            "-"
-                        )}
-                    </div>
-
-                </div>
-
-
-                <div class="item">
-
-                    <div class="label">
-                        زمان ایجاد
-                    </div>
-
-                    <div class="value">
-                        ${escapeHtml(
-                            transfer.created_at ||
-                            "-"
-                        )}
-                    </div>
-
-                </div>
-
-
-                <div class="item">
-
-                    <div class="label">
-                        آخرین بروزرسانی
-                    </div>
-
-                    <div class="value">
-                        ${escapeHtml(
-                            transfer.updated_at ||
-                            "-"
-                        )}
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="actions">
-
-                ${
-                    canProcess
-                    ? `
-
-                        <button
-                            class="success"
-                            onclick="changeStatus(
-                                ${Number(
-                                    transfer.id
-                                )},
-                                'completed'
-                            )"
-                        >
-                            ✅ تأیید انتقال
-                        </button>
-
-
-                        <button
-                            class="danger"
-                            onclick="changeStatus(
-                                ${Number(
-                                    transfer.id
-                                )},
-                                'failed'
-                            )"
-                        >
-                            ❌ رد انتقال
-                        </button>
-
-
-                        <button
-                            class="warning"
-                            onclick="changeStatus(
-                                ${Number(
-                                    transfer.id
-                                )},
-                                'cancelled'
-                            )"
-                        >
-                            🚫 لغو انتقال
-                        </button>
-
-                    `
-                    : `
-                        <span>
-                            این درخواست قبلاً نهایی شده است.
-                        </span>
-                    `
-                }
-
-            </div>
-
-        </div>
-
-    `;
-
+    updateSelectedInfo();
 }
 
 
@@ -856,132 +1214,263 @@ async function changeStatus(
     status
 ) {
 
-    const names = {
-
-        completed:
-            "تأیید انتقال",
-
-        failed:
-            "رد انتقال",
-
-        cancelled:
-            "لغو انتقال"
-
-    };
-
-
-    const confirmed =
-        confirm(
-            "آیا مطمئن هستید که می‌خواهید «" +
-            names[status] +
-            "» را انجام دهید؟"
-        );
-
-
-    if (!confirmed) {
+    if (!transferId) {
         return;
     }
 
+    const text =
+        status === "completed"
+            ? "این درخواست تأیید شود؟"
+            : status === "failed"
+                ? "این درخواست رد شود؟"
+                : "این درخواست لغو شود؟";
+
+    if (!confirm(text)) {
+        return;
+    }
 
     try {
 
-        const response =
-            await fetch(
-                API_URL +
-                "/api/admin/card-transfers/" +
-                encodeURIComponent(
-                    transferId
-                ) +
-                "/status",
-                {
-                    method: "PATCH",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-
-                        "X-Admin-Key":
-                            adminKey
-                    },
-
-                    body: JSON.stringify({
-                        status: status
-                    })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.detail ||
-                "تغییر وضعیت انجام نشد."
-            );
-
-        }
-
-
-        showStatus(
-            statusBox,
-            data.message ||
-            "وضعیت با موفقیت تغییر کرد.",
-            "ok"
+        await apiFetch(
+            `/api/admin/card-transfers/${encodeURIComponent(transferId)}/status`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    status
+                })
+            }
         );
 
+        showMessage(
+            "وضعیت درخواست با موفقیت تغییر کرد.",
+            "success"
+        );
 
         await loadTransfers();
 
     } catch (error) {
 
-        showStatus(
-            statusBox,
-            error.message,
-            "error"
+        showMessage(
+            error.message ||
+            "تغییر وضعیت ناموفق بود."
+        );
+    }
+}
+
+
+async function bulkChangeStatus(status) {
+
+    const selected =
+        getSelectedIds();
+
+    if (!selected.length) {
+
+        showMessage(
+            "حداقل یک درخواست در انتظار را انتخاب کنید."
         );
 
+        return;
     }
 
+    const text =
+        status === "completed"
+            ? "درخواست‌های انتخاب‌شده تأیید شوند؟"
+            : status === "failed"
+                ? "درخواست‌های انتخاب‌شده رد شوند؟"
+                : "درخواست‌های انتخاب‌شده لغو شوند؟";
+
+    if (!confirm(text)) {
+        return;
+    }
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const transferId of selected) {
+
+        try {
+
+            await apiFetch(
+                `/api/admin/card-transfers/${encodeURIComponent(transferId)}/status`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        status
+                    })
+                }
+            );
+
+            successCount++;
+
+        } catch {
+
+            failedCount++;
+        }
+    }
+
+    await loadTransfers();
+
+    if (failedCount === 0) {
+
+        showMessage(
+            `${formatNumber(successCount)} درخواست با موفقیت پردازش شد.`,
+            "success"
+        );
+
+    } else {
+
+        showMessage(
+            `${formatNumber(successCount)} موفق و ${formatNumber(failedCount)} ناموفق.`,
+            successCount > 0
+                ? "success"
+                : "error"
+        );
+    }
 }
 
 
-function logoutAdmin() {
+function clearFilters() {
 
-    localStorage.removeItem(
-        "kifyar_admin_key"
+    document.getElementById(
+        "searchInput"
+    ).value = "";
+
+    document.getElementById(
+        "statusFilter"
+    ).value = "all";
+
+    renderTransfers();
+}
+
+
+function startAutoRefresh() {
+
+    stopAutoRefresh();
+
+    if (!autoRefreshEnabled) {
+        return;
+    }
+
+    autoRefreshTimer =
+        setInterval(
+            () => {
+
+                if (
+                    document
+                        .getElementById("adminView")
+                        .classList
+                        .contains("hidden")
+                ) {
+                    return;
+                }
+
+                loadTransfers();
+
+            },
+            15000
+        );
+}
+
+
+function stopAutoRefresh() {
+
+    if (autoRefreshTimer) {
+
+        clearInterval(
+            autoRefreshTimer
+        );
+
+        autoRefreshTimer = null;
+    }
+}
+
+
+function toggleAutoRefresh() {
+
+    autoRefreshEnabled =
+        !autoRefreshEnabled;
+
+    const button =
+        document.getElementById(
+            "autoRefreshButton"
+        );
+
+    button.textContent =
+        autoRefreshEnabled
+            ? "بروزرسانی خودکار: روشن"
+            : "بروزرسانی خودکار: خاموش";
+
+    if (autoRefreshEnabled) {
+        startAutoRefresh();
+    } else {
+        stopAutoRefresh();
+    }
+}
+
+
+async function tryStoredKey() {
+
+    const saved =
+        localStorage.getItem(
+            ADMIN_KEY_STORAGE
+        );
+
+    if (!saved) {
+        return;
+    }
+
+    adminKey = saved;
+
+    try {
+
+        await apiFetch(
+            "/api/admin/card-transfers"
+        );
+
+        document
+            .getElementById("loginView")
+            .classList.add("hidden");
+
+        document
+            .getElementById("adminView")
+            .classList.remove("hidden");
+
+        await loadTransfers();
+
+        startAutoRefresh();
+
+    } catch {
+
+        adminKey = "";
+
+        localStorage.removeItem(
+            ADMIN_KEY_STORAGE
+        );
+    }
+}
+
+
+document
+    .getElementById("adminKey")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (event.key === "Enter") {
+                login();
+            }
+
+        }
     );
 
-    adminKey = "";
 
-    location.reload();
-
-}
-
-
-function escapeHtml(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-
-}
-
-
-if (adminKey) {
-
-    verifyAdmin();
-
-}
+tryStoredKey();
 
 </script>
 
