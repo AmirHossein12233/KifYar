@@ -10,6 +10,11 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <meta
+        name="theme-color"
+        content="#2563eb"
+    >
+
     <title>کارت‌های بانکی - کیف‌یار</title>
 
     <link
@@ -18,6 +23,24 @@
     >
 
     <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .container {
+            width: min(
+                100%,
+                900px
+            );
+
+            margin: 0 auto;
+            padding: 20px;
+        }
 
         .page-header {
             display: flex;
@@ -29,26 +52,38 @@
 
         .page-header h1 {
             margin: 0;
+            font-size: 25px;
         }
 
-        .page-header a {
+        .back-link {
             color: #2563eb;
             text-decoration: none;
             font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         .card {
-            background: white;
+            background: #ffffff;
             border-radius: 18px;
             padding: 20px;
             margin-bottom: 20px;
             box-shadow:
                 0 5px 20px
-                rgba(0, 0, 0, 0.05);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
         }
 
         .card h2 {
             margin-top: 0;
+            margin-bottom: 10px;
         }
 
         .card p {
@@ -56,20 +91,27 @@
             line-height: 1.8;
         }
 
+        .field {
+            margin-top: 14px;
+        }
+
         label {
             display: block;
-            margin: 14px 0 7px;
+            margin-bottom: 7px;
             font-weight: bold;
         }
 
         input {
             width: 100%;
             height: 48px;
-            border: 1px solid #d1d5db;
+            border:
+                1px solid
+                #d1d5db;
             border-radius: 12px;
             padding: 0 12px;
             font-family: inherit;
             font-size: 14px;
+            background: #fff;
         }
 
         input:focus {
@@ -77,12 +119,17 @@
             border-color: #2563eb;
             box-shadow:
                 0 0 0 3px
-                rgba(37, 99, 235, 0.1);
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.1
+                );
         }
 
         .card-button {
             width: 100%;
-            height: 50px;
+            min-height: 50px;
             margin-top: 18px;
             border: none;
             border-radius: 12px;
@@ -123,8 +170,16 @@
             color: #991b1b;
         }
 
+        .message.info {
+            display: block;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
         .bank-card {
-            border: 1px solid #e5e7eb;
+            border:
+                1px solid
+                #e5e7eb;
             border-radius: 15px;
             padding: 16px;
             margin-bottom: 12px;
@@ -138,29 +193,55 @@
         .bank-card-title {
             font-size: 18px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .bank-card-row {
-            margin-top: 7px;
+            margin-top: 8px;
             color: #555;
+            line-height: 1.8;
+        }
+
+        .bank-card-row strong {
+            color: #222;
+        }
+
+        .default-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .normal-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            color: #555;
+            font-size: 13px;
         }
 
         .bank-card-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-top: 14px;
+            margin-top: 15px;
         }
 
         .small-button {
             border: none;
             border-radius: 10px;
-            padding: 9px 12px;
+            padding: 10px 13px;
             font-family: inherit;
             cursor: pointer;
-            background: #e5e7eb;
-            color: #222;
+            font-size: 13px;
+            font-weight: bold;
         }
 
         .small-button.primary {
@@ -168,20 +249,100 @@
             color: white;
         }
 
+        .small-button.primary:hover {
+            background: #1d4ed8;
+        }
+
         .small-button.danger {
             background: #dc2626;
             color: white;
         }
 
+        .small-button.danger:hover {
+            background: #b91c1c;
+        }
+
+        .small-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
         .empty {
             text-align: center;
             color: #777;
-            padding: 20px;
+            padding: 25px 10px;
+            line-height: 1.8;
         }
 
         .loading {
             color: #777;
             padding: 15px 0;
+            text-align: center;
+        }
+
+        .error-box {
+            padding: 15px;
+            border-radius: 12px;
+            background: #fee2e2;
+            color: #991b1b;
+            line-height: 1.8;
+        }
+
+        .refresh-button {
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #333;
+            border-radius: 10px;
+            padding: 9px 13px;
+            font-family: inherit;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .refresh-button:hover {
+            background: #f3f4f6;
+        }
+
+        .list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .list-header h2 {
+            margin: 0;
+        }
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .container {
+                padding: 14px;
+            }
+
+            .page-header h1 {
+                font-size: 21px;
+            }
+
+            .page-header {
+                align-items: flex-start;
+            }
+
+            .list-header {
+                align-items: flex-start;
+            }
+
+            .bank-card-actions {
+                flex-direction: column;
+            }
+
+            .small-button {
+                width: 100%;
+            }
+
         }
 
     </style>
@@ -193,18 +354,30 @@
 
 <div class="container">
 
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
     <header class="page-header">
 
         <h1>
             💳 کارت‌های بانکی
         </h1>
 
-        <a href="index.html">
+        <a
+            href="index.html"
+            class="back-link"
+        >
             بازگشت
         </a>
 
     </header>
 
+
+    <!-- =====================================================
+         ADD CARD
+         ===================================================== -->
 
     <section class="card">
 
@@ -213,48 +386,59 @@
         </h2>
 
         <p>
-            اطلاعات کارت خودت را برای استفاده در کیف‌یار ثبت کن.
+            اطلاعات کارت بانکی خودت را برای استفاده در کیف‌یار ثبت کن.
         </p>
 
 
-        <label for="holderName">
-            نام صاحب کارت
-        </label>
+        <div class="field">
 
-        <input
-            id="holderName"
-            type="text"
-            maxlength="100"
-            autocomplete="off"
-            placeholder="نام و نام خانوادگی"
-        >
+            <label for="holderName">
+                نام صاحب کارت
+            </label>
 
+            <input
+                id="holderName"
+                type="text"
+                maxlength="100"
+                autocomplete="name"
+                placeholder="نام و نام خانوادگی"
+            >
 
-        <label for="bankName">
-            نام بانک
-        </label>
-
-        <input
-            id="bankName"
-            type="text"
-            maxlength="100"
-            autocomplete="off"
-            placeholder="مثلاً بانک ملی"
-        >
+        </div>
 
 
-        <label for="cardNumber">
-            شماره کارت
-        </label>
+        <div class="field">
 
-        <input
-            id="cardNumber"
-            type="text"
-            inputmode="numeric"
-            maxlength="19"
-            autocomplete="off"
-            placeholder="6037-xxxx-xxxx-xxxx"
-        >
+            <label for="bankName">
+                نام بانک
+            </label>
+
+            <input
+                id="bankName"
+                type="text"
+                maxlength="100"
+                placeholder="مثلاً بانک ملی"
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="cardNumber">
+                شماره کارت
+            </label>
+
+            <input
+                id="cardNumber"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                maxlength="19"
+                placeholder="6037-xxxx-xxxx-xxxx"
+            >
+
+        </div>
 
 
         <button
@@ -269,16 +453,34 @@
         <div
             id="addMessage"
             class="message"
+            role="alert"
         ></div>
 
     </section>
 
 
+    <!-- =====================================================
+         CARDS LIST
+         ===================================================== -->
+
     <section class="card">
 
-        <h2>
-            💳 کارت‌های من
-        </h2>
+        <div class="list-header">
+
+            <h2>
+                💳 کارت‌های من
+            </h2>
+
+            <button
+                id="refreshButton"
+                class="refresh-button"
+                type="button"
+            >
+                🔄 بروزرسانی
+            </button>
+
+        </div>
+
 
         <div id="cardsList">
 
@@ -295,12 +497,21 @@
 
 <script>
 
+
+// =========================================================
+// CONFIG
+// =========================================================
+
 const API_URL =
     "https://kifyar-api.onrender.com";
 
 const TOKEN_KEY =
     "kifyar_token";
 
+
+// =========================================================
+// GET TOKEN
+// =========================================================
 
 function getToken() {
 
@@ -313,6 +524,30 @@ function getToken() {
 }
 
 
+// =========================================================
+// REDIRECT TO LOGIN
+// =========================================================
+
+function redirectToLogin() {
+
+    localStorage.removeItem(
+        TOKEN_KEY
+    );
+
+    localStorage.removeItem(
+        "kifyar_user"
+    );
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+// =========================================================
+// CHECK LOGIN
+// =========================================================
+
 function ensureLoggedIn() {
 
     const token =
@@ -320,8 +555,7 @@ function ensureLoggedIn() {
 
     if (!token) {
 
-        window.location.href =
-            "login.html";
+        redirectToLogin();
 
         return false;
 
@@ -332,26 +566,90 @@ function ensureLoggedIn() {
 }
 
 
-function authHeaders() {
+// =========================================================
+// AUTH HEADERS
+// =========================================================
 
-    const token =
-        getToken();
+function authHeaders(
+    includeJson = false
+) {
 
-    return {
+    const headers = {
 
         "Accept":
             "application/json",
 
-        "Content-Type":
-            "application/json",
-
         "Authorization":
-            "Bearer " + token
+            "Bearer " +
+            getToken()
 
+    };
+
+
+    if (includeJson) {
+
+        headers[
+            "Content-Type"
+        ] =
+            "application/json";
+
+    }
+
+
+    return headers;
+
+}
+
+
+// =========================================================
+// READ RESPONSE
+// =========================================================
+
+async function readResponse(
+    response
+) {
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+
+    if (
+        contentType.includes(
+            "application/json"
+        )
+    ) {
+
+        try {
+
+            return await response.json();
+
+        } catch {
+
+            return {};
+
+        }
+
+    }
+
+
+    const text =
+        await response.text();
+
+
+    return {
+        detail:
+            text ||
+            "پاسخ نامعتبر از سرور دریافت شد."
     };
 
 }
 
+
+// =========================================================
+// API REQUEST
+// =========================================================
 
 async function apiRequest(
     endpoint,
@@ -360,12 +658,18 @@ async function apiRequest(
 
     const response =
         await fetch(
-            API_URL + endpoint,
+            API_URL +
+            endpoint,
             {
                 ...options,
 
                 headers: {
-                    ...authHeaders(),
+                    ...authHeaders(
+                        Boolean(
+                            options.body
+                        )
+                    ),
+
                     ...(options.headers || {})
                 }
             }
@@ -376,19 +680,10 @@ async function apiRequest(
         response.status === 401
     ) {
 
-        localStorage.removeItem(
-            TOKEN_KEY
-        );
-
-        localStorage.removeItem(
-            "kifyar_user"
-        );
-
-        window.location.href =
-            "login.html";
+        redirectToLogin();
 
         throw new Error(
-            "جلسه ورود معتبر نیست."
+            "جلسه ورود معتبر نیست. دوباره وارد شوید."
         );
 
     }
@@ -399,50 +694,29 @@ async function apiRequest(
 }
 
 
-async function readResponse(
-    response
-) {
-
-    const text =
-        await response.text();
-
-    if (!text) {
-        return {};
-    }
-
-    try {
-
-        return JSON.parse(
-            text
-        );
-
-    } catch {
-
-        return {
-            detail: text
-        };
-
-    }
-
-}
-
+// =========================================================
+// MESSAGE
+// =========================================================
 
 function showMessage(
     element,
     message,
-    success = false
+    type = "error"
 ) {
 
     element.textContent =
         message;
 
     element.className =
-        success
-            ? "message success"
-            : "message error";
+        "message " +
+        type;
 
 }
 
+
+// =========================================================
+// ESCAPE HTML
+// =========================================================
 
 function escapeHtml(
     value
@@ -475,6 +749,10 @@ function escapeHtml(
 }
 
 
+// =========================================================
+// FORMAT CARD NUMBER
+// =========================================================
+
 function formatCardNumber(
     value
 ) {
@@ -483,27 +761,45 @@ function formatCardNumber(
         String(
             value || ""
         )
-        .replace(
-            /\D/g,
-            ""
-        )
-        .slice(
-            0,
-            16
+            .replace(
+                /\D/g,
+                ""
+            )
+            .slice(
+                0,
+                16
+            );
+
+
+    const groups = [];
+
+
+    for (
+        let i = 0;
+        i < digits.length;
+        i += 4
+    ) {
+
+        groups.push(
+            digits.slice(
+                i,
+                i + 4
+            )
         );
 
-    return digits
-        .replace(
-            /(.{4})/g,
-            "$1-"
-        )
-        .replace(
-            /-$/,
-            ""
-        );
+    }
+
+
+    return groups.join(
+        "-"
+    );
 
 }
 
+
+// =========================================================
+// CARD NUMBER INPUT
+// =========================================================
 
 document
     .getElementById(
@@ -511,7 +807,7 @@ document
     )
     .addEventListener(
         "input",
-        function () {
+        function() {
 
             this.value =
                 formatCardNumber(
@@ -521,6 +817,10 @@ document
         }
     );
 
+
+// =========================================================
+// LOAD CARDS
+// =========================================================
 
 async function loadCards() {
 
@@ -541,10 +841,7 @@ async function loadCards() {
 
         const response =
             await apiRequest(
-                "/api/cards",
-                {
-                    method: "GET"
-                }
+                "/api/cards"
             );
 
 
@@ -558,6 +855,7 @@ async function loadCards() {
 
             throw new Error(
                 data.detail ||
+                data.message ||
                 "دریافت کارت‌ها انجام نشد."
             );
 
@@ -565,21 +863,17 @@ async function loadCards() {
 
 
         /*
-         * Backend ممکن است مستقیماً
-         * آرایه برگرداند:
+         * Backend may return either:
          *
          * [
-         *   {...},
          *   {...}
          * ]
          *
-         * یا:
+         * or:
          *
          * {
          *   "cards": [...]
          * }
-         *
-         * هر دو حالت را پشتیبانی می‌کنیم.
          */
 
         let cards = [];
@@ -613,6 +907,8 @@ async function loadCards() {
             list.innerHTML = `
                 <div class="empty">
                     هنوز هیچ کارت بانکی ثبت نشده است.
+                    <br>
+                    از بخش بالا یک کارت اضافه کن.
                 </div>
             `;
 
@@ -621,180 +917,20 @@ async function loadCards() {
         }
 
 
-        list.innerHTML = "";
+        list.innerHTML =
+            "";
 
 
         cards.forEach(
             card => {
 
-                const item =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                item.className =
-                    "bank-card";
-
-
-                const isDefault =
-                    Number(
-                        card.is_default || 0
-                    ) === 1;
-
-
-                const bankName =
-                    card.bank_name ||
-                    card.bank ||
-                    "بانک";
-
-
-                const holderName =
-                    card.holder_name ||
-                    card.name ||
-                    "-";
-
-
-                const cardNumber =
-                    card.masked_card_number ||
-                    card.card_number_masked ||
-                    card.masked_number ||
-                    "****";
-
-
-                item.innerHTML = `
-
-                    <div class="bank-card-title">
-                        💳
-                        ${escapeHtml(
-                            bankName
-                        )}
-                    </div>
-
-
-                    <div class="bank-card-row">
-
-                        صاحب کارت:
-
-                        <strong>
-                            ${escapeHtml(
-                                holderName
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="bank-card-row">
-
-                        شماره کارت:
-
-                        <strong>
-                            ${escapeHtml(
-                                cardNumber
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="bank-card-row">
-
-                        وضعیت:
-
-                        ${
-                            isDefault
-                                ? "⭐ کارت پیش‌فرض"
-                                : "کارت عادی"
-                        }
-
-                    </div>
-
-
-                    <div class="bank-card-actions">
-
-                        ${
-                            !isDefault
-                                ? `
-                                    <button
-                                        type="button"
-                                        class="small-button primary"
-                                        data-default="${Number(card.id)}"
-                                    >
-                                        ⭐ انتخاب به‌عنوان پیش‌فرض
-                                    </button>
-                                  `
-                                : ""
-                        }
-
-
-                        <button
-                            type="button"
-                            class="small-button danger"
-                            data-delete="${Number(card.id)}"
-                        >
-                            🗑 حذف کارت
-                        </button>
-
-                    </div>
-
-                `;
-
-
-                list.appendChild(
-                    item
+                renderCard(
+                    list,
+                    card
                 );
 
             }
         );
-
-
-        document
-            .querySelectorAll(
-                "[data-default]"
-            )
-            .forEach(
-                button => {
-
-                    button.addEventListener(
-                        "click",
-                        () => {
-
-                            setDefaultCard(
-                                Number(
-                                    button.dataset.default
-                                )
-                            );
-
-                        }
-                    );
-
-                }
-            );
-
-
-        document
-            .querySelectorAll(
-                "[data-delete]"
-            )
-            .forEach(
-                button => {
-
-                    button.addEventListener(
-                        "click",
-                        () => {
-
-                            deleteCard(
-                                Number(
-                                    button.dataset.delete
-                                )
-                            );
-
-                        }
-                    );
-
-                }
-            );
 
 
     } catch (
@@ -808,11 +944,13 @@ async function loadCards() {
 
 
         list.innerHTML = `
-            <div class="message error">
-                ${escapeHtml(
-                    error.message ||
-                    "خطا در دریافت کارت‌ها."
-                )}
+            <div class="error-box">
+                ${
+                    escapeHtml(
+                        error.message ||
+                        "خطا در دریافت کارت‌ها."
+                    )
+                }
             </div>
         `;
 
@@ -820,6 +958,147 @@ async function loadCards() {
 
 }
 
+
+// =========================================================
+// RENDER CARD
+// =========================================================
+
+function renderCard(
+    list,
+    card
+) {
+
+    const item =
+        document.createElement(
+            "div"
+        );
+
+
+    item.className =
+        "bank-card";
+
+
+    const cardId =
+        Number(
+            card.id
+        );
+
+
+    const isDefault =
+        Number(
+            card.is_default || 0
+        ) === 1;
+
+
+    const bankName =
+        card.bank_name ||
+        "بانک";
+
+
+    const holderName =
+        card.holder_name ||
+        "-";
+
+
+    const maskedNumber =
+        card.masked_card_number ||
+        card.card_number_masked ||
+        card.card_number ||
+        "****";
+
+
+    const defaultBadge =
+        isDefault
+
+            ? `
+                <div class="default-badge">
+                    ⭐ کارت پیش‌فرض
+                </div>
+              `
+
+            : `
+                <div class="normal-badge">
+                    کارت عادی
+                </div>
+              `;
+
+
+    const defaultButton =
+        !isDefault
+
+            ? `
+                <button
+                    type="button"
+                    class="small-button primary"
+                    data-default-card="${cardId}"
+                >
+                    ⭐ انتخاب به‌عنوان پیش‌فرض
+                </button>
+              `
+
+            : "";
+
+
+    item.innerHTML = `
+
+        <div class="bank-card-title">
+            💳 ${escapeHtml(
+                bankName
+            )}
+        </div>
+
+
+        <div class="bank-card-row">
+            صاحب کارت:
+            <strong>
+                ${escapeHtml(
+                    holderName
+                )}
+            </strong>
+        </div>
+
+
+        <div class="bank-card-row">
+            شماره کارت:
+            <strong>
+                ${escapeHtml(
+                    maskedNumber
+                )}
+            </strong>
+        </div>
+
+
+        ${defaultBadge}
+
+
+        <div class="bank-card-actions">
+
+            ${defaultButton}
+
+
+            <button
+                type="button"
+                class="small-button danger"
+                data-delete-card="${cardId}"
+            >
+                🗑 حذف کارت
+            </button>
+
+        </div>
+
+    `;
+
+
+    list.appendChild(
+        item
+    );
+
+}
+
+
+// =========================================================
+// ADD CARD
+// =========================================================
 
 async function addCard() {
 
@@ -948,6 +1227,7 @@ async function addCard() {
 
             throw new Error(
                 data.detail ||
+                data.message ||
                 "افزودن کارت انجام نشد."
             );
 
@@ -958,7 +1238,7 @@ async function addCard() {
             message,
             data.message ||
             "کارت با موفقیت اضافه شد.",
-            true
+            "success"
         );
 
 
@@ -993,7 +1273,8 @@ async function addCard() {
         showMessage(
             message,
             error.message ||
-            "افزودن کارت انجام نشد."
+            "افزودن کارت انجام نشد.",
+            "error"
         );
 
 
@@ -1010,9 +1291,25 @@ async function addCard() {
 }
 
 
+// =========================================================
+// SET DEFAULT CARD
+// =========================================================
+
 async function setDefaultCard(
     cardId
 ) {
+
+    if (
+        !Number.isInteger(
+            cardId
+        ) ||
+        cardId <= 0
+    ) {
+
+        return;
+
+    }
+
 
     try {
 
@@ -1038,6 +1335,7 @@ async function setDefaultCard(
 
             throw new Error(
                 data.detail ||
+                data.message ||
                 "تغییر کارت پیش‌فرض انجام نشد."
             );
 
@@ -1067,9 +1365,25 @@ async function setDefaultCard(
 }
 
 
+// =========================================================
+// DELETE CARD
+// =========================================================
+
 async function deleteCard(
     cardId
 ) {
+
+    if (
+        !Number.isInteger(
+            cardId
+        ) ||
+        cardId <= 0
+    ) {
+
+        return;
+
+    }
+
 
     const confirmed =
         window.confirm(
@@ -1078,7 +1392,9 @@ async function deleteCard(
 
 
     if (!confirmed) {
+
         return;
+
     }
 
 
@@ -1105,6 +1421,7 @@ async function deleteCard(
 
             throw new Error(
                 data.detail ||
+                data.message ||
                 "حذف کارت انجام نشد."
             );
 
@@ -1134,6 +1451,67 @@ async function deleteCard(
 }
 
 
+// =========================================================
+// CARD ACTIONS
+// =========================================================
+
+document.addEventListener(
+    "click",
+    function(event) {
+
+        const defaultButton =
+            event.target.closest(
+                "[data-default-card]"
+            );
+
+
+        if (defaultButton) {
+
+            const cardId =
+                Number(
+                    defaultButton.dataset
+                        .defaultCard
+                );
+
+
+            setDefaultCard(
+                cardId
+            );
+
+            return;
+
+        }
+
+
+        const deleteButton =
+            event.target.closest(
+                "[data-delete-card]"
+            );
+
+
+        if (deleteButton) {
+
+            const cardId =
+                Number(
+                    deleteButton.dataset
+                        .deleteCard
+                );
+
+
+            deleteCard(
+                cardId
+            );
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// ADD BUTTON
+// =========================================================
+
 document
     .getElementById(
         "addCardButton"
@@ -1144,13 +1522,59 @@ document
     );
 
 
+// =========================================================
+// REFRESH BUTTON
+// =========================================================
+
+document
+    .getElementById(
+        "refreshButton"
+    )
+    .addEventListener(
+        "click",
+        loadCards
+    );
+
+
+// =========================================================
+// ENTER KEY
+// =========================================================
+
+document
+    .getElementById(
+        "cardNumber"
+    )
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                addCard();
+
+            }
+
+        }
+    );
+
+
+// =========================================================
+// INIT
+// =========================================================
+
 async function init() {
 
     if (
         !ensureLoggedIn()
     ) {
+
         return;
+
     }
+
 
     await loadCards();
 

@@ -1,20 +1,13 @@
 from __future__ import annotations
 
-import os
 import uuid
 from typing import Optional
 
-from fastapi import (
-    FastAPI,
-    Header,
-    HTTPException,
-    Request,
-)
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend.database import (
-    add_admin_action_log,
     add_bank_card,
     add_transaction,
     add_wallet_balance_with_transaction,
@@ -25,13 +18,10 @@ from backend.database import (
     find_user_by_email,
     find_user_by_id,
     find_user_by_username,
-    get_admin_action_logs,
     get_balance,
     get_bank_cards,
     get_card_transfer_request,
-    get_card_transfer_request_by_id,
     get_card_transfer_requests,
-    get_all_card_transfer_requests,
     get_notifications,
     get_transactions,
     get_unread_notification_count,
@@ -41,16 +31,13 @@ from backend.database import (
     set_default_bank_card,
     subtract_wallet_balance_with_transaction,
     transfer_wallet_to_card_once,
-    update_card_transfer_status,
     update_user_name,
     update_user_password,
     verify_user_password,
     create_user,
 )
 
-from backend.session import (
-    require_session_user_id,
-)
+from backend.session import require_session_user_id
 
 from backend.auth import (
     create_token,
@@ -145,10 +132,6 @@ class WalletCardTransferRequest(BaseModel):
     request_id: str
 
 
-class TransferStatusRequest(BaseModel):
-    status: str
-
-
 # =========================================================
 # HELPERS
 # =========================================================
@@ -184,54 +167,6 @@ def validate_amount(
     return float(amount)
 
 
-def require_admin(
-    request: Request,
-) -> str:
-    expected_key = os.getenv(
-        "KIFYAR_ADMIN_KEY"
-    )
-
-    if not expected_key:
-        raise HTTPException(
-            status_code=503,
-            detail="KIFYAR_ADMIN_KEY روی سرور تنظیم نشده است.",
-        )
-
-    admin_key = request.headers.get(
-        "X-Admin-Key"
-    )
-
-    if not admin_key:
-        raise HTTPException(
-            status_code=401,
-            detail="کلید مدیریت ارسال نشده است.",
-        )
-
-    if admin_key != expected_key:
-        raise HTTPException(
-            status_code=403,
-            detail="کلید مدیریت نادرست است.",
-        )
-
-    return admin_key
-
-
-def get_action_name(
-    status: str,
-) -> str:
-    actions = {
-        "completed": "تأیید انتقال",
-        "failed": "رد انتقال",
-        "cancelled": "لغو انتقال",
-        "pending": "بازگردانی به انتظار",
-    }
-
-    return actions.get(
-        status,
-        "تغییر وضعیت انتقال",
-    )
-
-
 # =========================================================
 # BASIC
 # =========================================================
@@ -242,6 +177,7 @@ def root():
     return {
         "name": "KifYar API",
         "status": "ok",
+        "admin": False,
     }
 
 
@@ -294,7 +230,6 @@ def login(
             "username": user["username"],
             "email": user["email"],
             "name": user["name"],
-            "is_admin": bool(user["is_admin"]),
         },
     }
 
@@ -399,7 +334,6 @@ def register(
             "username": user["username"],
             "email": user["email"],
             "name": user["name"],
-            "is_admin": bool(user["is_admin"]),
         },
     }
 
@@ -417,14 +351,13 @@ def logout(
         "Authorization"
     )
 
-    if authorization:
-        if authorization.startswith(
-            "Bearer "
-        ):
-            token = authorization[7:].strip()
+    if authorization and authorization.startswith(
+        "Bearer "
+    ):
+        token = authorization[7:].strip()
 
-            if token:
-                remove_token(token)
+        if token:
+            remove_token(token)
 
     return {
         "success": True,
@@ -460,7 +393,6 @@ def get_profile(
         "username": user["username"],
         "email": user["email"],
         "name": user["name"],
-        "is_admin": bool(user["is_admin"]),
         "created_at": user["created_at"],
     }
 
@@ -834,9 +766,7 @@ def notifications(
     )
 
 
-@app.get(
-    "/api/notifications/unread-count"
-)
+@app.get("/api/notifications/unread-count")
 def notification_unread_count(
     request: Request,
 ):
@@ -1076,174 +1006,6 @@ def remove_card(
     return {
         "message": "کارت حذف شد.",
     }
-
-
-# =========================================================
-# ADMIN - CARD TRANSFERS
-# =========================================================
-
-
-@app.get("/api/admin/card-transfers")
-def admin_card_transfers(
-    request: Request,
-):
-    require_admin(
-        request
-    )
-
-    return get_all_card_transfer_requests()
-
-
-@app.get(
-    "/api/admin/card-transfers/{transfer_id}"
-)
-def admin_card_transfer(
-    request: Request,
-    transfer_id: int,
-):
-    require_admin(
-        request
-    )
-
-    transfer = get_card_transfer_request_by_id(
-        transfer_id
-    )
-
-    if not transfer:
-        raise HTTPException(
-            status_code=404,
-            detail="درخواست انتقال پیدا نشد.",
-        )
-
-    return transfer
-
-
-@app.patch(
-    "/api/admin/card-transfers/{transfer_id}/status"
-)
-def admin_update_transfer_status(
-    request: Request,
-    transfer_id: int,
-    payload: TransferStatusRequest,
-):
-    require_admin(
-        request
-    )
-
-    new_status = payload.status.strip().lower()
-
-    allowed = {
-        "pending",
-        "completed",
-        "failed",
-        "cancelled",
-    }
-
-    if new_status not in allowed:
-        raise HTTPException(
-            status_code=400,
-            detail="وضعیت نامعتبر است.",
-        )
-
-    transfer = get_card_transfer_request_by_id(
-        transfer_id
-    )
-
-    if not transfer:
-        raise HTTPException(
-            status_code=404,
-            detail="درخواست انتقال پیدا نشد.",
-        )
-
-    old_status = transfer["status"]
-
-    if old_status == new_status:
-        return transfer
-
-    try:
-        ok = update_card_transfer_status(
-            transfer_id,
-            new_status,
-        )
-
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    if not ok:
-        raise HTTPException(
-            status_code=404,
-            detail="درخواست انتقال پیدا نشد.",
-        )
-
-    add_admin_action_log(
-        action=get_action_name(
-            new_status
-        ),
-        transfer_id=transfer_id,
-        status_before=old_status,
-        status_after=new_status,
-        amount=float(
-            transfer["amount"]
-        ),
-        request_id=transfer["request_id"],
-    )
-
-    updated = get_card_transfer_request_by_id(
-        transfer_id
-    )
-
-    return updated
-
-
-# =========================================================
-# ADMIN - LOGS
-# =========================================================
-
-
-@app.get("/api/admin/logs")
-def admin_logs(
-    request: Request,
-    limit: int = 200,
-):
-    require_admin(
-        request
-    )
-
-    if limit < 1:
-        limit = 1
-
-    if limit > 1000:
-        limit = 1000
-
-    return get_admin_action_logs(
-        limit
-    )
-
-
-@app.get("/api/admin/logs/{log_id}")
-def admin_log(
-    request: Request,
-    log_id: int,
-):
-    require_admin(
-        request
-    )
-
-    logs = get_admin_action_logs(
-        1000
-    )
-
-    for log in logs:
-        if int(log["id"]) == log_id:
-            return log
-
-    raise HTTPException(
-        status_code=404,
-        detail="گزارش پیدا نشد.",
-    )
 
 
 # =========================================================

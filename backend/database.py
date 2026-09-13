@@ -2231,4 +2231,5 @@ def get_admin_action_log(
 # STARTUP
 # =========================================================
 
-initialize_database()
+# Database initialization is handled by backend/main.py
+# after the application starts.
