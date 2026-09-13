@@ -1,222 +1,383 @@
-﻿<!DOCTYPE html>
+﻿```html
+<!DOCTYPE html>
 
 <html lang="fa" dir="rtl">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<title>ورود | کیف‌یار</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<style>
-    * {
-        box-sizing: border-box;
-    }
+    <title>ورود | کیف‌یار</title>
 
-    body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: Tahoma, Arial, sans-serif;
-        background: linear-gradient(135deg, #0f172a, #1e293b);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
+    <style>
 
-    .login-box {
-        width: 100%;
-        max-width: 420px;
-        background: #ffffff;
-        border-radius: 22px;
-        padding: 30px 24px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    }
+        * {
+            box-sizing: border-box;
+        }
 
-    .logo {
-        width: 70px;
-        height: 70px;
-        margin: 0 auto 15px;
-        border-radius: 20px;
-        background: #2563eb;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
-        font-weight: bold;
-    }
+        body {
 
-    h1 {
-        text-align: center;
-        margin: 0 0 8px;
-        color: #111827;
-        font-size: 27px;
-    }
+            margin: 0;
 
-    .subtitle {
-        text-align: center;
-        color: #6b7280;
-        margin-bottom: 25px;
-        font-size: 14px;
-    }
+            min-height: 100vh;
 
-    .field {
-        margin-bottom: 17px;
-    }
+            font-family:
+                Tahoma,
+                Arial,
+                sans-serif;
 
-    label {
-        display: block;
-        margin-bottom: 8px;
-        color: #374151;
-        font-weight: bold;
-        font-size: 14px;
-    }
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f172a,
+                    #1e293b
+                );
 
-    input {
-        width: 100%;
-        height: 50px;
-        border: 1px solid #d1d5db;
-        border-radius: 13px;
-        padding: 0 14px;
-        font-size: 15px;
-        outline: none;
-        transition: 0.2s;
-        direction: rtl;
-    }
+            display: flex;
 
-    input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    }
+            align-items: center;
 
-    button {
-        width: 100%;
-        height: 52px;
-        border: none;
-        border-radius: 13px;
-        background: #2563eb;
-        color: white;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.2s;
-    }
+            justify-content: center;
 
-    button:hover {
-        background: #1d4ed8;
-    }
+            padding: 20px;
+        }
 
-    button:disabled {
-        opacity: 0.65;
-        cursor: not-allowed;
-    }
+        .login-box {
 
-    .message {
-        display: none;
-        margin-top: 16px;
-        padding: 12px;
-        border-radius: 12px;
-        text-align: center;
-        font-size: 14px;
-        line-height: 1.7;
-    }
+            width: 100%;
 
-    .message.error {
-        display: block;
-        background: #fee2e2;
-        color: #991b1b;
-    }
+            max-width: 420px;
 
-    .message.success {
-        display: block;
-        background: #dcfce7;
-        color: #166534;
-    }
+            background: #ffffff;
 
-    .register {
-        text-align: center;
-        margin-top: 22px;
-        color: #6b7280;
-        font-size: 14px;
-    }
+            border-radius: 22px;
 
-    .register a {
-        color: #2563eb;
-        text-decoration: none;
-        font-weight: bold;
-    }
+            padding: 30px 24px;
 
-    .register a:hover {
-        text-decoration: underline;
-    }
-</style>
-```
+            box-shadow:
+                0 20px 50px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.25
+                );
+        }
+
+        .logo {
+
+            width: 70px;
+
+            height: 70px;
+
+            margin:
+                0 auto 15px;
+
+            border-radius: 20px;
+
+            background: #2563eb;
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 30px;
+
+            font-weight: bold;
+        }
+
+        h1 {
+
+            text-align: center;
+
+            margin:
+                0 0 8px;
+
+            color: #111827;
+
+            font-size: 27px;
+        }
+
+        .subtitle {
+
+            text-align: center;
+
+            color: #6b7280;
+
+            margin-bottom: 25px;
+
+            font-size: 14px;
+        }
+
+        .field {
+
+            margin-bottom: 17px;
+        }
+
+        label {
+
+            display: block;
+
+            margin-bottom: 8px;
+
+            color: #374151;
+
+            font-weight: bold;
+
+            font-size: 14px;
+        }
+
+        input {
+
+            width: 100%;
+
+            height: 50px;
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 13px;
+
+            padding:
+                0 14px;
+
+            font-size: 15px;
+
+            outline: none;
+
+            transition: 0.2s;
+
+            direction: rtl;
+        }
+
+        input:focus {
+
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.12
+                );
+        }
+
+        button {
+
+            width: 100%;
+
+            height: 52px;
+
+            border: none;
+
+            border-radius: 13px;
+
+            background: #2563eb;
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        button:hover {
+
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+
+            opacity: 0.65;
+
+            cursor: not-allowed;
+        }
+
+        .message {
+
+            display: none;
+
+            margin-top: 16px;
+
+            padding: 12px;
+
+            border-radius: 12px;
+
+            text-align: center;
+
+            font-size: 14px;
+
+            line-height: 1.7;
+        }
+
+        .message.error {
+
+            display: block;
+
+            background: #fee2e2;
+
+            color: #991b1b;
+        }
+
+        .message.success {
+
+            display: block;
+
+            background: #dcfce7;
+
+            color: #166534;
+        }
+
+        .register {
+
+            text-align: center;
+
+            margin-top: 22px;
+
+            color: #6b7280;
+
+            font-size: 14px;
+        }
+
+        .register a {
+
+            color: #2563eb;
+
+            text-decoration: none;
+
+            font-weight: bold;
+        }
+
+        .register a:hover {
+
+            text-decoration: underline;
+        }
+
+    </style>
 
 </head>
 
+
 <body>
 
-<div class="login-box">
+    <div class="login-box">
 
-```
-<div class="logo">ک</div>
+        <div class="logo">
+            ک
+        </div>
 
-<h1>ورود به کیف‌یار</h1>
+        <h1>
+            ورود به کیف‌یار
+        </h1>
 
-<div class="subtitle">
-    وارد حساب خود شوید
-</div>
+        <div class="subtitle">
+            وارد حساب خود شوید
+        </div>
 
-<form id="loginForm">
 
-    <div class="field">
-        <label for="username">نام کاربری</label>
+        <form id="loginForm">
 
-        <input
-            id="username"
-            name="username"
-            type="text"
-            autocomplete="username"
-            placeholder="نام کاربری خود را وارد کنید"
-            required
-        >
+            <div class="field">
+
+                <label for="username">
+                    نام کاربری
+                </label>
+
+                <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    autocomplete="username"
+                    placeholder="نام کاربری خود را وارد کنید"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="password">
+                    رمز عبور
+                </label>
+
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="رمز عبور خود را وارد کنید"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                id="loginButton"
+                type="submit"
+            >
+                ورود
+            </button>
+
+
+            <div
+                id="message"
+                class="message"
+            ></div>
+
+        </form>
+
+
+        <div class="register">
+
+            حساب ندارید؟
+
+            <a href="/register.html">
+                ثبت‌نام کنید
+            </a>
+
+        </div>
+
     </div>
 
-    <div class="field">
-        <label for="password">رمز عبور</label>
-
-        <input
-            id="password"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            placeholder="رمز عبور خود را وارد کنید"
-            required
-        >
-    </div>
-
-    <button id="loginButton" type="submit">
-        ورود
-    </button>
-
-    <div id="message" class="message"></div>
-
-</form>
-
-<div class="register">
-    حساب ندارید؟
-    <a href="/frontend/register.html">ثبت‌نام کنید</a>
-</div>
-```
-
-</div>
 
 <script>
-    const API_BASE = "https://kifyar-api.onrender.com";
 
-    const TOKEN_KEY = "kifyar_token";
-    const USER_KEY = "kifyar_user";
+    // =====================================================
+    // API
+    // =====================================================
+
+    const API_BASE =
+        "https://kifyar-api.onrender.com";
+
+
+    // =====================================================
+    // STORAGE
+    // =====================================================
+
+    const TOKEN_KEY =
+        "kifyar_token";
+
+    const USER_KEY =
+        "kifyar_user";
+
 
     const OLD_TOKEN_KEYS = [
         "access_token",
@@ -224,184 +385,447 @@
         "gapino_token"
     ];
 
+
     const OLD_USER_KEYS = [
         "gapino_user"
     ];
 
-    const loginForm = document.getElementById("loginForm");
-    const loginButton = document.getElementById("loginButton");
-    const messageBox = document.getElementById("message");
 
-    function showMessage(text, type = "error") {
-        messageBox.textContent = text;
-        messageBox.className = "message " + type;
+    // =====================================================
+    // ELEMENTS
+    // =====================================================
+
+    const loginForm =
+        document.getElementById(
+            "loginForm"
+        );
+
+
+    const loginButton =
+        document.getElementById(
+            "loginButton"
+        );
+
+
+    const messageBox =
+        document.getElementById(
+            "message"
+        );
+
+
+    // =====================================================
+    // MESSAGE
+    // =====================================================
+
+    function showMessage(
+        text,
+        type = "error"
+    ) {
+
+        messageBox.textContent =
+            text;
+
+        messageBox.className =
+            "message " + type;
+
+        messageBox.style.display =
+            "block";
     }
+
+
+    function hideMessage() {
+
+        messageBox.textContent =
+            "";
+
+        messageBox.className =
+            "message";
+
+        messageBox.style.display =
+            "none";
+    }
+
+
+    // =====================================================
+    // CLEAR OLD AUTH
+    // =====================================================
 
     function clearOldAuth() {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
 
-        OLD_TOKEN_KEYS.forEach(key => {
-            localStorage.removeItem(key);
-        });
+        localStorage.removeItem(
+            TOKEN_KEY
+        );
 
-        OLD_USER_KEYS.forEach(key => {
-            localStorage.removeItem(key);
-        });
+        localStorage.removeItem(
+            USER_KEY
+        );
 
-        sessionStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(USER_KEY);
+
+        OLD_TOKEN_KEYS.forEach(
+            function(key) {
+
+                localStorage.removeItem(
+                    key
+                );
+
+            }
+        );
+
+
+        OLD_USER_KEYS.forEach(
+            function(key) {
+
+                localStorage.removeItem(
+                    key
+                );
+
+            }
+        );
+
+
+        sessionStorage.removeItem(
+            TOKEN_KEY
+        );
+
+        sessionStorage.removeItem(
+            USER_KEY
+        );
     }
+
+
+    // =====================================================
+    // HOME
+    // =====================================================
 
     function goToHome() {
-        window.location.assign("/frontend/index.html");
+
+        window.location.assign(
+            "/index.html"
+        );
     }
 
-    // اگر قبلاً وارد شده‌ایم، مستقیماً به صفحه اصلی برو
-    const existingToken = localStorage.getItem(TOKEN_KEY);
+
+    // =====================================================
+    // EXISTING SESSION
+    // =====================================================
+
+    const existingToken =
+        localStorage.getItem(
+            TOKEN_KEY
+        );
+
 
     if (existingToken) {
+
         goToHome();
     }
 
-    loginForm.addEventListener("submit", async function(event) {
-        event.preventDefault();
 
-        const username = document
-            .getElementById("username")
-            .value
-            .trim();
+    // =====================================================
+    // LOGIN
+    // =====================================================
 
-        const password = document
-            .getElementById("password")
-            .value;
+    loginForm.addEventListener(
+        "submit",
+        async function(event) {
 
-        if (!username) {
-            showMessage("نام کاربری را وارد کنید.");
-            return;
-        }
+            event.preventDefault();
 
-        if (!password) {
-            showMessage("رمز عبور را وارد کنید.");
-            return;
-        }
 
-        loginButton.disabled = true;
-        loginButton.textContent = "در حال ورود...";
+            const username =
+                document
+                    .getElementById(
+                        "username"
+                    )
+                    .value
+                    .trim();
 
-        showMessage("", "success");
-        messageBox.style.display = "none";
 
-        try {
-            const response = await fetch(
-                API_BASE + "/api/login",
-                {
-                    method: "POST",
+            const password =
+                document
+                    .getElementById(
+                        "password"
+                    )
+                    .value;
 
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
 
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                }
-            );
+            // -------------------------------------------------
+            // Validation
+            // -------------------------------------------------
 
-            const rawText = await response.text();
+            if (!username) {
 
-            let data = null;
+                showMessage(
+                    "نام کاربری را وارد کنید."
+                );
+
+                return;
+            }
+
+
+            if (!password) {
+
+                showMessage(
+                    "رمز عبور را وارد کنید."
+                );
+
+                return;
+            }
+
+
+            // -------------------------------------------------
+            // Loading
+            // -------------------------------------------------
+
+            loginButton.disabled =
+                true;
+
+            loginButton.textContent =
+                "در حال ورود...";
+
+            hideMessage();
+
 
             try {
-                data = rawText
-                    ? JSON.parse(rawText)
-                    : null;
-            } catch (jsonError) {
-                throw new Error(
-                    "پاسخ سرور قابل خواندن نیست."
-                );
-            }
 
-            if (!response.ok) {
-                let errorMessage =
-                    "نام کاربری یا رمز عبور اشتباه است.";
+                // -------------------------------------------------
+                // Request
+                // -------------------------------------------------
 
-                if (data) {
-                    if (typeof data.detail === "string") {
-                        errorMessage = data.detail;
-                    } else if (Array.isArray(data.detail)) {
-                        errorMessage = data.detail
-                            .map(item => item.msg || "خطای ورود")
-                            .join("، ");
-                    } else if (typeof data.message === "string") {
-                        errorMessage = data.message;
-                    }
+                const response =
+                    await fetch(
+                        API_BASE +
+                        "/api/login",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    {
+                                        username:
+                                            username,
+
+                                        password:
+                                            password
+                                    }
+                                )
+                        }
+                    );
+
+
+                // -------------------------------------------------
+                // Read response
+                // -------------------------------------------------
+
+                const rawText =
+                    await response.text();
+
+
+                let data = null;
+
+
+                try {
+
+                    data =
+                        rawText
+                            ? JSON.parse(
+                                rawText
+                              )
+                            : null;
+
+                } catch {
+
+                    throw new Error(
+                        "پاسخ سرور قابل خواندن نیست."
+                    );
                 }
 
-                throw new Error(errorMessage);
-            }
 
-            if (!data) {
-                throw new Error(
-                    "پاسخ معتبری از سرور دریافت نشد."
-                );
-            }
+                // -------------------------------------------------
+                // HTTP ERROR
+                // -------------------------------------------------
 
-            const token =
-                data.token ||
-                data.access_token;
+                if (!response.ok) {
 
-            if (!token) {
-                throw new Error(
-                    "توکن ورود از سرور دریافت نشد."
-                );
-            }
+                    let errorMessage =
+                        "نام کاربری یا رمز عبور اشتباه است.";
 
-            clearOldAuth();
 
-            localStorage.setItem(
-                TOKEN_KEY,
-                token
-            );
+                    if (
+                        data &&
+                        typeof data.detail
+                        === "string"
+                    ) {
 
-            if (data.user) {
+                        errorMessage =
+                            data.detail;
+
+                    }
+
+
+                    else if (
+                        data &&
+                        Array.isArray(
+                            data.detail
+                        )
+                    ) {
+
+                        errorMessage =
+                            data.detail
+                                .map(
+                                    function(item) {
+
+                                        return (
+                                            item.msg
+                                            ||
+                                            "خطای ورود"
+                                        );
+
+                                    }
+                                )
+                                .join(
+                                    "، "
+                                );
+
+                    }
+
+
+                    else if (
+                        data &&
+                        typeof data.message
+                        === "string"
+                    ) {
+
+                        errorMessage =
+                            data.message;
+                    }
+
+
+                    throw new Error(
+                        errorMessage
+                    );
+                }
+
+
+                // -------------------------------------------------
+                // Response validation
+                // -------------------------------------------------
+
+                if (!data) {
+
+                    throw new Error(
+                        "پاسخ معتبری از سرور دریافت نشد."
+                    );
+                }
+
+
+                // -------------------------------------------------
+                // Token
+                // -------------------------------------------------
+
+                const token =
+                    data.token
+                    ||
+                    data.access_token;
+
+
+                if (!token) {
+
+                    throw new Error(
+                        "توکن ورود از سرور دریافت نشد."
+                    );
+                }
+
+
+                // -------------------------------------------------
+                // Save auth
+                // -------------------------------------------------
+
+                clearOldAuth();
+
+
                 localStorage.setItem(
-                    USER_KEY,
-                    JSON.stringify(data.user)
+                    TOKEN_KEY,
+                    token
                 );
+
+
+                if (data.user) {
+
+                    localStorage.setItem(
+                        USER_KEY,
+                        JSON.stringify(
+                            data.user
+                        )
+                    );
+                }
+
+
+                // -------------------------------------------------
+                // Success
+                // -------------------------------------------------
+
+                showMessage(
+                    "ورود با موفقیت انجام شد.",
+                    "success"
+                );
+
+
+                loginButton.textContent =
+                    "ورود موفق";
+
+
+                // -------------------------------------------------
+                // Home
+                // -------------------------------------------------
+
+                setTimeout(
+                    function() {
+
+                        goToHome();
+
+                    },
+                    500
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Login error:",
+                    error
+                );
+
+
+                showMessage(
+                    error &&
+                    error.message
+                        ? error.message
+                        : "خطایی هنگام ورود رخ داد."
+                );
+
+
+                loginButton.disabled =
+                    false;
+
+                loginButton.textContent =
+                    "ورود";
             }
 
-            showMessage(
-                "ورود با موفقیت انجام شد...",
-                "success"
-            );
-
-            loginButton.textContent = "ورود موفق";
-
-            setTimeout(() => {
-                goToHome();
-            }, 300);
-
-        } catch (error) {
-
-            console.error(
-                "Login error:",
-                error
-            );
-
-            showMessage(
-                error.message ||
-                "خطایی هنگام ورود رخ داد."
-            );
-
-            loginButton.disabled = false;
-            loginButton.textContent = "ورود";
         }
-    });
+    );
+
 </script>
 
 </body>
-</html>
 
+</html>
+```
