@@ -15,9 +15,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 PASSWORD_ITERATIONS = 120_000
 
 
-# =========================================================
-# Connection
-# =========================================================
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
 
 def get_connection():
     if not DATABASE_URL:
@@ -32,20 +32,14 @@ def get_connection():
     )
 
 
-# =========================================================
-# Helpers
-# =========================================================
-
-def now_iso() -> str:
-    return datetime.now(
-        timezone.utc
-    ).isoformat()
-
+# ============================================================
+# Password
+# ============================================================
 
 def hash_password(
     password: str,
     salt: bytes | None = None,
-) -> tuple[str, str]:
+) -> str:
 
     if salt is None:
         salt = secrets.token_bytes(16)
@@ -58,60 +52,62 @@ def hash_password(
     )
 
     return (
-        digest.hex(),
-        salt.hex(),
+        salt.hex()
+        + ":"
+        + digest.hex()
     )
 
 
 def verify_password(
     password: str,
-    password_hash: str,
-    salt_hex: str,
+    stored_password: str,
 ) -> bool:
 
     try:
+        salt_hex, digest_hex = (
+            stored_password.split(":", 1)
+        )
+
         salt = bytes.fromhex(salt_hex)
 
-        digest = hashlib.pbkdf2_hmac(
+        calculated = hashlib.pbkdf2_hmac(
             "sha256",
             password.encode("utf-8"),
             salt,
             PASSWORD_ITERATIONS,
         )
 
-        return secrets.compare_digest(
-            digest.hex(),
-            password_hash,
-        )
+        return calculated.hex() == digest_hex
 
     except Exception:
         return False
 
 
-def mask_card_number(
-    card_number: str,
-) -> str:
+def verify_user_password(
+    username: str,
+    password: str,
+) -> dict[str, Any] | None:
 
-    value = str(card_number or "")
+    user = find_user_by_username(username)
 
-    digits = "".join(
-        character
-        for character in value
-        if character.isdigit()
-    )
+    if not user:
+        user = find_user_by_email(username)
 
-    if len(digits) <= 4:
-        return digits
+    if not user:
+        return None
 
-    return (
-        "**** **** **** "
-        + digits[-4:]
-    )
+    if not verify_password(
+        password,
+        user["password_hash"],
+    ):
+        return None
+
+    return user
 
 
-# =========================================================
+# ============================================================
 # Database initialization
-# =========================================================
+# ============================================================
 
 def initialize_database() -> None:
 
@@ -124,8 +120,8 @@ def initialize_database() -> None:
                 username TEXT NOT NULL UNIQUE,
                 email TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
-                password_salt TEXT NOT NULL,
                 full_name TEXT NOT NULL DEFAULT '',
+                balance DOUBLE PRECISION NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT
             )
@@ -172,7 +168,6 @@ def initialize_database() -> None:
             CREATE TABLE IF NOT EXISTS wallet_deposits (
                 id BIGSERIAL PRIMARY KEY,
                 user_id BIGINT NOT NULL,
-                card_id BIGINT NOT NULL,
                 amount DOUBLE PRECISION NOT NULL,
                 request_id TEXT NOT NULL UNIQUE,
                 status TEXT NOT NULL DEFAULT 'completed',
@@ -180,9 +175,6 @@ def initialize_database() -> None:
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY(user_id)
                     REFERENCES users(id)
-                    ON DELETE CASCADE,
-                FOREIGN KEY(card_id)
-                    REFERENCES bank_cards(id)
                     ON DELETE CASCADE
             )
             """
@@ -215,7 +207,6 @@ def initialize_database() -> None:
                 id BIGSERIAL PRIMARY KEY,
                 admin_name TEXT NOT NULL,
                 action TEXT NOT NULL,
-                target_type TEXT,
                 target_id BIGINT,
                 details TEXT,
                 created_at TEXT NOT NULL
@@ -230,13 +221,81 @@ def initialize_database() -> None:
                 user_id BIGINT NOT NULL,
                 title TEXT NOT NULL,
                 message TEXT NOT NULL,
-                notification_type TEXT NOT NULL DEFAULT 'system',
+                notification_type TEXT NOT NULL DEFAULT 'general',
                 transfer_id BIGINT,
                 is_read INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(user_id)
                     REFERENCES users(id)
-                    ON DELETE CASCADE,
+                    ON DELETE CASCADE
+            )
+            """
+        )
+
+        # =====================================================
+        # New settlement columns
+        # =====================================================
+
+        conn.execute(
+            """
+            ALTER TABLE card_transfers
+            ADD COLUMN IF NOT EXISTS provider TEXT
+            """
+        )
+
+        conn.execute(
+            """
+            ALTER TABLE card_transfers
+            ADD COLUMN IF NOT EXISTS provider_transfer_id TEXT
+            """
+        )
+
+        conn.execute(
+            """
+            ALTER TABLE card_transfers
+            ADD COLUMN IF NOT EXISTS provider_status TEXT
+            """
+        )
+
+        conn.execute(
+            """
+            ALTER TABLE card_transfers
+            ADD COLUMN IF NOT EXISTS reserved_amount
+            DOUBLE PRECISION NOT NULL DEFAULT 0
+            """
+        )
+
+        conn.execute(
+            """
+            ALTER TABLE card_transfers
+            ADD COLUMN IF NOT EXISTS failure_reason TEXT
+            """
+        )
+
+        conn.execute(
+            """
+            ALTER TABLE card_transfers
+            ADD COLUMN IF NOT EXISTS processed_at TEXT
+            """
+        )
+
+        # =====================================================
+        # Payout attempts
+        # =====================================================
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS payout_attempts (
+                id BIGSERIAL PRIMARY KEY,
+                transfer_id BIGINT NOT NULL,
+                provider TEXT NOT NULL,
+                provider_transfer_id TEXT,
+                amount DOUBLE PRECISION NOT NULL,
+                status TEXT NOT NULL,
+                response_data TEXT,
+                error_message TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
                 FOREIGN KEY(transfer_id)
                     REFERENCES card_transfers(id)
                     ON DELETE CASCADE
@@ -244,12 +303,26 @@ def initialize_database() -> None:
             """
         )
 
-        conn.commit()
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_payout_attempts_transfer_id
+            ON payout_attempts(transfer_id)
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS
+            idx_card_transfers_provider_transfer_id
+            ON card_transfers(provider_transfer_id)
+            """
+        )
 
 
-# =========================================================
+# ============================================================
 # Users
-# =========================================================
+# ============================================================
 
 def create_user(
     username: str,
@@ -258,11 +331,9 @@ def create_user(
     full_name: str = "",
 ) -> int:
 
-    password_hash, password_salt = hash_password(
-        password
-    )
-
     created_at = now_iso()
+
+    password_hash = hash_password(password)
 
     with get_connection() as conn:
 
@@ -272,19 +343,13 @@ def create_user(
                 username,
                 email,
                 password_hash,
-                password_salt,
                 full_name,
+                balance,
                 created_at,
                 updated_at
             )
             VALUES (
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s
+                %s, %s, %s, %s, 0, %s, %s
             )
             RETURNING id
             """,
@@ -292,16 +357,13 @@ def create_user(
                 username,
                 email,
                 password_hash,
-                password_salt,
                 full_name,
                 created_at,
                 created_at,
             ),
         ).fetchone()
 
-        conn.commit()
-
-        return int(row["id"])
+    return int(row["id"])
 
 
 def find_user_by_id(
@@ -358,102 +420,72 @@ def find_user_by_email(
     return dict(row) if row else None
 
 
-def verify_user_password(
-    username: str,
-    password: str,
-) -> dict[str, Any] | None:
-
-    user = find_user_by_username(
-        username
-    )
-
-    if not user:
-        return None
-
-    valid = verify_password(
-        password,
-        user["password_hash"],
-        user["password_salt"],
-    )
-
-    if not valid:
-        return None
-
-    return user
-
-
 def update_user_name(
     user_id: int,
     full_name: str,
-) -> dict[str, Any] | None:
-
-    updated_at = now_iso()
+) -> dict[str, Any]:
 
     with get_connection() as conn:
 
-        row = conn.execute(
+        conn.execute(
             """
             UPDATE users
             SET
                 full_name = %s,
                 updated_at = %s
             WHERE id = %s
-            RETURNING *
             """,
             (
                 full_name,
-                updated_at,
+                now_iso(),
                 user_id,
             ),
-        ).fetchone()
+        )
 
-        conn.commit()
+    user = find_user_by_id(user_id)
 
-    return dict(row) if row else None
+    if not user:
+        raise ValueError(
+            "کاربر پیدا نشد."
+        )
+
+    return user
 
 
 def update_user_password(
     user_id: int,
     new_password: str,
-) -> bool:
+) -> None:
 
-    password_hash, password_salt = hash_password(
+    password_hash = hash_password(
         new_password
     )
 
-    updated_at = now_iso()
-
     with get_connection() as conn:
 
-        result = conn.execute(
+        conn.execute(
             """
             UPDATE users
             SET
                 password_hash = %s,
-                password_salt = %s,
                 updated_at = %s
             WHERE id = %s
             """,
             (
                 password_hash,
-                password_salt,
-                updated_at,
+                now_iso(),
                 user_id,
             ),
         )
 
-        conn.commit()
-
-        return result.rowcount > 0
-
 
 def delete_user(
     user_id: int,
-) -> bool:
+) -> None:
 
     with get_connection() as conn:
 
-        result = conn.execute(
+        conn.execute(
             """
             DELETE FROM users
             WHERE id = %s
@@ -461,14 +493,10 @@ def delete_user(
             (user_id,),
         )
 
-        conn.commit()
 
-        return result.rowcount > 0
-
-
-# =========================================================
-# Balance
-# =========================================================
+# ============================================================
+# Balance helpers
+# ============================================================
 
 def get_balance(
     user_id: int,
@@ -501,9 +529,53 @@ def get_balance(
     )
 
 
-# =========================================================
+def get_reserved_amount(
+    user_id: int,
+) -> float:
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT COALESCE(
+                SUM(reserved_amount),
+                0
+            ) AS reserved
+            FROM card_transfers
+            WHERE user_id = %s
+              AND status IN (
+                  'pending',
+                  'approved',
+                  'processing'
+              )
+            """,
+            (user_id,),
+        ).fetchone()
+
+    return float(
+        row["reserved"] or 0
+    )
+
+
+def get_available_balance(
+    user_id: int,
+) -> float:
+
+    balance = get_balance(user_id)
+
+    reserved = get_reserved_amount(
+        user_id
+    )
+
+    return max(
+        0.0,
+        balance - reserved,
+    )
+
+
+# ============================================================
 # Transactions
-# =========================================================
+# ============================================================
 
 def add_transaction(
     user_id: int,
@@ -511,7 +583,7 @@ def add_transaction(
     amount: float,
     transaction_type: str,
     category: str | None = None,
-) -> dict[str, Any]:
+) -> int:
 
     created_at = now_iso()
 
@@ -528,14 +600,9 @@ def add_transaction(
                 created_at
             )
             VALUES (
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s
+                %s, %s, %s, %s, %s, %s
             )
-            RETURNING *
+            RETURNING id
             """,
             (
                 user_id,
@@ -547,9 +614,7 @@ def add_transaction(
             ),
         ).fetchone()
 
-        conn.commit()
-
-    return dict(row)
+    return int(row["id"])
 
 
 def get_transactions(
@@ -584,6 +649,10 @@ def get_transactions(
     ]
 
 
+# ============================================================
+# Wallet
+# ============================================================
+
 def add_wallet_balance_with_transaction(
     user_id: int,
     amount: float,
@@ -593,7 +662,7 @@ def add_wallet_balance_with_transaction(
 
     if amount <= 0:
         raise ValueError(
-            "مبلغ نامعتبر است"
+            "مبلغ نامعتبر است."
         )
 
     created_at = now_iso()
@@ -628,11 +697,31 @@ def add_wallet_balance_with_transaction(
             ),
         )
 
-        conn.commit()
+        balance_row = conn.execute(
+            """
+            SELECT COALESCE(
+                SUM(
+                    CASE
+                        WHEN transaction_type = 'income'
+                            THEN amount
+                        WHEN transaction_type = 'expense'
+                            THEN -amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS balance
+            FROM transactions
+            WHERE user_id = %s
+            """,
+            (user_id,),
+        ).fetchone()
 
     return {
         "success": True,
-        "balance": get_balance(user_id),
+        "balance": float(
+            balance_row["balance"] or 0
+        ),
     }
 
 
@@ -645,7 +734,7 @@ def subtract_wallet_balance_with_transaction(
 
     if amount <= 0:
         raise ValueError(
-            "مبلغ نامعتبر است"
+            "مبلغ نامعتبر است."
         )
 
     with get_connection() as conn:
@@ -676,7 +765,7 @@ def subtract_wallet_balance_with_transaction(
 
         if balance < amount:
             raise ValueError(
-                "موجودی کافی نیست"
+                "موجودی کافی نیست."
             )
 
         created_at = now_iso()
@@ -709,17 +798,94 @@ def subtract_wallet_balance_with_transaction(
             ),
         )
 
-        conn.commit()
+        new_balance = balance - amount
 
     return {
         "success": True,
-        "balance": get_balance(user_id),
+        "balance": new_balance,
     }
 
 
-# =========================================================
+# ============================================================
 # Bank cards
-# =========================================================
+# ============================================================
+
+def mask_card_number(
+    card_number: str,
+) -> str:
+
+    digits = "".join(
+        char
+        for char in str(card_number)
+        if char.isdigit()
+    )
+
+    if len(digits) <= 4:
+        return digits
+
+    return (
+        "*" * (len(digits) - 4)
+        + digits[-4:]
+    )
+
+
+def add_bank_card(
+    user_id: int,
+    holder_name: str,
+    bank_name: str,
+    card_number: str,
+    is_default: bool = False,
+) -> int:
+
+    created_at = now_iso()
+
+    with get_connection() as conn:
+
+        if is_default:
+
+            conn.execute(
+                """
+                UPDATE bank_cards
+                SET
+                    is_default = 0,
+                    updated_at = %s
+                WHERE user_id = %s
+                """,
+                (
+                    created_at,
+                    user_id,
+                ),
+            )
+
+        row = conn.execute(
+            """
+            INSERT INTO bank_cards (
+                user_id,
+                holder_name,
+                bank_name,
+                card_number,
+                is_default,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                %s, %s, %s, %s, %s, %s, %s
+            )
+            RETURNING id
+            """,
+            (
+                user_id,
+                holder_name,
+                bank_name,
+                card_number,
+                1 if is_default else 0,
+                created_at,
+                created_at,
+            ),
+        ).fetchone()
+
+    return int(row["id"])
+
 
 def get_bank_cards(
     user_id: int,
@@ -740,9 +906,7 @@ def get_bank_cards(
                 updated_at
             FROM bank_cards
             WHERE user_id = %s
-            ORDER BY
-                is_default DESC,
-                id DESC
+            ORDER BY is_default DESC, id DESC
             """,
             (user_id,),
         ).fetchall()
@@ -753,10 +917,10 @@ def get_bank_cards(
 
         item = dict(row)
 
-        item["masked_card_number"] = (
-            mask_card_number(
-                item["card_number"]
-            )
+        item[
+            "masked_card_number"
+        ] = mask_card_number(
+            item["card_number"]
         )
 
         item.pop(
@@ -769,105 +933,10 @@ def get_bank_cards(
     return result
 
 
-def add_bank_card(
-    user_id: int,
-    holder_name: str,
-    bank_name: str,
-    card_number: str,
-) -> dict[str, Any]:
-
-    created_at = now_iso()
-
-    with get_connection() as conn:
-
-        existing = conn.execute(
-            """
-            SELECT id
-            FROM bank_cards
-            WHERE user_id = %s
-              AND card_number = %s
-            """,
-            (
-                user_id,
-                card_number,
-            ),
-        ).fetchone()
-
-        if existing:
-            raise ValueError(
-                "این کارت قبلاً ثبت شده است"
-            )
-
-        count_row = conn.execute(
-            """
-            SELECT COUNT(*) AS count
-            FROM bank_cards
-            WHERE user_id = %s
-            """,
-            (user_id,),
-        ).fetchone()
-
-        is_default = (
-            1
-            if int(count_row["count"] or 0) == 0
-            else 0
-        )
-
-        row = conn.execute(
-            """
-            INSERT INTO bank_cards (
-                user_id,
-                holder_name,
-                bank_name,
-                card_number,
-                is_default,
-                created_at,
-                updated_at
-            )
-            VALUES (
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s
-            )
-            RETURNING *
-            """,
-            (
-                user_id,
-                holder_name,
-                bank_name,
-                card_number,
-                is_default,
-                created_at,
-                created_at,
-            ),
-        ).fetchone()
-
-        conn.commit()
-
-    item = dict(row)
-
-    item["masked_card_number"] = (
-        mask_card_number(
-            item["card_number"]
-        )
-    )
-
-    item.pop(
-        "card_number",
-        None,
-    )
-
-    return item
-
-
 def set_default_bank_card(
     user_id: int,
     card_id: int,
-) -> dict[str, Any]:
+) -> None:
 
     with get_connection() as conn:
 
@@ -886,7 +955,7 @@ def set_default_bank_card(
 
         if not card:
             raise ValueError(
-                "کارت بانکی پیدا نشد"
+                "کارت بانکی پیدا نشد."
             )
 
         conn.execute(
@@ -903,7 +972,7 @@ def set_default_bank_card(
             ),
         )
 
-        row = conn.execute(
+        conn.execute(
             """
             UPDATE bank_cards
             SET
@@ -911,41 +980,23 @@ def set_default_bank_card(
                 updated_at = %s
             WHERE id = %s
               AND user_id = %s
-            RETURNING *
             """,
             (
                 now_iso(),
                 card_id,
                 user_id,
             ),
-        ).fetchone()
-
-        conn.commit()
-
-    item = dict(row)
-
-    item["masked_card_number"] = (
-        mask_card_number(
-            item["card_number"]
         )
-    )
-
-    item.pop(
-        "card_number",
-        None,
-    )
-
-    return item
 
 
 def delete_bank_card(
     user_id: int,
     card_id: int,
-) -> bool:
+) -> None:
 
     with get_connection() as conn:
 
-        result = conn.execute(
+        conn.execute(
             """
             DELETE FROM bank_cards
             WHERE id = %s
@@ -957,25 +1008,20 @@ def delete_bank_card(
             ),
         )
 
-        conn.commit()
 
-        return result.rowcount > 0
-
-
-# =========================================================
-# Wallet deposit
-# =========================================================
+# ============================================================
+# Deposits
+# ============================================================
 
 def deposit_by_card_once(
     user_id: int,
-    card_id: int,
     amount: float,
     request_id: str,
 ) -> dict[str, Any]:
 
     if amount <= 0:
         raise ValueError(
-            "مبلغ نامعتبر است"
+            "مبلغ نامعتبر است."
         )
 
     with get_connection() as conn:
@@ -991,29 +1037,16 @@ def deposit_by_card_once(
 
         if existing:
 
-            return {
-                "deposit": dict(existing),
-                "balance": get_balance(user_id),
-                "duplicate": True,
-            }
-
-        card = conn.execute(
-            """
-            SELECT *
-            FROM bank_cards
-            WHERE id = %s
-              AND user_id = %s
-            """,
-            (
-                card_id,
-                user_id,
-            ),
-        ).fetchone()
-
-        if not card:
-            raise ValueError(
-                "کارت بانکی پیدا نشد"
+            balance = get_balance(
+                user_id
             )
+
+            return {
+                "success": True,
+                "duplicate": True,
+                "deposit": dict(existing),
+                "balance": balance,
+            }
 
         created_at = now_iso()
 
@@ -1021,7 +1054,6 @@ def deposit_by_card_once(
             """
             INSERT INTO wallet_deposits (
                 user_id,
-                card_id,
                 amount,
                 request_id,
                 status,
@@ -1029,25 +1061,24 @@ def deposit_by_card_once(
                 updated_at
             )
             VALUES (
-                %s,
-                %s,
-                %s,
-                %s,
+                %s, %s, %s,
                 'completed',
-                %s,
-                %s
+                %s, %s
             )
-            RETURNING *
+            RETURNING id
             """,
             (
                 user_id,
-                card_id,
                 amount,
                 request_id,
                 created_at,
                 created_at,
             ),
         ).fetchone()
+
+        deposit_id = int(
+            row["id"]
+        )
 
         conn.execute(
             """
@@ -1061,7 +1092,7 @@ def deposit_by_card_once(
             )
             VALUES (
                 %s,
-                'افزایش موجودی با کارت',
+                'افزایش موجودی از کارت',
                 %s,
                 'income',
                 'card_deposit',
@@ -1075,22 +1106,21 @@ def deposit_by_card_once(
             ),
         )
 
-        conn.commit()
-
         balance = get_balance(
             user_id
         )
 
     return {
-        "deposit": dict(row),
-        "balance": balance,
+        "success": True,
         "duplicate": False,
+        "deposit_id": deposit_id,
+        "balance": balance,
     }
 
 
-# =========================================================
-# Card transfer
-# =========================================================
+# ============================================================
+# Card transfer / settlement
+# ============================================================
 
 def transfer_wallet_to_card_once(
     user_id: int,
@@ -1101,63 +1131,58 @@ def transfer_wallet_to_card_once(
 
     if amount <= 0:
         raise ValueError(
-            "مبلغ نامعتبر است"
+            "مبلغ نامعتبر است."
+        )
+
+    if not request_id:
+        raise ValueError(
+            "شناسه درخواست الزامی است."
         )
 
     with get_connection() as conn:
 
-        # -----------------------------------------
-        # جلوگیری از ثبت دوباره همان درخواست
-        # -----------------------------------------
+        # -----------------------------------------------------
+        # Idempotency
+        # -----------------------------------------------------
 
         existing = conn.execute(
             """
-            SELECT
-                ct.*,
-                bc.bank_name,
-                bc.holder_name,
-                bc.card_number
-            FROM card_transfers ct
-            LEFT JOIN bank_cards bc
-                ON bc.id = ct.card_id
-            WHERE ct.request_id = %s
+            SELECT *
+            FROM card_transfers
+            WHERE request_id = %s
             """,
             (request_id,),
         ).fetchone()
 
         if existing:
 
-            item = dict(existing)
-
-            if item.get("card_number"):
-                item["masked_card_number"] = (
-                    mask_card_number(
-                        item["card_number"]
-                    )
-                )
-
-            item.pop(
-                "card_number",
-                None,
+            reserved = get_reserved_amount(
+                user_id
             )
 
             balance = get_balance(
                 user_id
             )
 
+            available = max(
+                0.0,
+                balance - reserved,
+            )
+
             return {
                 "success": True,
-                "transfer": item,
+                "duplicate": True,
+                "transfer": dict(existing),
                 "transfer_id": int(
-                    item["id"]
+                    existing["id"]
                 ),
                 "balance": balance,
-                "duplicate": True,
+                "available_balance": available,
             }
 
-        # -----------------------------------------
-        # بررسی کارت
-        # -----------------------------------------
+        # -----------------------------------------------------
+        # Card validation
+        # -----------------------------------------------------
 
         card = conn.execute(
             """
@@ -1174,12 +1199,12 @@ def transfer_wallet_to_card_once(
 
         if not card:
             raise ValueError(
-                "کارت بانکی پیدا نشد"
+                "کارت بانکی پیدا نشد."
             )
 
-        # -----------------------------------------
-        # بررسی موجودی
-        # -----------------------------------------
+        # -----------------------------------------------------
+        # Balance
+        # -----------------------------------------------------
 
         balance_row = conn.execute(
             """
@@ -1205,16 +1230,45 @@ def transfer_wallet_to_card_once(
             balance_row["balance"] or 0
         )
 
-        if balance < amount:
+        # -----------------------------------------------------
+        # Existing reservations
+        # -----------------------------------------------------
+
+        reserved_row = conn.execute(
+            """
+            SELECT COALESCE(
+                SUM(reserved_amount),
+                0
+            ) AS reserved
+            FROM card_transfers
+            WHERE user_id = %s
+              AND status IN (
+                  'pending',
+                  'approved',
+                  'processing'
+              )
+            """,
+            (user_id,),
+        ).fetchone()
+
+        reserved = float(
+            reserved_row["reserved"] or 0
+        )
+
+        available_balance = (
+            balance - reserved
+        )
+
+        if available_balance < amount:
             raise ValueError(
-                "موجودی کافی نیست"
+                "موجودی قابل برداشت کافی نیست."
             )
 
-        created_at = now_iso()
+        # -----------------------------------------------------
+        # Create pending transfer
+        # -----------------------------------------------------
 
-        # -----------------------------------------
-        # ایجاد درخواست انتقال
-        # -----------------------------------------
+        created_at = now_iso()
 
         row = conn.execute(
             """
@@ -1224,8 +1278,14 @@ def transfer_wallet_to_card_once(
                 amount,
                 request_id,
                 status,
+                provider,
+                provider_transfer_id,
+                provider_status,
+                reserved_amount,
+                failure_reason,
                 created_at,
-                updated_at
+                updated_at,
+                processed_at
             )
             VALUES (
                 %s,
@@ -1233,16 +1293,23 @@ def transfer_wallet_to_card_once(
                 %s,
                 %s,
                 'pending',
+                NULL,
+                NULL,
+                NULL,
                 %s,
-                %s
+                NULL,
+                %s,
+                %s,
+                NULL
             )
-            RETURNING *
+            RETURNING id
             """,
             (
                 user_id,
                 card_id,
                 amount,
                 request_id,
+                amount,
                 created_at,
                 created_at,
             ),
@@ -1252,40 +1319,9 @@ def transfer_wallet_to_card_once(
             row["id"]
         )
 
-        # -----------------------------------------
-        # کسر موجودی
-        # -----------------------------------------
-
-        conn.execute(
-            """
-            INSERT INTO transactions (
-                user_id,
-                title,
-                amount,
-                transaction_type,
-                category,
-                created_at
-            )
-            VALUES (
-                %s,
-                %s,
-                %s,
-                'expense',
-                'card_transfer',
-                %s
-            )
-            """,
-            (
-                user_id,
-                "انتقال به کارت",
-                amount,
-                created_at,
-            ),
-        )
-
-        # -----------------------------------------
-        # اعلان برای کاربر
-        # -----------------------------------------
+        # -----------------------------------------------------
+        # Notification
+        # -----------------------------------------------------
 
         conn.execute(
             """
@@ -1310,12 +1346,11 @@ def transfer_wallet_to_card_once(
             """,
             (
                 user_id,
-                "درخواست انتقال ثبت شد",
+                "درخواست تسویه ثبت شد",
                 (
-                    f"درخواست انتقال "
-                    f"{amount:,.0f} تومان "
-                    "ثبت شد و در انتظار "
-                    "بررسی است."
+                    f"درخواست تسویه "
+                    f"{amount:,.0f} تومان ثبت شد "
+                    f"و مبلغ آن رزرو شد."
                 ),
                 "transfer",
                 transfer_id,
@@ -1323,33 +1358,88 @@ def transfer_wallet_to_card_once(
             ),
         )
 
-        conn.commit()
-
-        new_balance = balance - amount
-
-    transfer = dict(row)
-
-    transfer["bank_name"] = (
-        card["bank_name"]
-    )
-
-    transfer["holder_name"] = (
-        card["holder_name"]
-    )
-
-    transfer["masked_card_number"] = (
-        mask_card_number(
-            card["card_number"]
+        new_available_balance = (
+            available_balance - amount
         )
-    )
 
     return {
         "success": True,
-        "transfer": transfer,
-        "transfer_id": transfer_id,
-        "balance": new_balance,
         "duplicate": False,
+        "transfer_id": transfer_id,
+        "balance": balance,
+        "reserved_amount": amount,
+        "available_balance": new_available_balance,
+        "status": "pending",
     }
+
+
+# ============================================================
+# Transfer requests
+# ============================================================
+
+def get_card_transfer_request(
+    user_id: int,
+    transfer_id: int,
+) -> dict[str, Any] | None:
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT
+                ct.id,
+                ct.user_id,
+                ct.card_id,
+                ct.amount,
+                ct.request_id,
+                ct.status,
+                ct.provider,
+                ct.provider_transfer_id,
+                ct.provider_status,
+                ct.reserved_amount,
+                ct.failure_reason,
+                ct.created_at,
+                ct.updated_at,
+                ct.processed_at,
+                bc.bank_name,
+                bc.holder_name,
+                bc.card_number
+            FROM card_transfers ct
+            LEFT JOIN bank_cards bc
+                ON bc.id = ct.card_id
+            WHERE ct.id = %s
+              AND ct.user_id = %s
+            """,
+            (
+                transfer_id,
+                user_id,
+            ),
+        ).fetchone()
+
+    if not row:
+        return None
+
+    item = dict(row)
+
+    if item.get("card_number"):
+        item[
+            "masked_card_number"
+        ] = mask_card_number(
+            item["card_number"]
+        )
+
+    item.pop(
+        "card_number",
+        None,
+    )
+
+    item[
+        "status_text"
+    ] = transfer_status_text(
+        item.get("status")
+    )
+
+    return item
 
 
 def get_card_transfer_requests(
@@ -1373,8 +1463,14 @@ def get_card_transfer_requests(
                 ct.amount,
                 ct.request_id,
                 ct.status,
+                ct.provider,
+                ct.provider_transfer_id,
+                ct.provider_status,
+                ct.reserved_amount,
+                ct.failure_reason,
                 ct.created_at,
                 ct.updated_at,
+                ct.processed_at,
                 bc.bank_name,
                 bc.holder_name,
                 bc.card_number
@@ -1397,19 +1493,11 @@ def get_card_transfer_requests(
 
         item = dict(row)
 
-        card_number = item.get(
-            "card_number"
-        )
-
-        if card_number:
-            item["masked_card_number"] = (
-                mask_card_number(
-                    card_number
-                )
-            )
-        else:
-            item["masked_card_number"] = (
-                "کارت حذف شده"
+        if item.get("card_number"):
+            item[
+                "masked_card_number"
+            ] = mask_card_number(
+                item["card_number"]
             )
 
         item.pop(
@@ -1417,215 +1505,579 @@ def get_card_transfer_requests(
             None,
         )
 
-        status = (
+        item[
+            "status_text"
+        ] = transfer_status_text(
             item.get("status")
-            or "pending"
         )
-
-        item["status"] = status
-
-        if status == "pending":
-            item["status_text"] = (
-                "در انتظار بررسی"
-            )
-        elif status == "approved":
-            item["status_text"] = (
-                "تأیید شده"
-            )
-        elif status == "completed":
-            item["status_text"] = (
-                "انجام شده"
-            )
-        elif status == "rejected":
-            item["status_text"] = (
-                "رد شده"
-            )
-        elif status == "failed":
-            item["status_text"] = (
-                "ناموفق"
-            )
-        else:
-            item["status_text"] = status
 
         result.append(item)
 
     return result
 
 
-def get_card_transfer_request(
-    user_id: int,
+def transfer_status_text(
+    status: str | None,
+) -> str:
+
+    values = {
+        "pending": "در انتظار بررسی",
+        "approved": "تأیید شده",
+        "processing": "در حال تسویه",
+        "completed": "تسویه انجام شد",
+        "failed": "تسویه ناموفق",
+        "rejected": "رد شده",
+    }
+
+    return values.get(
+        status or "",
+        "نامشخص",
+    )
+
+
+# ============================================================
+# Admin settlement operations
+# ============================================================
+
+def approve_card_transfer(
     transfer_id: int,
-) -> dict[str, Any] | None:
+) -> dict[str, Any]:
 
     with get_connection() as conn:
 
         row = conn.execute(
             """
-            SELECT
-                ct.*,
-                bc.bank_name,
-                bc.holder_name,
-                bc.card_number
-            FROM card_transfers ct
-            LEFT JOIN bank_cards bc
-                ON bc.id = ct.card_id
-            WHERE ct.id = %s
-              AND ct.user_id = %s
+            SELECT *
+            FROM card_transfers
+            WHERE id = %s
+            FOR UPDATE
             """,
-            (
-                transfer_id,
-                user_id,
-            ),
+            (transfer_id,),
         ).fetchone()
 
-    if not row:
-        return None
-
-    item = dict(row)
-
-    if item.get("card_number"):
-        item["masked_card_number"] = (
-            mask_card_number(
-                item["card_number"]
+        if not row:
+            raise ValueError(
+                "درخواست تسویه پیدا نشد."
             )
-        )
-    else:
-        item["masked_card_number"] = (
-            "کارت حذف شده"
-        )
 
-    item.pop(
-        "card_number",
-        None,
-    )
+        status = row["status"]
 
-    return item
+        if status != "pending":
+            raise ValueError(
+                "این درخواست در وضعیت قابل تأیید نیست."
+            )
 
+        updated_at = now_iso()
 
-def update_card_transfer_status(
-    transfer_id: int,
-    status: str,
-) -> dict[str, Any] | None:
-
-    allowed_statuses = {
-        "pending",
-        "approved",
-        "completed",
-        "rejected",
-        "failed",
-    }
-
-    if status not in allowed_statuses:
-        raise ValueError(
-            "وضعیت انتقال نامعتبر است"
-        )
-
-    updated_at = now_iso()
-
-    with get_connection() as conn:
-
-        row = conn.execute(
+        conn.execute(
             """
             UPDATE card_transfers
             SET
-                status = %s,
+                status = 'approved',
                 updated_at = %s
             WHERE id = %s
-            RETURNING *
             """,
             (
-                status,
                 updated_at,
                 transfer_id,
             ),
+        )
+
+        conn.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                'transfer',
+                %s,
+                0,
+                %s
+            )
+            """,
+            (
+                row["user_id"],
+                "درخواست تسویه تأیید شد",
+                (
+                    "درخواست تسویه شما تأیید شد "
+                    "و آماده پردازش است."
+                ),
+                transfer_id,
+                updated_at,
+            ),
+        )
+
+    return {
+        "success": True,
+        "transfer_id": transfer_id,
+        "status": "approved",
+    }
+
+
+def reject_card_transfer(
+    transfer_id: int,
+    reason: str,
+) -> dict[str, Any]:
+
+    reason = (
+        reason.strip()
+        if reason
+        else "درخواست تسویه رد شد."
+    )
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM card_transfers
+            WHERE id = %s
+            FOR UPDATE
+            """,
+            (transfer_id,),
         ).fetchone()
 
-        conn.commit()
+        if not row:
+            raise ValueError(
+                "درخواست تسویه پیدا نشد."
+            )
 
-    if not row:
-        return None
+        if row["status"] not in (
+            "pending",
+            "approved",
+        ):
+            raise ValueError(
+                "این درخواست قابل رد نیست."
+            )
 
-    return dict(row)
+        updated_at = now_iso()
+
+        conn.execute(
+            """
+            UPDATE card_transfers
+            SET
+                status = 'rejected',
+                reserved_amount = 0,
+                failure_reason = %s,
+                updated_at = %s,
+                processed_at = %s
+            WHERE id = %s
+            """,
+            (
+                reason,
+                updated_at,
+                updated_at,
+                transfer_id,
+            ),
+        )
+
+        conn.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                'transfer',
+                %s,
+                0,
+                %s
+            )
+            """,
+            (
+                row["user_id"],
+                "درخواست تسویه رد شد",
+                reason,
+                transfer_id,
+                updated_at,
+            ),
+        )
+
+    return {
+        "success": True,
+        "transfer_id": transfer_id,
+        "status": "rejected",
+    }
 
 
-def get_all_card_transfer_requests(
-    limit: int = 500,
-) -> list[dict[str, Any]]:
+def mark_transfer_processing(
+    transfer_id: int,
+) -> dict[str, Any]:
 
-    limit = max(
-        1,
-        min(int(limit), 2000),
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM card_transfers
+            WHERE id = %s
+            FOR UPDATE
+            """,
+            (transfer_id,),
+        ).fetchone()
+
+        if not row:
+            raise ValueError(
+                "درخواست تسویه پیدا نشد."
+            )
+
+        if row["status"] != "approved":
+            raise ValueError(
+                "درخواست باید ابتدا تأیید شود."
+            )
+
+        updated_at = now_iso()
+
+        conn.execute(
+            """
+            UPDATE card_transfers
+            SET
+                status = 'processing',
+                updated_at = %s
+            WHERE id = %s
+            """,
+            (
+                updated_at,
+                transfer_id,
+            ),
+        )
+
+    return {
+        "success": True,
+        "transfer_id": transfer_id,
+        "status": "processing",
+    }
+
+
+def complete_card_transfer(
+    transfer_id: int,
+    provider_transfer_id: str,
+    provider_status: str = "completed",
+) -> dict[str, Any]:
+
+    if not provider_transfer_id:
+        raise ValueError(
+            "شناسه تراکنش Provider الزامی است."
+        )
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM card_transfers
+            WHERE id = %s
+            FOR UPDATE
+            """,
+            (transfer_id,),
+        ).fetchone()
+
+        if not row:
+            raise ValueError(
+                "درخواست تسویه پیدا نشد."
+            )
+
+        if row["status"] != "processing":
+            raise ValueError(
+                "درخواست در وضعیت processing نیست."
+            )
+
+        updated_at = now_iso()
+
+        conn.execute(
+            """
+            UPDATE card_transfers
+            SET
+                status = 'completed',
+                provider_transfer_id = %s,
+                provider_status = %s,
+                reserved_amount = 0,
+                updated_at = %s,
+                processed_at = %s
+            WHERE id = %s
+            """,
+            (
+                provider_transfer_id,
+                provider_status,
+                updated_at,
+                updated_at,
+                transfer_id,
+            ),
+        )
+
+        conn.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                'transfer',
+                %s,
+                0,
+                %s
+            )
+            """,
+            (
+                row["user_id"],
+                "تسویه انجام شد",
+                (
+                    f"تسویه مبلغ "
+                    f"{row['amount']:,.0f} تومان "
+                    "با موفقیت انجام شد."
+                ),
+                transfer_id,
+                updated_at,
+            ),
+        )
+
+    return {
+        "success": True,
+        "transfer_id": transfer_id,
+        "status": "completed",
+        "provider_transfer_id":
+            provider_transfer_id,
+    }
+
+
+def fail_card_transfer(
+    transfer_id: int,
+    reason: str,
+) -> dict[str, Any]:
+
+    reason = (
+        reason.strip()
+        if reason
+        else "تسویه ناموفق بود."
     )
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM card_transfers
+            WHERE id = %s
+            FOR UPDATE
+            """,
+            (transfer_id,),
+        ).fetchone()
+
+        if not row:
+            raise ValueError(
+                "درخواست تسویه پیدا نشد."
+            )
+
+        if row["status"] != "processing":
+            raise ValueError(
+                "درخواست در وضعیت processing نیست."
+            )
+
+        updated_at = now_iso()
+
+        conn.execute(
+            """
+            UPDATE card_transfers
+            SET
+                status = 'failed',
+                reserved_amount = 0,
+                failure_reason = %s,
+                updated_at = %s,
+                processed_at = %s
+            WHERE id = %s
+            """,
+            (
+                reason,
+                updated_at,
+                updated_at,
+                transfer_id,
+            ),
+        )
+
+        conn.execute(
+            """
+            INSERT INTO notifications (
+                user_id,
+                title,
+                message,
+                notification_type,
+                transfer_id,
+                is_read,
+                created_at
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                'transfer',
+                %s,
+                0,
+                %s
+            )
+            """,
+            (
+                row["user_id"],
+                "تسویه ناموفق بود",
+                (
+                    "مبلغ رزرو‌شده آزاد شد. "
+                    + reason
+                ),
+                transfer_id,
+                updated_at,
+            ),
+        )
+
+    return {
+        "success": True,
+        "transfer_id": transfer_id,
+        "status": "failed",
+        "failure_reason": reason,
+    }
+
+
+# ============================================================
+# Payout attempts
+# ============================================================
+
+def create_payout_attempt(
+    transfer_id: int,
+    provider: str,
+    amount: float,
+) -> int:
+
+    created_at = now_iso()
+
+    with get_connection() as conn:
+
+        row = conn.execute(
+            """
+            INSERT INTO payout_attempts (
+                transfer_id,
+                provider,
+                provider_transfer_id,
+                amount,
+                status,
+                response_data,
+                error_message,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                %s,
+                %s,
+                NULL,
+                %s,
+                'created',
+                NULL,
+                NULL,
+                %s,
+                %s
+            )
+            RETURNING id
+            """,
+            (
+                transfer_id,
+                provider,
+                amount,
+                created_at,
+                created_at,
+            ),
+        ).fetchone()
+
+    return int(row["id"])
+
+
+def update_payout_attempt(
+    attempt_id: int,
+    status: str,
+    provider_transfer_id: str | None = None,
+    response_data: str | None = None,
+    error_message: str | None = None,
+) -> None:
+
+    with get_connection() as conn:
+
+        conn.execute(
+            """
+            UPDATE payout_attempts
+            SET
+                status = %s,
+                provider_transfer_id = %s,
+                response_data = %s,
+                error_message = %s,
+                updated_at = %s
+            WHERE id = %s
+            """,
+            (
+                status,
+                provider_transfer_id,
+                response_data,
+                error_message,
+                now_iso(),
+                attempt_id,
+            ),
+        )
+
+
+def get_payout_attempts(
+    transfer_id: int,
+) -> list[dict[str, Any]]:
 
     with get_connection() as conn:
 
         rows = conn.execute(
             """
-            SELECT
-                ct.id,
-                ct.user_id,
-                ct.card_id,
-                ct.amount,
-                ct.request_id,
-                ct.status,
-                ct.created_at,
-                ct.updated_at,
-                u.username,
-                u.email,
-                u.full_name,
-                bc.bank_name,
-                bc.holder_name,
-                bc.card_number
-            FROM card_transfers ct
-            LEFT JOIN users u
-                ON u.id = ct.user_id
-            LEFT JOIN bank_cards bc
-                ON bc.id = ct.card_id
-            ORDER BY ct.id DESC
-            LIMIT %s
+            SELECT *
+            FROM payout_attempts
+            WHERE transfer_id = %s
+            ORDER BY id DESC
             """,
-            (limit,),
+            (transfer_id,),
         ).fetchall()
 
-    result = []
-
-    for row in rows:
-
-        item = dict(row)
-
-        if item.get("card_number"):
-            item["masked_card_number"] = (
-                mask_card_number(
-                    item["card_number"]
-                )
-            )
-        else:
-            item["masked_card_number"] = (
-                "کارت حذف شده"
-            )
-
-        item.pop(
-            "card_number",
-            None,
-        )
-
-        result.append(item)
-
-    return result
+    return [
+        dict(row)
+        for row in rows
+    ]
 
 
-# =========================================================
+# ============================================================
 # Notifications
-# =========================================================
+# ============================================================
 
 def get_notifications(
     user_id: int,
-    limit: int = 200,
+    limit: int = 100,
 ) -> list[dict[str, Any]]:
 
     limit = max(
         1,
-        min(int(limit), 1000),
+        min(int(limit), 500),
     )
 
     with get_connection() as conn:
@@ -1674,11 +2126,11 @@ def get_unread_notification_count(
 def mark_notification_as_read(
     user_id: int,
     notification_id: int,
-) -> bool:
+) -> None:
 
     with get_connection() as conn:
 
-        result = conn.execute(
+        conn.execute(
             """
             UPDATE notifications
             SET is_read = 1
@@ -1691,40 +2143,31 @@ def mark_notification_as_read(
             ),
         )
 
-        conn.commit()
-
-        return result.rowcount > 0
-
 
 def mark_all_notifications_as_read(
     user_id: int,
-) -> int:
+) -> None:
 
     with get_connection() as conn:
 
-        result = conn.execute(
+        conn.execute(
             """
             UPDATE notifications
             SET is_read = 1
             WHERE user_id = %s
-              AND is_read = 0
             """,
             (user_id,),
         )
-
-        conn.commit()
-
-        return result.rowcount
 
 
 def delete_notification(
     user_id: int,
     notification_id: int,
-) -> bool:
+) -> None:
 
     with get_connection() as conn:
 
-        result = conn.execute(
+        conn.execute(
             """
             DELETE FROM notifications
             WHERE id = %s
@@ -1735,58 +2178,3 @@ def delete_notification(
                 user_id,
             ),
         )
-
-        conn.commit()
-
-        return result.rowcount > 0
-
-
-# =========================================================
-# Admin logs
-# =========================================================
-
-def add_admin_action_log(
-    admin_name: str,
-    action: str,
-    target_type: str | None = None,
-    target_id: int | None = None,
-    details: str | None = None,
-) -> dict[str, Any]:
-
-    created_at = now_iso()
-
-    with get_connection() as conn:
-
-        row = conn.execute(
-            """
-            INSERT INTO admin_action_logs (
-                admin_name,
-                action,
-                target_type,
-                target_id,
-                details,
-                created_at
-            )
-            VALUES (
-                %s,
-                %s,
-                %s,
-                %s,
-                %s,
-                %s
-            )
-            RETURNING *
-            """,
-            (
-                admin_name,
-                action,
-                target_type,
-                target_id,
-                details,
-                created_at,
-            ),
-        ).fetchone()
-
-        conn.commit()
-
-    return dict(row)
