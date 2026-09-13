@@ -4,13 +4,12 @@ import os
 import uuid
 from typing import Optional
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from backend.auth import router as auth_router
-
 from backend.database import (
+    add_admin_action_log,
     add_bank_card,
     add_transaction,
     add_wallet_balance_with_transaction,
@@ -19,6 +18,7 @@ from backend.database import (
     delete_user,
     deposit_by_card_once,
     find_user_by_id,
+    get_admin_action_logs,
     get_balance,
     get_bank_card,
     get_bank_cards,
@@ -34,25 +34,19 @@ from backend.database import (
     update_card_transfer_status,
     update_user_name,
     update_user_password,
+    verify_user_password,
+)
+
+from backend.session import (
+    require_session_user_id,
 )
 
 
-from backend.session import require_session_user_id
-
-
-# =========================================================
-# APP
-# =========================================================
-
 app = FastAPI(
-    title="KifYar",
+    title="KifYar API",
     version="1.0.0",
 )
 
-
-# =========================================================
-# CORS
-# =========================================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,15 +62,6 @@ app.add_middleware(
 
 
 # =========================================================
-# AUTH ROUTER
-# =========================================================
-
-app.include_router(
-    auth_router
-)
-
-
-# =========================================================
 # MODELS
 # =========================================================
 
@@ -88,57 +73,30 @@ class ProfileUpdateRequest(BaseModel):
 
 
 class PasswordChangeRequest(BaseModel):
-    current_password: str = Field(
-        min_length=1,
-        max_length=200,
-    )
-
+    current_password: str
     new_password: str = Field(
-        min_length=4,
+        min_length=6,
         max_length=200,
     )
 
 
 class TransactionRequest(BaseModel):
-    title: str = Field(
-        min_length=1,
-        max_length=200,
-    )
-
+    title: str
     amount: float
-
-    transaction_type: str = Field(
-        min_length=1,
-        max_length=50,
-    )
-
-    category: str = Field(
-        default="other",
-        max_length=100,
-    )
+    transaction_type: str
+    category: Optional[str] = None
 
 
 class BankCardRequest(BaseModel):
-    holder_name: str = Field(
-        min_length=1,
-        max_length=100,
-    )
-
-    bank_name: str = Field(
-        min_length=1,
-        max_length=100,
-    )
-
-    card_number: str = Field(
-        min_length=4,
-        max_length=30,
-    )
+    holder_name: str
+    bank_name: str
+    card_number: str
 
 
 class CardDepositRequest(BaseModel):
     card_id: int
     amount: float
-    request_id: Optional[str] = None
+    request_id: str
 
 
 class WalletAmountRequest(BaseModel):
@@ -152,7 +110,7 @@ class WalletWithdrawRequest(BaseModel):
 class WalletCardTransferRequest(BaseModel):
     card_id: int
     amount: float
-    request_id: Optional[str] = None
+    request_id: str
 
 
 class TransferStatusRequest(BaseModel):
@@ -164,39 +122,21 @@ class TransferStatusRequest(BaseModel):
 # =========================================================
 
 def normalize_request_id(
-    request_id: Optional[str],
+    request_id: str | None,
 ) -> str:
 
-    if request_id is None:
-        return str(uuid.uuid4())
+    if request_id:
+        value = request_id.strip()
 
-    value = str(
-        request_id
-    ).strip()
+        if value:
+            return value[:200]
 
-    if not value:
-        return str(uuid.uuid4())
-
-    if len(value) > 100:
-        raise HTTPException(
-            status_code=400,
-            detail="شناسه درخواست نامعتبر است.",
-        )
-
-    return value
+    return str(uuid.uuid4())
 
 
 def validate_amount(
     amount: float,
 ) -> float:
-
-    try:
-        amount = float(amount)
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="مبلغ نامعتبر است.",
-        )
 
     if amount <= 0:
         raise HTTPException(
@@ -207,30 +147,26 @@ def validate_amount(
     if amount > 100_000_000:
         raise HTTPException(
             status_code=400,
-            detail="مبلغ بیشتر از حد مجاز است.",
+            detail="حداکثر مبلغ ۱۰۰٬۰۰۰٬۰۰۰ تومان است.",
         )
 
-    return amount
+    return float(amount)
 
-
-# =========================================================
-# ADMIN SECURITY
-# =========================================================
 
 def require_admin(
     x_admin_key: Optional[str] = Header(
-        default=None
+        default=None,
     ),
-):
-    admin_key = os.getenv(
-        "KIFYAR_ADMIN_KEY",
-        "",
-    ).strip()
+) -> str:
 
-    if not admin_key:
+    expected_key = os.getenv(
+        "KIFYAR_ADMIN_KEY"
+    )
+
+    if not expected_key:
         raise HTTPException(
             status_code=503,
-            detail="کلید مدیریت در سرور تنظیم نشده است.",
+            detail="KIFYAR_ADMIN_KEY روی سرور تنظیم نشده است.",
         )
 
     if not x_admin_key:
@@ -239,68 +175,48 @@ def require_admin(
             detail="کلید مدیریت ارسال نشده است.",
         )
 
-    if x_admin_key != admin_key:
+    if x_admin_key != expected_key:
         raise HTTPException(
             status_code=403,
             detail="کلید مدیریت نادرست است.",
         )
 
-    return True
+    return x_admin_key
+
+
+def get_action_name(
+    status: str,
+) -> str:
+
+    actions = {
+        "completed": "تأیید انتقال",
+        "failed": "رد انتقال",
+        "cancelled": "لغو انتقال",
+        "pending": "بازگردانی به انتظار",
+    }
+
+    return actions.get(
+        status,
+        "تغییر وضعیت انتقال",
+    )
 
 
 # =========================================================
-# STARTUP
-# =========================================================
-
-@app.on_event("startup")
-def startup():
-
-    initialize_database()
-
-
-# =========================================================
-# ROOT
+# BASIC
 # =========================================================
 
 @app.get("/")
 def root():
-
     return {
-        "ok": True,
-        "success": True,
-        "app": "KifYar",
-        "version": "1.0.0",
-        "message": "KifYar API is running.",
+        "name": "KifYar API",
+        "status": "ok",
     }
 
 
-# =========================================================
-# HEALTH
-# =========================================================
-
 @app.get("/health")
 def health():
-
-    database_ok = False
-    frontend_ok = True
-
-    try:
-
-        initialize_database()
-
-        database_ok = True
-
-    except Exception:
-
-        database_ok = False
-
     return {
-        "ok": database_ok and frontend_ok,
-        "success": True,
-        "app": "KifYar",
-        "version": "1.0.0",
-        "database": database_ok,
-        "frontend": frontend_ok,
+        "status": "ok",
     }
 
 
@@ -309,218 +225,157 @@ def health():
 # =========================================================
 
 @app.get("/api/profile")
-def get_profile(
-    user_id: int = Depends(
-        require_session_user_id
-    ),
-):
+def get_profile():
 
-    user = find_user_by_id(
-        user_id
-    )
+    user_id = require_session_user_id()
 
-    if user is None:
+    user = find_user_by_id(user_id)
 
+    if not user:
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
         )
 
     return {
-        "success": True,
-        "user": user,
+        "id": user["id"],
+        "username": user["username"],
+        "email": user["email"],
+        "name": user["name"],
+        "is_admin": bool(
+            user["is_admin"]
+        ),
+        "created_at": user["created_at"],
     }
 
 
 @app.put("/api/profile")
 def update_profile(
-    data: ProfileUpdateRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: ProfileUpdateRequest,
 ):
 
-    name = data.name.strip()
+    user_id = require_session_user_id()
 
-    if not name:
-
-        raise HTTPException(
-            status_code=400,
-            detail="نام نمی‌تواند خالی باشد.",
-        )
-
-    updated = update_user_name(
+    ok = update_user_name(
         user_id,
-        name,
+        payload.name.strip(),
     )
 
-    if not updated:
-
+    if not ok:
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
         )
 
-    user = find_user_by_id(
-        user_id
-    )
-
     return {
-        "success": True,
-        "user": user,
         "message": "پروفایل با موفقیت بروزرسانی شد.",
     }
 
 
-# =========================================================
-# PASSWORD
-# =========================================================
-
 @app.put("/api/password")
 def change_password(
-    data: PasswordChangeRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: PasswordChangeRequest,
 ):
 
-    try:
+    user_id = require_session_user_id()
 
-        update_user_password(
-            user_id=user_id,
-            current_password=data.current_password,
-            new_password=data.new_password,
+    user = find_user_by_id(user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="کاربر پیدا نشد.",
         )
 
-    except ValueError as exc:
-
+    if not verify_user_password(
+        user["username"],
+        payload.current_password,
+    ):
         raise HTTPException(
             status_code=400,
-            detail=str(exc),
+            detail="رمز عبور فعلی صحیح نیست.",
         )
 
+    update_user_password(
+        user_id,
+        payload.new_password,
+    )
+
     return {
-        "success": True,
         "message": "رمز عبور با موفقیت تغییر کرد.",
     }
 
 
-# =========================================================
-# DELETE ACCOUNT
-# =========================================================
-
 @app.delete("/api/account")
-def delete_account(
-    user_id: int = Depends(
-        require_session_user_id
-    ),
-):
+def remove_account():
 
-    try:
+    user_id = require_session_user_id()
 
-        delete_transactions(
-            user_id
-        )
+    ok = delete_user(user_id)
 
-        delete_user(
-            user_id
-        )
-
-    except Exception as exc:
-
+    if not ok:
         raise HTTPException(
-            status_code=500,
-            detail=str(exc),
+            status_code=404,
+            detail="کاربر پیدا نشد.",
         )
 
     return {
-        "success": True,
         "message": "حساب کاربری حذف شد.",
     }
 
 
 # =========================================================
-# WALLET BALANCE
+# WALLET
 # =========================================================
 
 @app.get("/api/wallet/balance")
-def wallet_balance(
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+def wallet_balance():
+
+    user_id = require_session_user_id()
+
+    return {
+        "balance": get_balance(user_id),
+    }
+
+
+@app.post("/api/wallet/add")
+def wallet_add(
+    payload: WalletAmountRequest,
 ):
 
-    balance = get_balance(
-        user_id
+    user_id = require_session_user_id()
+
+    amount = validate_amount(
+        payload.amount
+    )
+
+    balance = add_wallet_balance_with_transaction(
+        user_id,
+        amount,
     )
 
     return {
-        "success": True,
+        "message": "موجودی افزایش یافت.",
         "balance": balance,
     }
 
 
-# =========================================================
-# WALLET ADD
-# =========================================================
-
-@app.post("/api/wallet/add")
-def wallet_add(
-    data: WalletAmountRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
-):
-
-    amount = validate_amount(
-        data.amount
-    )
-
-    try:
-
-        result = add_wallet_balance_with_transaction(
-            user_id=user_id,
-            amount=amount,
-        )
-
-    except ValueError as exc:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
-        )
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# WALLET SUBTRACT
-# =========================================================
-
 @app.post("/api/wallet/subtract")
 def wallet_subtract(
-    data: WalletAmountRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: WalletAmountRequest,
 ):
 
+    user_id = require_session_user_id()
+
     amount = validate_amount(
-        data.amount
+        payload.amount
     )
 
     try:
 
-        result = subtract_wallet_balance_with_transaction(
-            user_id=user_id,
-            amount=amount,
+        balance = subtract_wallet_balance_with_transaction(
+            user_id,
+            amount,
         )
 
     except ValueError as exc:
@@ -530,41 +385,32 @@ def wallet_subtract(
             detail=str(exc),
         )
 
-    except Exception as exc:
+    return {
+        "message": "موجودی کاهش یافت.",
+        "balance": balance,
+    }
 
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# WALLET DEPOSIT
-# =========================================================
 
 @app.post("/api/wallet/deposit")
 def wallet_deposit(
-    data: CardDepositRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: CardDepositRequest,
 ):
 
+    user_id = require_session_user_id()
+
     amount = validate_amount(
-        data.amount
+        payload.amount
     )
 
     request_id = normalize_request_id(
-        data.request_id
+        payload.request_id
     )
 
     try:
 
         result = deposit_by_card_once(
             user_id=user_id,
-            card_id=data.card_id,
+            card_id=payload.card_id,
             amount=amount,
             request_id=request_id,
         )
@@ -576,37 +422,25 @@ def wallet_deposit(
             detail=str(exc),
         )
 
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
     return result
 
 
-# =========================================================
-# WALLET WITHDRAW
-# =========================================================
-
 @app.post("/api/wallet/withdraw")
 def wallet_withdraw(
-    data: WalletWithdrawRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: WalletWithdrawRequest,
 ):
 
+    user_id = require_session_user_id()
+
     amount = validate_amount(
-        data.amount
+        payload.amount
     )
 
     try:
 
-        result = subtract_wallet_balance_with_transaction(
-            user_id=user_id,
-            amount=amount,
+        balance = subtract_wallet_balance_with_transaction(
+            user_id,
+            amount,
             title="برداشت از کیف پول",
             category="withdraw",
         )
@@ -618,41 +452,32 @@ def wallet_withdraw(
             detail=str(exc),
         )
 
-    except Exception as exc:
+    return {
+        "message": "برداشت ثبت شد.",
+        "balance": balance,
+    }
 
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
-    return result
-
-
-# =========================================================
-# WALLET -> CARD
-# =========================================================
 
 @app.post("/api/wallet/transfer-to-card")
 def wallet_transfer_to_card(
-    data: WalletCardTransferRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: WalletCardTransferRequest,
 ):
 
+    user_id = require_session_user_id()
+
     amount = validate_amount(
-        data.amount
+        payload.amount
     )
 
     request_id = normalize_request_id(
-        data.request_id
+        payload.request_id
     )
 
     try:
 
         result = transfer_wallet_to_card_once(
             user_id=user_id,
-            card_id=data.card_id,
+            card_id=payload.card_id,
             amount=amount,
             request_id=request_id,
         )
@@ -664,80 +489,38 @@ def wallet_transfer_to_card(
             detail=str(exc),
         )
 
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
     return result
 
 
-# =========================================================
-# USER CARD TRANSFERS
-# =========================================================
-
 @app.get("/api/wallet/card-transfers")
-def wallet_card_transfers(
-    user_id: int = Depends(
-        require_session_user_id
-    ),
-):
+def wallet_card_transfers():
 
-    transfers = get_card_transfer_requests(
+    user_id = require_session_user_id()
+
+    return get_card_transfer_requests(
         user_id
     )
 
-    return {
-        "success": True,
-        "transfers": transfers,
-    }
 
-
-@app.get(
-    "/api/wallet/card-transfers/{transfer_id}"
-)
+@app.get("/api/wallet/card-transfers/{transfer_id}")
 def wallet_card_transfer(
     transfer_id: int,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
 ):
 
+    user_id = require_session_user_id()
+
     transfer = get_card_transfer_request(
-        user_id=user_id,
-        transfer_id=transfer_id,
+        user_id,
+        transfer_id,
     )
 
-    if transfer is None:
-
+    if not transfer:
         raise HTTPException(
             status_code=404,
             detail="درخواست انتقال پیدا نشد.",
         )
 
-    return {
-        "success": True,
-        "transfer": transfer,
-    }
-
-
-# =========================================================
-# IMPORTANT
-# =========================================================
-#
-# وضعیت انتقال دیگر از سمت کاربر عادی قابل تغییر نیست.
-#
-# قبلاً این endpoint وجود داشت:
-#
-# PATCH /api/wallet/card-transfers/{id}/status
-#
-# و یک مشکل امنیتی داشت.
-#
-# تغییر وضعیت فقط از پنل مدیریت انجام می‌شود.
-#
-# =========================================================
+    return transfer
 
 
 # =========================================================
@@ -745,134 +528,79 @@ def wallet_card_transfer(
 # =========================================================
 
 @app.get("/api/transactions")
-def transactions(
-    user_id: int = Depends(
-        require_session_user_id
-    ),
-):
+def transactions():
 
-    items = get_transactions(
+    user_id = require_session_user_id()
+
+    return get_transactions(
         user_id
     )
-
-    return {
-        "success": True,
-        "transactions": items,
-    }
 
 
 @app.post("/api/transactions")
 def create_transaction(
-    data: TransactionRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: TransactionRequest,
 ):
 
-    amount = validate_amount(
-        data.amount
-    )
+    user_id = require_session_user_id()
 
-    transaction_type = (
-        data.transaction_type
-        .strip()
-        .lower()
-    )
+    if payload.amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="مبلغ نامعتبر است.",
+        )
 
-    if transaction_type not in {
+    if payload.transaction_type not in {
         "income",
         "expense",
     }:
-
         raise HTTPException(
             status_code=400,
-            detail="نوع تراکنش باید income یا expense باشد.",
+            detail="نوع تراکنش نامعتبر است.",
         )
 
-    title = data.title.strip()
-
-    category = (
-        data.category.strip()
-        or "other"
+    transaction_id = add_transaction(
+        user_id=user_id,
+        title=payload.title,
+        amount=payload.amount,
+        transaction_type=payload.transaction_type,
+        category=payload.category,
     )
 
-    try:
-
-        transaction_id = add_transaction(
-            user_id=user_id,
-            title=title,
-            amount=amount,
-            transaction_type=transaction_type,
-            category=category,
-        )
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
     return {
-        "success": True,
-        "transaction_id": transaction_id,
+        "id": transaction_id,
         "message": "تراکنش ثبت شد.",
     }
 
 
 # =========================================================
-# BANK CARDS
+# CARDS
 # =========================================================
 
 @app.get("/api/cards")
-def cards(
-    user_id: int = Depends(
-        require_session_user_id
-    ),
-):
+def cards():
 
-    items = get_bank_cards(
+    user_id = require_session_user_id()
+
+    return get_bank_cards(
         user_id
     )
-
-    return {
-        "success": True,
-        "cards": items,
-    }
 
 
 @app.post("/api/cards")
 def create_card(
-    data: BankCardRequest,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
+    payload: BankCardRequest,
 ):
 
-    holder_name = data.holder_name.strip()
-
-    bank_name = data.bank_name.strip()
-
-    card_number = "".join(
-        ch
-        for ch in data.card_number
-        if ch.isdigit()
-    )
-
-    if len(card_number) < 4:
-
-        raise HTTPException(
-            status_code=400,
-            detail="شماره کارت نامعتبر است.",
-        )
+    user_id = require_session_user_id()
 
     try:
 
         card_id = add_bank_card(
             user_id=user_id,
-            holder_name=holder_name,
-            bank_name=bank_name,
-            card_number=card_number,
+            holder_name=payload.holder_name.strip(),
+            bank_name=payload.bank_name.strip(),
+            card_number=payload.card_number,
         )
 
     except ValueError as exc:
@@ -882,183 +610,136 @@ def create_card(
             detail=str(exc),
         )
 
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
-    card = get_bank_card(
-        user_id=user_id,
-        card_id=card_id,
-    )
-
     return {
-        "success": True,
-        "card": card,
+        "id": card_id,
         "message": "کارت بانکی اضافه شد.",
     }
 
 
-@app.put(
-    "/api/cards/{card_id}/default"
-)
+@app.put("/api/cards/{card_id}/default")
 def default_card(
     card_id: int,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
 ):
 
-    updated = set_default_bank_card(
-        user_id=user_id,
-        card_id=card_id,
+    user_id = require_session_user_id()
+
+    ok = set_default_bank_card(
+        user_id,
+        card_id,
     )
 
-    if not updated:
-
+    if not ok:
         raise HTTPException(
             status_code=404,
-            detail="کارت بانکی پیدا نشد.",
+            detail="کارت پیدا نشد.",
         )
 
-    card = get_bank_card(
-        user_id=user_id,
-        card_id=card_id,
-    )
-
     return {
-        "success": True,
-        "card": card,
-        "message": "کارت پیش‌فرض تغییر کرد.",
+        "message": "کارت پیش‌فرض شد.",
     }
 
 
-@app.delete(
-    "/api/cards/{card_id}"
-)
+@app.delete("/api/cards/{card_id}")
 def remove_card(
     card_id: int,
-    user_id: int = Depends(
-        require_session_user_id
-    ),
 ):
 
-    card = get_bank_card(
-        user_id=user_id,
-        card_id=card_id,
+    user_id = require_session_user_id()
+
+    ok = delete_bank_card(
+        user_id,
+        card_id,
     )
 
-    if card is None:
-
+    if not ok:
         raise HTTPException(
             status_code=404,
-            detail="کارت بانکی پیدا نشد.",
-        )
-
-    deleted = delete_bank_card(
-        user_id=user_id,
-        card_id=card_id,
-    )
-
-    if not deleted:
-
-        raise HTTPException(
-            status_code=404,
-            detail="کارت بانکی پیدا نشد.",
+            detail="کارت پیدا نشد.",
         )
 
     return {
-        "success": True,
-        "message": "کارت بانکی حذف شد.",
+        "message": "کارت حذف شد.",
     }
 
 
 # =========================================================
-# ADMIN
+# ADMIN - TRANSFERS
 # =========================================================
 
-@app.get(
-    "/api/admin/card-transfers"
-)
-def admin_card_transfers(
-    _: bool = Depends(
-        require_admin
-    ),
-):
+@app.get("/api/admin/card-transfers")
+def admin_card_transfers():
 
-    transfers = get_all_card_transfer_requests()
+    require_admin()
 
-    return {
-        "success": True,
-        "simulation": True,
-        "transfers": transfers,
-    }
+    return get_all_card_transfer_requests()
 
 
-@app.get(
-    "/api/admin/card-transfers/{transfer_id}"
-)
+@app.get("/api/admin/card-transfers/{transfer_id}")
 def admin_card_transfer(
     transfer_id: int,
-    _: bool = Depends(
-        require_admin
-    ),
 ):
+
+    require_admin()
 
     transfer = get_card_transfer_request_by_id(
         transfer_id
     )
 
-    if transfer is None:
-
+    if not transfer:
         raise HTTPException(
             status_code=404,
             detail="درخواست انتقال پیدا نشد.",
         )
 
-    return {
-        "success": True,
-        "simulation": True,
-        "transfer": transfer,
-    }
+    return transfer
 
 
 @app.patch(
     "/api/admin/card-transfers/{transfer_id}/status"
 )
-def admin_change_card_transfer_status(
+def admin_update_transfer_status(
     transfer_id: int,
-    data: TransferStatusRequest,
-    _: bool = Depends(
-        require_admin
-    ),
+    payload: TransferStatusRequest,
 ):
 
-    status = (
-        data.status
-        .strip()
-        .lower()
-    )
+    require_admin()
 
-    if status not in {
+    new_status = payload.status.strip().lower()
+
+    allowed = {
         "pending",
         "completed",
         "failed",
         "cancelled",
-    }:
+    }
 
+    if new_status not in allowed:
         raise HTTPException(
             status_code=400,
-            detail="وضعیت انتقال نامعتبر است.",
+            detail="وضعیت نامعتبر است.",
         )
+
+    transfer = get_card_transfer_request_by_id(
+        transfer_id
+    )
+
+    if not transfer:
+        raise HTTPException(
+            status_code=404,
+            detail="درخواست انتقال پیدا نشد.",
+        )
+
+    old_status = transfer["status"]
+
+    if old_status == new_status:
+
+        return transfer
 
     try:
 
-        updated = update_card_transfer_status(
-            transfer_id=transfer_id,
-            status=status,
+        ok = update_card_transfer_status(
+            transfer_id,
+            new_status,
         )
 
     except ValueError as exc:
@@ -1068,29 +749,75 @@ def admin_change_card_transfer_status(
             detail=str(exc),
         )
 
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
-
-    if not updated:
-
+    if not ok:
         raise HTTPException(
             status_code=404,
             detail="درخواست انتقال پیدا نشد.",
         )
 
-    transfer = get_card_transfer_request_by_id(
+    add_admin_action_log(
+        action=get_action_name(
+            new_status
+        ),
+        transfer_id=transfer_id,
+        status_before=old_status,
+        status_after=new_status,
+        amount=float(
+            transfer["amount"]
+        ),
+        request_id=transfer["request_id"],
+    )
+
+    updated = get_card_transfer_request_by_id(
         transfer_id
     )
 
-    return {
-        "success": True,
-        "simulation": True,
-        "transfer": transfer,
-        "message": (
-            "وضعیت درخواست با موفقیت تغییر کرد."
-        ),
-    }
+    return updated
+
+
+# =========================================================
+# ADMIN - AUDIT LOGS
+# =========================================================
+
+@app.get("/api/admin/logs")
+def admin_logs(
+    limit: int = 200,
+):
+
+    require_admin()
+
+    return get_admin_action_logs(
+        limit
+    )
+
+
+@app.get("/api/admin/logs/{log_id}")
+def admin_log(
+    log_id: int,
+):
+
+    require_admin()
+
+    logs = get_admin_action_logs(
+        1000
+    )
+
+    for log in logs:
+
+        if int(log["id"]) == log_id:
+            return log
+
+    raise HTTPException(
+        status_code=404,
+        detail="گزارش پیدا نشد.",
+    )
+
+
+# =========================================================
+# STARTUP
+# =========================================================
+
+@app.on_event("startup")
+def startup():
+
+    initialize_database()
