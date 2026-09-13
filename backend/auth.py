@@ -1,20 +1,16 @@
 from __future__ import annotations
 
 import secrets
+from typing import Any
 
-from fastapi import (
-    APIRouter,
-    Header,
-    HTTPException,
-    Request,
-)
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from backend.database import (
     create_user,
-    find_user,
-    get_user_by_id,
-    verify_password,
+    find_user_by_id,
+    get_connection,
+    verify_user_password,
 )
 
 
@@ -37,6 +33,59 @@ tokens: dict[str, int] = {}
 
 
 # =========================================================
+# DATABASE USER LOOKUP
+# =========================================================
+
+def find_user(
+    identifier: str,
+) -> dict[str, Any] | None:
+    """
+    پیدا کردن کاربر با ایمیل یا نام کاربری.
+
+    این تابع داخل auth.py قرار گرفته تا با database.py فعلی
+    که تابع find_user ندارد، سازگار باشد.
+    """
+
+    value = str(identifier).strip()
+
+    if not value:
+        return None
+
+    connection = get_connection()
+
+    try:
+        row = connection.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                name,
+                password_hash,
+                is_admin,
+                created_at,
+                updated_at
+            FROM users
+            WHERE LOWER(email) = LOWER(?)
+               OR LOWER(username) = LOWER(?)
+            LIMIT 1
+            """,
+            (
+                value,
+                value,
+            ),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        return dict(row)
+
+    finally:
+        connection.close()
+
+
+# =========================================================
 # TOKEN FUNCTIONS
 # =========================================================
 
@@ -44,13 +93,9 @@ def create_token(
     user_id: int,
 ) -> str:
 
-    token = secrets.token_urlsafe(
-        32
-    )
+    token = secrets.token_urlsafe(32)
 
-    tokens[token] = int(
-        user_id
-    )
+    tokens[token] = int(user_id)
 
     return token
 
@@ -70,27 +115,20 @@ def get_bearer_token(
 ) -> str:
 
     if not authorization:
-
         raise HTTPException(
             status_code=401,
             detail="ورود لازم است.",
         )
 
-    if not authorization.startswith(
-        "Bearer "
-    ):
-
+    if not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=401,
             detail="توکن نامعتبر است.",
         )
 
-    token = authorization[
-        7:
-    ].strip()
+    token = authorization[7:].strip()
 
     if not token:
-
         raise HTTPException(
             status_code=401,
             detail="توکن نامعتبر است.",
@@ -107,29 +145,22 @@ def require_user_id(
         authorization
     )
 
-    user_id = tokens.get(
-        token
-    )
+    user_id = tokens.get(token)
 
     if user_id is None:
-
         raise HTTPException(
             status_code=401,
             detail="جلسه ورود معتبر نیست.",
         )
 
-    return int(
-        user_id
-    )
+    return int(user_id)
 
 
 # =========================================================
 # REGISTER MODEL
 # =========================================================
 
-class RegisterRequest(
-    BaseModel
-):
+class RegisterRequest(BaseModel):
 
     username: str
 
@@ -142,9 +173,7 @@ class RegisterRequest(
 # LOGIN MODEL
 # =========================================================
 
-class LoginRequest(
-    BaseModel
-):
+class LoginRequest(BaseModel):
 
     email: str | None = None
 
@@ -159,9 +188,7 @@ class LoginRequest(
 # LOGOUT MODEL
 # =========================================================
 
-class LogoutRequest(
-    BaseModel
-):
+class LogoutRequest(BaseModel):
     pass
 
 
@@ -176,86 +203,91 @@ def register(
     data: RegisterRequest,
 ):
 
-    username = (
-        data.username
-        .strip()
-    )
+    username = data.username.strip()
 
-    email = (
-        data.email
-        .strip()
-        .lower()
-    )
+    email = data.email.strip().lower()
 
     password = data.password
 
     if not username:
-
         raise HTTPException(
             status_code=400,
             detail="نام کاربری الزامی است.",
         )
 
     if not email:
-
         raise HTTPException(
             status_code=400,
             detail="ایمیل الزامی است.",
         )
 
     if not password:
-
         raise HTTPException(
             status_code=400,
             detail="رمز عبور الزامی است.",
         )
 
     if len(password) < 6:
-
         raise HTTPException(
             status_code=400,
             detail="رمز عبور باید حداقل ۶ کاراکتر باشد.",
         )
 
-    existing_user = find_user(
-        email
-    )
+    # بررسی ایمیل یا نام کاربری تکراری
+    existing_user = find_user(email)
+
+    if existing_user is None:
+        existing_user = find_user(username)
 
     if existing_user is not None:
-
         raise HTTPException(
             status_code=409,
             detail="این ایمیل یا نام کاربری قبلاً ثبت شده است.",
         )
 
-    # مهم:
-    # رمز را اینجا هش نمی‌کنیم.
-    # create_user خودش هش می‌کند.
-    user = create_user(
-        username=username,
-        email=email,
-        password=password,
-    )
+    # create_user خودش رمز را هش می‌کند.
+    try:
+
+        user = create_user(
+            username=username,
+            email=email,
+            password=password,
+        )
+
+    except Exception as exc:
+
+        error_text = str(exc).lower()
+
+        if (
+            "unique" in error_text
+            or "already exists" in error_text
+            or "duplicate" in error_text
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="این ایمیل یا نام کاربری قبلاً ثبت شده است.",
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="ثبت‌نام انجام نشد.",
+        ) from exc
+
+    if user is None:
+        raise HTTPException(
+            status_code=500,
+            detail="کاربر ایجاد نشد.",
+        )
 
     return {
         "success": True,
         "message": "ثبت‌نام با موفقیت انجام شد.",
         "user": {
-            "id": int(
-                user["id"]
-            ),
-            "username": user.get(
-                "username"
-            ),
-            "name": user.get(
-                "name"
-            ),
-            "email": user.get(
-                "email"
-            ),
-            "created_at": user.get(
-                "created_at"
-            ),
+            "id": int(user["id"]),
+            "username": user.get("username"),
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "created_at": user.get("created_at"),
         },
     }
 
@@ -279,18 +311,14 @@ async def login(
 
         body = await request.json()
 
-    except Exception:
+    except Exception as exc:
 
         raise HTTPException(
             status_code=400,
             detail="بدنه درخواست ورود نامعتبر است.",
-        )
+        ) from exc
 
-    if not isinstance(
-        body,
-        dict,
-    ):
-
+    if not isinstance(body, dict):
         raise HTTPException(
             status_code=400,
             detail="اطلاعات ورود نامعتبر است.",
@@ -300,21 +328,13 @@ async def login(
     # Read possible field names
     # -----------------------------------------------------
 
-    email = body.get(
-        "email"
-    )
+    email = body.get("email")
 
-    username = body.get(
-        "username"
-    )
+    username = body.get("username")
 
-    identifier = body.get(
-        "identifier"
-    )
+    identifier = body.get("identifier")
 
-    password = body.get(
-        "password"
-    )
+    password = body.get("password")
 
     # -----------------------------------------------------
     # Normalize
@@ -355,14 +375,12 @@ async def login(
     )
 
     if not login_identifier:
-
         raise HTTPException(
             status_code=400,
             detail="ایمیل یا نام کاربری الزامی است.",
         )
 
     if not password:
-
         raise HTTPException(
             status_code=400,
             detail="رمز عبور الزامی است.",
@@ -377,44 +395,42 @@ async def login(
     )
 
     if user is None:
-
         raise HTTPException(
             status_code=401,
             detail="ایمیل یا نام کاربری یا رمز عبور اشتباه است.",
         )
 
     # -----------------------------------------------------
-    # Stored password
-    # -----------------------------------------------------
-
-    stored_password = user.get(
-        "password_hash"
-    )
-
-    if not stored_password:
-
-        raise HTTPException(
-            status_code=401,
-            detail="رمز عبور این حساب ثبت نشده است.",
-        )
-
-    # -----------------------------------------------------
-    # Verify
+    # Verify password
     # -----------------------------------------------------
 
     try:
 
-        valid_password = verify_password(
+        valid_password = verify_user_password(
+            int(user["id"]),
             password,
-            stored_password,
         )
+
+    except TypeError:
+
+        # سازگاری در صورتی که ترتیب آرگومان تابع
+        # database.py متفاوت باشد.
+        try:
+
+            valid_password = verify_user_password(
+                password,
+                int(user["id"]),
+            )
+
+        except Exception:
+
+            valid_password = False
 
     except Exception:
 
         valid_password = False
 
     if not valid_password:
-
         raise HTTPException(
             status_code=401,
             detail="ایمیل یا نام کاربری یا رمز عبور اشتباه است.",
@@ -426,13 +442,8 @@ async def login(
 
     old_tokens = [
         token
-        for token, stored_user_id
-        in tokens.items()
-        if int(
-            stored_user_id
-        ) == int(
-            user["id"]
-        )
+        for token, stored_user_id in tokens.items()
+        if int(stored_user_id) == int(user["id"])
     ]
 
     for token in old_tokens:
@@ -443,13 +454,11 @@ async def login(
         )
 
     # -----------------------------------------------------
-    # New token
+    # Create new token
     # -----------------------------------------------------
 
     token = create_token(
-        int(
-            user["id"]
-        )
+        int(user["id"])
     )
 
     # -----------------------------------------------------
@@ -462,17 +471,12 @@ async def login(
         "token": token,
         "access_token": token,
         "user": {
-            "id": int(
-                user["id"]
-            ),
-            "username": user.get(
-                "username"
-            ),
-            "name": user.get(
-                "name"
-            ),
-            "email": user.get(
-                "email"
+            "id": int(user["id"]),
+            "username": user.get("username"),
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "is_admin": bool(
+                user.get("is_admin", 0)
             ),
         },
     }
@@ -495,12 +499,11 @@ def me(
         authorization
     )
 
-    user = get_user_by_id(
+    user = find_user_by_id(
         user_id
     )
 
     if user is None:
-
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
