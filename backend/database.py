@@ -4,42 +4,33 @@ import hashlib
 import hmac
 import os
 import secrets
-import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
+import psycopg
+from psycopg.rows import dict_row
 
-BASE_DIR = Path(__file__).resolve().parent
 
-DATABASE_PATH = Path(
-    os.getenv(
-        "KIFYAR_DATABASE_PATH",
-        str(BASE_DIR / "kifyar.db"),
-    )
-)
-
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 PASSWORD_ITERATIONS = 120_000
 
 
-def get_connection() -> sqlite3.Connection:
-    DATABASE_PATH.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+# =========================================================
+# DATABASE CONNECTION
+# =========================================================
+
+def get_connection():
+    if not DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL روی سرور تنظیم نشده است."
+        )
+
+    return psycopg.connect(
+        DATABASE_URL,
+        row_factory=dict_row,
+        connect_timeout=20,
     )
-
-    conn = sqlite3.connect(
-        DATABASE_PATH,
-        timeout=30,
-    )
-
-    conn.row_factory = sqlite3.Row
-
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.execute("PRAGMA busy_timeout = 30000")
-
-    return conn
 
 
 def now_iso() -> str:
@@ -73,7 +64,6 @@ def verify_password(
 ) -> bool:
 
     try:
-
         algorithm, iterations, salt_hex, digest_hex = (
             stored_hash.split("$")
         )
@@ -104,37 +94,7 @@ def verify_password(
 
 
 # =========================================================
-# DATABASE HELPERS
-# =========================================================
-
-def _ensure_column(
-    conn: sqlite3.Connection,
-    table: str,
-    column: str,
-    definition: str,
-) -> None:
-
-    columns = conn.execute(
-        f"PRAGMA table_info({table})"
-    ).fetchall()
-
-    existing = {
-        row["name"]
-        for row in columns
-    }
-
-    if column not in existing:
-
-        conn.execute(
-            f"""
-            ALTER TABLE {table}
-            ADD COLUMN {column} {definition}
-            """
-        )
-
-
-# =========================================================
-# ADMIN LOG TABLE
+# INITIALIZE DATABASE
 # =========================================================
 
 def initialize_admin_logs_table() -> None:
@@ -144,12 +104,12 @@ def initialize_admin_logs_table() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS admin_action_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id BIGSERIAL PRIMARY KEY,
                 action TEXT NOT NULL,
-                transfer_id INTEGER,
+                transfer_id BIGINT,
                 status_before TEXT,
                 status_after TEXT,
-                amount REAL,
+                amount DOUBLE PRECISION,
                 request_id TEXT,
                 created_at TEXT NOT NULL
             )
@@ -173,10 +133,6 @@ def initialize_admin_logs_table() -> None:
         )
 
 
-# =========================================================
-# NOTIFICATIONS TABLE
-# =========================================================
-
 def initialize_notifications_table() -> None:
 
     with get_connection() as conn:
@@ -184,12 +140,12 @@ def initialize_notifications_table() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS notifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
                 title TEXT NOT NULL,
                 message TEXT NOT NULL,
                 notification_type TEXT NOT NULL DEFAULT 'system',
-                transfer_id INTEGER,
+                transfer_id BIGINT,
                 is_read INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 read_at TEXT,
@@ -225,10 +181,6 @@ def initialize_notifications_table() -> None:
         )
 
 
-# =========================================================
-# INITIALIZE DATABASE
-# =========================================================
-
 def initialize_database() -> None:
 
     with get_connection() as conn:
@@ -236,7 +188,7 @@ def initialize_database() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id BIGSERIAL PRIMARY KEY,
                 username TEXT NOT NULL UNIQUE,
                 email TEXT UNIQUE,
                 name TEXT,
@@ -251,10 +203,10 @@ def initialize_database() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
                 title TEXT NOT NULL,
-                amount REAL NOT NULL,
+                amount DOUBLE PRECISION NOT NULL,
                 transaction_type TEXT NOT NULL,
                 category TEXT,
                 created_at TEXT NOT NULL,
@@ -268,8 +220,8 @@ def initialize_database() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS bank_cards (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
                 holder_name TEXT NOT NULL,
                 bank_name TEXT NOT NULL,
                 card_number TEXT NOT NULL,
@@ -286,10 +238,10 @@ def initialize_database() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS wallet_deposits (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                card_id INTEGER NOT NULL,
-                amount REAL NOT NULL,
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                card_id BIGINT NOT NULL,
+                amount DOUBLE PRECISION NOT NULL,
                 request_id TEXT NOT NULL UNIQUE,
                 status TEXT NOT NULL DEFAULT 'completed',
                 created_at TEXT NOT NULL,
@@ -306,10 +258,10 @@ def initialize_database() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS card_transfers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                card_id INTEGER NOT NULL,
-                amount REAL NOT NULL,
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                card_id BIGINT NOT NULL,
+                amount DOUBLE PRECISION NOT NULL,
                 request_id TEXT NOT NULL UNIQUE,
                 status TEXT NOT NULL DEFAULT 'pending',
                 created_at TEXT NOT NULL,
@@ -322,34 +274,6 @@ def initialize_database() -> None:
                     ON DELETE CASCADE
             )
             """
-        )
-
-        _ensure_column(
-            conn,
-            "users",
-            "is_admin",
-            "INTEGER NOT NULL DEFAULT 0",
-        )
-
-        _ensure_column(
-            conn,
-            "users",
-            "email",
-            "TEXT",
-        )
-
-        _ensure_column(
-            conn,
-            "users",
-            "name",
-            "TEXT",
-        )
-
-        _ensure_column(
-            conn,
-            "users",
-            "updated_at",
-            "TEXT",
         )
 
         conn.execute(
@@ -413,7 +337,7 @@ def create_user(
 
     with get_connection() as conn:
 
-        cursor = conn.execute(
+        row = conn.execute(
             """
             INSERT INTO users (
                 username,
@@ -423,7 +347,8 @@ def create_user(
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
             """,
             (
                 username,
@@ -433,9 +358,9 @@ def create_user(
                 created_at,
                 created_at,
             ),
-        )
+        ).fetchone()
 
-        return int(cursor.lastrowid)
+        return int(row["id"])
 
 
 def find_user_by_id(
@@ -448,7 +373,7 @@ def find_user_by_id(
             """
             SELECT *
             FROM users
-            WHERE id = ?
+            WHERE id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -466,7 +391,7 @@ def find_user_by_username(
             """
             SELECT *
             FROM users
-            WHERE username = ?
+            WHERE username = %s
             """,
             (username,),
         ).fetchone()
@@ -484,7 +409,7 @@ def find_user_by_email(
             """
             SELECT *
             FROM users
-            WHERE email = ?
+            WHERE email = %s
             """,
             (email,),
         ).fetchone()
@@ -521,9 +446,9 @@ def update_user_name(
         cursor = conn.execute(
             """
             UPDATE users
-            SET name = ?,
-                updated_at = ?
-            WHERE id = ?
+            SET name = %s,
+                updated_at = %s
+            WHERE id = %s
             """,
             (
                 name,
@@ -549,9 +474,9 @@ def update_user_password(
         cursor = conn.execute(
             """
             UPDATE users
-            SET password_hash = ?,
-                updated_at = ?
-            WHERE id = ?
+            SET password_hash = %s,
+                updated_at = %s
+            WHERE id = %s
             """,
             (
                 password_hash,
@@ -572,7 +497,7 @@ def delete_user(
         cursor = conn.execute(
             """
             DELETE FROM users
-            WHERE id = ?
+            WHERE id = %s
             """,
             (user_id,),
         )
@@ -594,7 +519,7 @@ def is_user_admin(
             """
             SELECT is_admin
             FROM users
-            WHERE id = ?
+            WHERE id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -612,9 +537,9 @@ def set_user_admin(
         cursor = conn.execute(
             """
             UPDATE users
-            SET is_admin = ?,
-                updated_at = ?
-            WHERE id = ?
+            SET is_admin = %s,
+                updated_at = %s
+            WHERE id = %s
             """,
             (
                 1 if is_admin else 0,
@@ -664,7 +589,7 @@ def add_transaction(
 
     with get_connection() as conn:
 
-        cursor = conn.execute(
+        row = conn.execute(
             """
             INSERT INTO transactions (
                 user_id,
@@ -674,7 +599,8 @@ def add_transaction(
                 category,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
             """,
             (
                 user_id,
@@ -684,9 +610,9 @@ def add_transaction(
                 category,
                 created_at,
             ),
-        )
+        ).fetchone()
 
-        return int(cursor.lastrowid)
+        return int(row["id"])
 
 
 def delete_transactions(
@@ -698,7 +624,7 @@ def delete_transactions(
         cursor = conn.execute(
             """
             DELETE FROM transactions
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         )
@@ -729,9 +655,9 @@ def get_transactions(
                 category,
                 created_at
             FROM transactions
-            WHERE user_id = ?
+            WHERE user_id = %s
             ORDER BY id DESC
-            LIMIT ?
+            LIMIT %s
             """,
             (
                 user_id,
@@ -764,7 +690,7 @@ def get_balance(
                     0
                 ) AS balance
             FROM transactions
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -784,8 +710,6 @@ def add_wallet_balance_with_transaction(
 
     with get_connection() as conn:
 
-        conn.execute("BEGIN IMMEDIATE")
-
         conn.execute(
             """
             INSERT INTO transactions (
@@ -796,7 +720,7 @@ def add_wallet_balance_with_transaction(
                 category,
                 created_at
             )
-            VALUES (?, ?, ?, 'income', ?, ?)
+            VALUES (%s, %s, %s, 'income', %s, %s)
             """,
             (
                 user_id,
@@ -823,7 +747,7 @@ def add_wallet_balance_with_transaction(
                     0
                 ) AS balance
             FROM transactions
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -843,8 +767,6 @@ def subtract_wallet_balance_with_transaction(
 
     with get_connection() as conn:
 
-        conn.execute("BEGIN IMMEDIATE")
-
         row = conn.execute(
             """
             SELECT
@@ -861,7 +783,7 @@ def subtract_wallet_balance_with_transaction(
                     0
                 ) AS balance
             FROM transactions
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -885,7 +807,7 @@ def subtract_wallet_balance_with_transaction(
                 category,
                 created_at
             )
-            VALUES (?, ?, ?, 'expense', ?, ?)
+            VALUES (%s, %s, %s, 'expense', %s, %s)
             """,
             (
                 user_id,
@@ -907,13 +829,11 @@ def normalize_card_number(
     card_number: str,
 ) -> str:
 
-    digits = "".join(
+    return "".join(
         char
         for char in str(card_number)
         if char.isdigit()
     )
-
-    return digits
 
 
 def mask_card_number(
@@ -927,10 +847,7 @@ def mask_card_number(
     if len(digits) <= 4:
         return digits
 
-    return (
-        "**** **** **** "
-        + digits[-4:]
-    )
+    return "**** **** **** " + digits[-4:]
 
 
 def add_bank_card(
@@ -957,7 +874,7 @@ def add_bank_card(
             """
             SELECT COUNT(*) AS count
             FROM bank_cards
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -968,7 +885,7 @@ def add_bank_card(
             else 0
         )
 
-        cursor = conn.execute(
+        row = conn.execute(
             """
             INSERT INTO bank_cards (
                 user_id,
@@ -979,7 +896,8 @@ def add_bank_card(
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
             """,
             (
                 user_id,
@@ -990,9 +908,9 @@ def add_bank_card(
                 created_at,
                 created_at,
             ),
-        )
+        ).fetchone()
 
-        return int(cursor.lastrowid)
+        return int(row["id"])
 
 
 def get_bank_cards(
@@ -1013,7 +931,7 @@ def get_bank_cards(
                 created_at,
                 updated_at
             FROM bank_cards
-            WHERE user_id = ?
+            WHERE user_id = %s
             ORDER BY is_default DESC, id DESC
             """,
             (user_id,),
@@ -1031,10 +949,7 @@ def get_bank_cards(
             )
         )
 
-        item.pop(
-            "card_number",
-            None,
-        )
+        item.pop("card_number", None)
 
         result.append(item)
 
@@ -1052,8 +967,8 @@ def get_bank_card(
             """
             SELECT *
             FROM bank_cards
-            WHERE id = ?
-              AND user_id = ?
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 card_id,
@@ -1075,8 +990,8 @@ def set_default_bank_card(
             """
             SELECT id
             FROM bank_cards
-            WHERE id = ?
-              AND user_id = ?
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 card_id,
@@ -1087,15 +1002,17 @@ def set_default_bank_card(
         if not card:
             return False
 
+        current_time = now_iso()
+
         conn.execute(
             """
             UPDATE bank_cards
             SET is_default = 0,
-                updated_at = ?
-            WHERE user_id = ?
+                updated_at = %s
+            WHERE user_id = %s
             """,
             (
-                now_iso(),
+                current_time,
                 user_id,
             ),
         )
@@ -1104,12 +1021,12 @@ def set_default_bank_card(
             """
             UPDATE bank_cards
             SET is_default = 1,
-                updated_at = ?
-            WHERE id = ?
-              AND user_id = ?
+                updated_at = %s
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
-                now_iso(),
+                current_time,
                 card_id,
                 user_id,
             ),
@@ -1125,11 +1042,31 @@ def delete_bank_card(
 
     with get_connection() as conn:
 
+        card = conn.execute(
+            """
+            SELECT is_default
+            FROM bank_cards
+            WHERE id = %s
+              AND user_id = %s
+            """,
+            (
+                card_id,
+                user_id,
+            ),
+        ).fetchone()
+
+        if not card:
+            return False
+
+        was_default = int(
+            card["is_default"] or 0
+        ) == 1
+
         cursor = conn.execute(
             """
             DELETE FROM bank_cards
-            WHERE id = ?
-              AND user_id = ?
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 card_id,
@@ -1137,7 +1074,37 @@ def delete_bank_card(
             ),
         )
 
-        return cursor.rowcount > 0
+        deleted = cursor.rowcount > 0
+
+        if deleted and was_default:
+
+            next_card = conn.execute(
+                """
+                SELECT id
+                FROM bank_cards
+                WHERE user_id = %s
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (user_id,),
+            ).fetchone()
+
+            if next_card:
+
+                conn.execute(
+                    """
+                    UPDATE bank_cards
+                    SET is_default = 1,
+                        updated_at = %s
+                    WHERE id = %s
+                    """,
+                    (
+                        now_iso(),
+                        next_card["id"],
+                    ),
+                )
+
+        return deleted
 
 
 # =========================================================
@@ -1158,13 +1125,11 @@ def deposit_by_card_once(
 
     with get_connection() as conn:
 
-        conn.execute("BEGIN IMMEDIATE")
-
         existing = conn.execute(
             """
             SELECT *
             FROM wallet_deposits
-            WHERE request_id = ?
+            WHERE request_id = %s
             """,
             (request_id,),
         ).fetchone()
@@ -1187,7 +1152,7 @@ def deposit_by_card_once(
                         0
                     ) AS balance
                 FROM transactions
-                WHERE user_id = ?
+                WHERE user_id = %s
                 """,
                 (user_id,),
             ).fetchone()
@@ -1204,8 +1169,8 @@ def deposit_by_card_once(
             """
             SELECT *
             FROM bank_cards
-            WHERE id = ?
-              AND user_id = ?
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 card_id,
@@ -1220,7 +1185,7 @@ def deposit_by_card_once(
 
         created_at = now_iso()
 
-        cursor = conn.execute(
+        row = conn.execute(
             """
             INSERT INTO wallet_deposits (
                 user_id,
@@ -1230,7 +1195,8 @@ def deposit_by_card_once(
                 status,
                 created_at
             )
-            VALUES (?, ?, ?, ?, 'completed', ?)
+            VALUES (%s, %s, %s, %s, 'completed', %s)
+            RETURNING id
             """,
             (
                 user_id,
@@ -1239,11 +1205,9 @@ def deposit_by_card_once(
                 request_id,
                 created_at,
             ),
-        )
+        ).fetchone()
 
-        deposit_id = int(
-            cursor.lastrowid
-        )
+        deposit_id = int(row["id"])
 
         conn.execute(
             """
@@ -1256,12 +1220,12 @@ def deposit_by_card_once(
                 created_at
             )
             VALUES (
-                ?,
+                %s,
                 'شارژ کیف پول',
-                ?,
+                %s,
                 'income',
                 'deposit',
-                ?
+                %s
             )
             """,
             (
@@ -1271,7 +1235,7 @@ def deposit_by_card_once(
             ),
         )
 
-        row = conn.execute(
+        balance_row = conn.execute(
             """
             SELECT
                 COALESCE(
@@ -1287,7 +1251,7 @@ def deposit_by_card_once(
                     0
                 ) AS balance
             FROM transactions
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -1295,7 +1259,7 @@ def deposit_by_card_once(
         return {
             "deposit_id": deposit_id,
             "balance": float(
-                row["balance"] or 0
+                balance_row["balance"] or 0
             ),
             "duplicate": False,
         }
@@ -1319,13 +1283,11 @@ def transfer_wallet_to_card_once(
 
     with get_connection() as conn:
 
-        conn.execute("BEGIN IMMEDIATE")
-
         existing = conn.execute(
             """
             SELECT *
             FROM card_transfers
-            WHERE request_id = ?
+            WHERE request_id = %s
             """,
             (request_id,),
         ).fetchone()
@@ -1348,7 +1310,7 @@ def transfer_wallet_to_card_once(
                         0
                     ) AS balance
                 FROM transactions
-                WHERE user_id = ?
+                WHERE user_id = %s
                 """,
                 (user_id,),
             ).fetchone()
@@ -1365,8 +1327,8 @@ def transfer_wallet_to_card_once(
             """
             SELECT *
             FROM bank_cards
-            WHERE id = ?
-              AND user_id = ?
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 card_id,
@@ -1395,7 +1357,7 @@ def transfer_wallet_to_card_once(
                     0
                 ) AS balance
             FROM transactions
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         ).fetchone()
@@ -1411,7 +1373,7 @@ def transfer_wallet_to_card_once(
 
         created_at = now_iso()
 
-        cursor = conn.execute(
+        row = conn.execute(
             """
             INSERT INTO card_transfers (
                 user_id,
@@ -1423,8 +1385,10 @@ def transfer_wallet_to_card_once(
                 updated_at
             )
             VALUES (
-                ?, ?, ?, ?, 'pending', ?, ?
+                %s, %s, %s, %s,
+                'pending', %s, %s
             )
+            RETURNING id
             """,
             (
                 user_id,
@@ -1434,11 +1398,9 @@ def transfer_wallet_to_card_once(
                 created_at,
                 created_at,
             ),
-        )
+        ).fetchone()
 
-        transfer_id = int(
-            cursor.lastrowid
-        )
+        transfer_id = int(row["id"])
 
         conn.execute(
             """
@@ -1451,12 +1413,12 @@ def transfer_wallet_to_card_once(
                 created_at
             )
             VALUES (
-                ?,
+                %s,
                 'انتقال به کارت',
-                ?,
+                %s,
                 'expense',
                 'card_transfer',
-                ?
+                %s
             )
             """,
             (
@@ -1466,7 +1428,6 @@ def transfer_wallet_to_card_once(
             ),
         )
 
-        # اعلان ثبت درخواست انتقال
         conn.execute(
             """
             INSERT INTO notifications (
@@ -1478,7 +1439,7 @@ def transfer_wallet_to_card_once(
                 is_read,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?, 0, ?)
+            VALUES (%s, %s, %s, %s, %s, 0, %s)
             """,
             (
                 user_id,
@@ -1525,13 +1486,14 @@ def get_card_transfer_requests(
                 ct.created_at,
                 ct.updated_at,
                 bc.bank_name,
-                bc.holder_name
+                bc.holder_name,
+                bc.card_number
             FROM card_transfers ct
             JOIN bank_cards bc
                 ON bc.id = ct.card_id
-            WHERE ct.user_id = ?
+            WHERE ct.user_id = %s
             ORDER BY ct.id DESC
-            LIMIT ?
+            LIMIT %s
             """,
             (
                 user_id,
@@ -1547,10 +1509,13 @@ def get_card_transfer_requests(
 
         item["masked_card_number"] = (
             mask_card_number(
-                get_card_number_for_transfer(
-                    item["card_id"]
-                )
+                item["card_number"]
             )
+        )
+
+        item.pop(
+            "card_number",
+            None,
         )
 
         result.append(item)
@@ -1568,7 +1533,7 @@ def get_card_number_for_transfer(
             """
             SELECT card_number
             FROM bank_cards
-            WHERE id = ?
+            WHERE id = %s
             """,
             (card_id,),
         ).fetchone()
@@ -1604,8 +1569,8 @@ def get_card_transfer_request(
             FROM card_transfers ct
             JOIN bank_cards bc
                 ON bc.id = ct.card_id
-            WHERE ct.id = ?
-              AND ct.user_id = ?
+            WHERE ct.id = %s
+              AND ct.user_id = %s
             """,
             (
                 transfer_id,
@@ -1660,7 +1625,7 @@ def get_card_transfer_request_by_id(
                 ON u.id = ct.user_id
             JOIN bank_cards bc
                 ON bc.id = ct.card_id
-            WHERE ct.id = ?
+            WHERE ct.id = %s
             """,
             (transfer_id,),
         ).fetchone()
@@ -1706,26 +1671,19 @@ def get_all_card_transfer_requests(
                 ct.status,
                 ct.created_at,
                 ct.updated_at,
-
                 u.username,
                 u.name,
                 u.email,
-
                 bc.bank_name,
                 bc.holder_name,
                 bc.card_number
-
             FROM card_transfers ct
-
             JOIN users u
                 ON u.id = ct.user_id
-
             JOIN bank_cards bc
                 ON bc.id = ct.card_id
-
             ORDER BY ct.id DESC
-
-            LIMIT ?
+            LIMIT %s
             """,
             (limit,),
         ).fetchall()
@@ -1771,13 +1729,12 @@ def update_card_transfer_status(
 
     with get_connection() as conn:
 
-        conn.execute("BEGIN IMMEDIATE")
-
         row = conn.execute(
             """
             SELECT *
             FROM card_transfers
-            WHERE id = ?
+            WHERE id = %s
+            FOR UPDATE
             """,
             (transfer_id,),
         ).fetchone()
@@ -1797,18 +1754,10 @@ def update_card_transfer_status(
 
         current_time = now_iso()
 
-        # -------------------------------------------------
-        # REFUND FOR FAILED / CANCELLED
-        # -------------------------------------------------
-
         if new_status in {
             "failed",
             "cancelled",
         }:
-
-            refund_title = (
-                "بازگشت وجه انتقال کارت"
-            )
 
             conn.execute(
                 """
@@ -1821,32 +1770,28 @@ def update_card_transfer_status(
                     created_at
                 )
                 VALUES (
-                    ?,
-                    ?,
-                    ?,
+                    %s,
+                    %s,
+                    %s,
                     'income',
                     'card_transfer_refund',
-                    ?
+                    %s
                 )
                 """,
                 (
                     row["user_id"],
-                    refund_title,
+                    "بازگشت وجه انتقال کارت",
                     row["amount"],
                     current_time,
                 ),
             )
 
-        # -------------------------------------------------
-        # UPDATE TRANSFER
-        # -------------------------------------------------
-
         conn.execute(
             """
             UPDATE card_transfers
-            SET status = ?,
-                updated_at = ?
-            WHERE id = ?
+            SET status = %s,
+                updated_at = %s
+            WHERE id = %s
             """,
             (
                 new_status,
@@ -1854,10 +1799,6 @@ def update_card_transfer_status(
                 transfer_id,
             ),
         )
-
-        # -------------------------------------------------
-        # CREATE NOTIFICATION
-        # -------------------------------------------------
 
         amount = float(
             row["amount"] or 0
@@ -1916,7 +1857,7 @@ def update_card_transfer_status(
                 is_read,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?, 0, ?)
+            VALUES (%s, %s, %s, %s, %s, 0, %s)
             """,
             (
                 row["user_id"],
@@ -1947,7 +1888,7 @@ def add_notification(
 
     with get_connection() as conn:
 
-        cursor = conn.execute(
+        row = conn.execute(
             """
             INSERT INTO notifications (
                 user_id,
@@ -1958,7 +1899,8 @@ def add_notification(
                 is_read,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?, 0, ?)
+            VALUES (%s, %s, %s, %s, %s, 0, %s)
+            RETURNING id
             """,
             (
                 user_id,
@@ -1968,9 +1910,9 @@ def add_notification(
                 transfer_id,
                 created_at,
             ),
-        )
+        ).fetchone()
 
-        return int(cursor.lastrowid)
+        return int(row["id"])
 
 
 def get_notifications(
@@ -2001,10 +1943,10 @@ def get_notifications(
                     created_at,
                     read_at
                 FROM notifications
-                WHERE user_id = ?
+                WHERE user_id = %s
                   AND is_read = 0
                 ORDER BY id DESC
-                LIMIT ?
+                LIMIT %s
                 """,
                 (
                     user_id,
@@ -2027,9 +1969,9 @@ def get_notifications(
                     created_at,
                     read_at
                 FROM notifications
-                WHERE user_id = ?
+                WHERE user_id = %s
                 ORDER BY id DESC
-                LIMIT ?
+                LIMIT %s
                 """,
                 (
                     user_id,
@@ -2063,8 +2005,8 @@ def get_notification(
                 created_at,
                 read_at
             FROM notifications
-            WHERE id = ?
-              AND user_id = ?
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 notification_id,
@@ -2085,7 +2027,7 @@ def get_unread_notification_count(
             """
             SELECT COUNT(*) AS count
             FROM notifications
-            WHERE user_id = ?
+            WHERE user_id = %s
               AND is_read = 0
             """,
             (user_id,),
@@ -2105,9 +2047,9 @@ def mark_notification_as_read(
             """
             UPDATE notifications
             SET is_read = 1,
-                read_at = ?
-            WHERE id = ?
-              AND user_id = ?
+                read_at = %s
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 now_iso(),
@@ -2129,8 +2071,8 @@ def mark_all_notifications_as_read(
             """
             UPDATE notifications
             SET is_read = 1,
-                read_at = ?
-            WHERE user_id = ?
+                read_at = %s
+            WHERE user_id = %s
               AND is_read = 0
             """,
             (
@@ -2152,8 +2094,8 @@ def delete_notification(
         cursor = conn.execute(
             """
             DELETE FROM notifications
-            WHERE id = ?
-              AND user_id = ?
+            WHERE id = %s
+              AND user_id = %s
             """,
             (
                 notification_id,
@@ -2173,7 +2115,7 @@ def delete_all_notifications(
         cursor = conn.execute(
             """
             DELETE FROM notifications
-            WHERE user_id = ?
+            WHERE user_id = %s
             """,
             (user_id,),
         )
@@ -2196,7 +2138,7 @@ def add_admin_action_log(
 
     with get_connection() as conn:
 
-        cursor = conn.execute(
+        row = conn.execute(
             """
             INSERT INTO admin_action_logs (
                 action,
@@ -2207,7 +2149,8 @@ def add_admin_action_log(
                 request_id,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
             """,
             (
                 action,
@@ -2218,9 +2161,9 @@ def add_admin_action_log(
                 request_id,
                 now_iso(),
             ),
-        )
+        ).fetchone()
 
-        return int(cursor.lastrowid)
+        return int(row["id"])
 
 
 def get_admin_action_logs(
@@ -2247,7 +2190,7 @@ def get_admin_action_logs(
                 created_at
             FROM admin_action_logs
             ORDER BY id DESC
-            LIMIT ?
+            LIMIT %s
             """,
             (limit,),
         ).fetchall()
@@ -2276,7 +2219,7 @@ def get_admin_action_log(
                 request_id,
                 created_at
             FROM admin_action_logs
-            WHERE id = ?
+            WHERE id = %s
             """,
             (log_id,),
         ).fetchone()
