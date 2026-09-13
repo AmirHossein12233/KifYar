@@ -1,20 +1,26 @@
 from __future__ import annotations
 
-from fastapi import Header, HTTPException
+from fastapi import HTTPException, Request
 
 from backend.auth import tokens
 
 
 def get_authenticated_user(
-    authorization: str | None = Header(default=None),
+    request: Request,
 ):
+    authorization = request.headers.get(
+        "Authorization"
+    )
+
     if not authorization:
         raise HTTPException(
             status_code=401,
             detail="ورود لازم است.",
         )
 
-    if not authorization.startswith("Bearer "):
+    if not authorization.startswith(
+        "Bearer "
+    ):
         raise HTTPException(
             status_code=401,
             detail="توکن نامعتبر است.",
@@ -28,7 +34,9 @@ def get_authenticated_user(
             detail="توکن نامعتبر است.",
         )
 
-    user_id = tokens.get(token)
+    user_id = tokens.get(
+        token
+    )
 
     if user_id is None:
         raise HTTPException(
@@ -43,10 +51,14 @@ def get_authenticated_user(
 
 
 def require_session_user_id(
-    authorization: str | None = Header(default=None),
+    request: Request,
 ) -> int:
-    authenticated_user = get_authenticated_user(
-        authorization=authorization
+    authenticated_user = (
+        get_authenticated_user(
+            request
+        )
     )
 
-    return int(authenticated_user["user_id"])
+    return int(
+        authenticated_user["user_id"]
+    )

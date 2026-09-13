@@ -4,7 +4,7 @@ import os
 import uuid
 from typing import Optional
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -15,13 +15,11 @@ from backend.database import (
     add_wallet_balance_with_transaction,
     delete_bank_card,
     delete_notification,
-    delete_transactions,
     delete_user,
     deposit_by_card_once,
     find_user_by_id,
     get_admin_action_logs,
     get_balance,
-    get_bank_card,
     get_bank_cards,
     get_card_transfer_request,
     get_card_transfer_request_by_id,
@@ -237,9 +235,13 @@ def health():
 # =========================================================
 
 @app.get("/api/profile")
-def get_profile():
+def get_profile(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     user = find_user_by_id(
         user_id
@@ -265,10 +267,13 @@ def get_profile():
 
 @app.put("/api/profile")
 def update_profile(
+    request: Request,
     payload: ProfileUpdateRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     name = payload.name.strip()
 
@@ -301,10 +306,13 @@ def update_profile(
 
 @app.put("/api/password")
 def change_password(
+    request: Request,
     payload: PasswordChangeRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     user = find_user_by_id(
         user_id
@@ -316,9 +324,13 @@ def change_password(
             detail="کاربر پیدا نشد.",
         )
 
-    current_password = payload.current_password
+    current_password = (
+        payload.current_password
+    )
 
-    new_password = payload.new_password
+    new_password = (
+        payload.new_password
+    )
 
     if not current_password:
         raise HTTPException(
@@ -361,9 +373,13 @@ def change_password(
 
 
 @app.delete("/api/account")
-def remove_account():
+def remove_account(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     ok = delete_user(
         user_id
@@ -385,9 +401,13 @@ def remove_account():
 # =========================================================
 
 @app.get("/api/wallet/balance")
-def wallet_balance():
+def wallet_balance(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     return {
         "balance": get_balance(
@@ -398,10 +418,13 @@ def wallet_balance():
 
 @app.post("/api/wallet/add")
 def wallet_add(
+    request: Request,
     payload: WalletAmountRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     amount = validate_amount(
         payload.amount
@@ -420,10 +443,13 @@ def wallet_add(
 
 @app.post("/api/wallet/subtract")
 def wallet_subtract(
+    request: Request,
     payload: WalletAmountRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     amount = validate_amount(
         payload.amount
@@ -431,9 +457,11 @@ def wallet_subtract(
 
     try:
 
-        balance = subtract_wallet_balance_with_transaction(
-            user_id,
-            amount,
+        balance = (
+            subtract_wallet_balance_with_transaction(
+                user_id,
+                amount,
+            )
         )
 
     except ValueError as exc:
@@ -451,10 +479,13 @@ def wallet_subtract(
 
 @app.post("/api/wallet/deposit")
 def wallet_deposit(
+    request: Request,
     payload: CardDepositRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     amount = validate_amount(
         payload.amount
@@ -485,10 +516,13 @@ def wallet_deposit(
 
 @app.post("/api/wallet/withdraw")
 def wallet_withdraw(
+    request: Request,
     payload: WalletWithdrawRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     amount = validate_amount(
         payload.amount
@@ -496,11 +530,13 @@ def wallet_withdraw(
 
     try:
 
-        balance = subtract_wallet_balance_with_transaction(
-            user_id,
-            amount,
-            title="برداشت از کیف پول",
-            category="withdraw",
+        balance = (
+            subtract_wallet_balance_with_transaction(
+                user_id,
+                amount,
+                title="برداشت از کیف پول",
+                category="withdraw",
+            )
         )
 
     except ValueError as exc:
@@ -518,10 +554,13 @@ def wallet_withdraw(
 
 @app.post("/api/wallet/transfer-to-card")
 def wallet_transfer_to_card(
+    request: Request,
     payload: WalletCardTransferRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     amount = validate_amount(
         payload.amount
@@ -551,9 +590,13 @@ def wallet_transfer_to_card(
 
 
 @app.get("/api/wallet/card-transfers")
-def wallet_card_transfers():
+def wallet_card_transfers(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     return get_card_transfer_requests(
         user_id
@@ -562,10 +605,13 @@ def wallet_card_transfers():
 
 @app.get("/api/wallet/card-transfers/{transfer_id}")
 def wallet_card_transfer(
+    request: Request,
     transfer_id: int,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     transfer = get_card_transfer_request(
         user_id,
@@ -587,10 +633,13 @@ def wallet_card_transfer(
 
 @app.get("/api/notifications")
 def notifications(
+    request: Request,
     limit: int = 100,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     if limit < 1:
         limit = 1
@@ -605,9 +654,13 @@ def notifications(
 
 
 @app.get("/api/notifications/unread-count")
-def notification_unread_count():
+def notification_unread_count(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     return {
         "unread_count": get_unread_notification_count(
@@ -620,10 +673,13 @@ def notification_unread_count():
     "/api/notifications/{notification_id}/read"
 )
 def notification_read(
+    request: Request,
     notification_id: int,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     ok = mark_notification_as_read(
         user_id=user_id,
@@ -644,9 +700,13 @@ def notification_read(
 @app.patch(
     "/api/notifications/read-all"
 )
-def notifications_read_all():
+def notifications_read_all(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     count = mark_all_notifications_as_read(
         user_id
@@ -662,10 +722,13 @@ def notifications_read_all():
     "/api/notifications/{notification_id}"
 )
 def notification_delete(
+    request: Request,
     notification_id: int,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     ok = delete_notification(
         user_id=user_id,
@@ -688,9 +751,13 @@ def notification_delete(
 # =========================================================
 
 @app.get("/api/transactions")
-def transactions():
+def transactions(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     return get_transactions(
         user_id
@@ -699,10 +766,13 @@ def transactions():
 
 @app.post("/api/transactions")
 def create_transaction(
+    request: Request,
     payload: TransactionRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     if payload.amount <= 0:
         raise HTTPException(
@@ -738,9 +808,13 @@ def create_transaction(
 # =========================================================
 
 @app.get("/api/cards")
-def cards():
+def cards(
+    request: Request,
+):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     return get_bank_cards(
         user_id
@@ -749,10 +823,13 @@ def cards():
 
 @app.post("/api/cards")
 def create_card(
+    request: Request,
     payload: BankCardRequest,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     try:
 
@@ -778,10 +855,13 @@ def create_card(
 
 @app.put("/api/cards/{card_id}/default")
 def default_card(
+    request: Request,
     card_id: int,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     ok = set_default_bank_card(
         user_id,
@@ -801,10 +881,13 @@ def default_card(
 
 @app.delete("/api/cards/{card_id}")
 def remove_card(
+    request: Request,
     card_id: int,
 ):
 
-    user_id = require_session_user_id()
+    user_id = require_session_user_id(
+        request
+    )
 
     ok = delete_bank_card(
         user_id,
