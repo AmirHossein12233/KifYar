@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>مدیریت تسویه‌ها | KifYar</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fb;
+            color: #1f2937;
+            font-family: Tahoma, Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .login-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            min-width: 220px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 10px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .warning {
+            background: #d97706;
+            color: white;
+        }
+
+        .secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow:
+                0 5px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .summary-title {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .summary-number {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .settlements {
+            display: grid;
+            gap: 16px;
+        }
+
+        .settlement {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow:
+                0 5px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .settlement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .transfer-id {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-processing {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-failed,
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .info-label {
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .amount {
+            font-size: 22px;
+            color: #16a34a;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .message.success-message {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .message.error-message {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 16px;
+            color: #64748b;
+        }
+
+        @media (max-width: 800px) {
+            .summary {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 10px;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .login-row {
+                flex-direction: column;
+            }
+
+            input {
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .actions button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>مدیریت تسویه‌های KifYar</h1>
+
+    <div class="panel">
+
+        <h3>ورود مدیریت</h3>
+
+        <div class="login-row">
+
+            <input
+                id="adminKey"
+                type="password"
+                placeholder="ADMIN_KEY"
+                autocomplete="off"
+            >
+
+            <button
+                class="primary"
+                onclick="loadSettlements()"
+            >
+                ورود و دریافت درخواست‌ها
+            </button>
+
+        </div>
+
+        <div id="message" class="message"></div>
+
+    </div>
+
+
+    <div class="summary">
+
+        <div class="summary-card">
+            <div class="summary-title">
+                کل درخواست‌ها
+            </div>
+
+            <div
+                id="totalCount"
+                class="summary-number"
+            >
+                ۰
+            </div>
+        </div>
+
+
+        <div class="summary-card">
+            <div class="summary-title">
+                در انتظار
+            </div>
+
+            <div
+                id="pendingCount"
+                class="summary-number"
+            >
+                ۰
+            </div>
+        </div>
+
+
+        <div class="summary-card">
+            <div class="summary-title">
+                در حال پردازش
+            </div>
+
+            <div
+                id="processingCount"
+                class="summary-number"
+            >
+                ۰
+            </div>
+        </div>
+
+
+        <div class="summary-card">
+            <div class="summary-title">
+                تکمیل‌شده
+            </div>
+
+            <div
+                id="completedCount"
+                class="summary-number"
+            >
+                ۰
+            </div>
+        </div>
+
+    </div>
+
+
+    <br>
+
+
+    <div
+        id="settlements"
+        class="settlements"
+    >
+
+        <div class="empty">
+            برای دریافت درخواست‌ها، کلید مدیریت را وارد کنید.
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL =
+    "https://kifyar-api.onrender.com";
+
+
+function getAdminKey() {
+
+    return document
+        .getElementById("adminKey")
+        .value
+        .trim();
+}
+
+
+function showMessage(
+    text,
+    type = "success"
+) {
+
+    const element =
+        document.getElementById("message");
+
+    element.textContent = text;
+
+    element.className =
+        "message " +
+        (
+            type === "error"
+                ? "error-message"
+                : "success-message"
+        );
+
+}
+
+
+function hideMessage() {
+
+    const element =
+        document.getElementById("message");
+
+    element.style.display = "none";
+}
+
+
+function statusText(status) {
+
+    const map = {
+
+        pending:
+            "در انتظار بررسی",
+
+        approved:
+            "تأیید شده",
+
+        processing:
+            "در حال پردازش",
+
+        completed:
+            "تکمیل شده",
+
+        failed:
+            "ناموفق",
+
+        rejected:
+            "رد شده"
+
+    };
+
+    return map[status] || status;
+}
+
+
+function statusClass(status) {
+
+    return (
+        "status status-" +
+        String(status || "")
+            .toLowerCase()
+    );
+}
+
+
+function formatMoney(amount) {
+
+    const number =
+        Number(amount || 0);
+
+    return number.toLocaleString(
+        "fa-IR"
+    ) + " تومان";
+}
+
+
+function escapeHtml(value) {
+
+    return String(
+        value ?? ""
+    )
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+async function apiRequest(
+    path,
+    options = {}
+) {
+
+    const adminKey =
+        getAdminKey();
+
+    const headers = {
+        "Content-Type":
+            "application/json",
+
+        "X-Admin-Key":
+            adminKey,
+
+        ...(options.headers || {})
+    };
+
+    const response =
+        await fetch(
+            API_URL + path,
+            {
+                ...options,
+                headers
+            }
+        );
+
+    let data = null;
+
+    try {
+
+        data =
+            await response.json();
+
+    } catch {
+
+        data = null;
+
+    }
+
+    if (!response.ok) {
+
+        throw new Error(
+            data?.detail ||
+            data?.message ||
+            "خطا در ارتباط با سرور."
+        );
+
+    }
+
+    return data;
+}
+
+
+async function loadSettlements() {
+
+    hideMessage();
+
+    const container =
+        document.getElementById(
+            "settlements"
+        );
+
+    container.innerHTML =
+        `<div class="empty">
+            در حال دریافت درخواست‌ها...
+        </div>`;
+
+    try {
+
+        const data =
+            await apiRequest(
+                "/api/admin/settlements"
+            );
+
+        const items =
+            Array.isArray(data?.items)
+                ? data.items
+                : [];
+
+        updateSummary(
+            items
+        );
+
+        renderSettlements(
+            items
+        );
+
+        showMessage(
+            "درخواست‌ها با موفقیت دریافت شدند."
+        );
+
+    } catch (error) {
+
+        container.innerHTML =
+            `<div class="empty">
+                دریافت اطلاعات ناموفق بود.
+            </div>`;
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+function updateSummary(
+    items
+) {
+
+    const total =
+        items.length;
+
+    const pending =
+        items.filter(
+            item =>
+                item.status === "pending"
+        ).length;
+
+    const processing =
+        items.filter(
+            item =>
+                item.status === "processing"
+        ).length;
+
+    const completed =
+        items.filter(
+            item =>
+                item.status === "completed"
+        ).length;
+
+    document
+        .getElementById(
+            "totalCount"
+        )
+        .textContent =
+        total.toLocaleString(
+            "fa-IR"
+        );
+
+    document
+        .getElementById(
+            "pendingCount"
+        )
+        .textContent =
+        pending.toLocaleString(
+            "fa-IR"
+        );
+
+    document
+        .getElementById(
+            "processingCount"
+        )
+        .textContent =
+        processing.toLocaleString(
+            "fa-IR"
+        );
+
+    document
+        .getElementById(
+            "completedCount"
+        )
+        .textContent =
+        completed.toLocaleString(
+            "fa-IR"
+        );
+}
+
+
+function renderSettlements(
+    items
+) {
+
+    const container =
+        document.getElementById(
+            "settlements"
+        );
+
+    if (!items.length) {
+
+        container.innerHTML =
+            `<div class="empty">
+                هیچ درخواست تسویه‌ای وجود ندارد.
+            </div>`;
+
+        return;
+    }
+
+    container.innerHTML =
+        items
+            .map(
+                renderSettlement
+            )
+            .join("");
+
+}
+
+
+function renderSettlement(
+    item
+) {
+
+    const status =
+        item.status || "pending";
+
+    const id =
+        Number(item.id || 0);
+
+    const amount =
+        formatMoney(
+            item.amount
+        );
+
+    const reserved =
+        formatMoney(
+            item.reserved_amount
+        );
+
+    const user =
+        escapeHtml(
+            item.username ||
+            item.user_username ||
+            "-"
+        );
+
+    const email =
+        escapeHtml(
+            item.email || "-"
+        );
+
+    const bank =
+        escapeHtml(
+            item.bank_name || "-"
+        );
+
+    const card =
+        escapeHtml(
+            item.masked_card_number ||
+            item.card_number ||
+            "-"
+        );
+
+    const requestId =
+        escapeHtml(
+            item.request_id || "-"
+        );
+
+    const provider =
+        escapeHtml(
+            item.provider || "sep"
+        );
+
+    const providerTransferId =
+        escapeHtml(
+            item.provider_transfer_id ||
+            "-"
+        );
+
+    const createdAt =
+        escapeHtml(
+            item.created_at || "-"
+        );
+
+    const updatedAt =
+        escapeHtml(
+            item.updated_at || "-"
+        );
+
+    const failureReason =
+        escapeHtml(
+            item.failure_reason || "-"
+        );
+
+    return `
+        <div class="settlement">
+
+            <div class="settlement-header">
+
+                <div class="transfer-id">
+                    تسویه #${id}
+                </div>
+
+                <div
+                    class="${statusClass(status)}"
+                >
+                    ${escapeHtml(
+                        statusText(status)
+                    )}
+                </div>
+
+            </div>
+
+
+            <div class="info-grid">
+
+                <div class="info">
+                    <div class="info-label">
+                        مبلغ
+                    </div>
+
+                    <div class="info-value amount">
+                        ${amount}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        مبلغ رزرو شده
+                    </div>
+
+                    <div class="info-value">
+                        ${reserved}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        کاربر
+                    </div>
+
+                    <div class="info-value">
+                        ${user}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        ایمیل
+                    </div>
+
+                    <div class="info-value">
+                        ${email}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        بانک
+                    </div>
+
+                    <div class="info-value">
+                        ${bank}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        کارت مقصد
+                    </div>
+
+                    <div class="info-value">
+                        ${card}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        شناسه درخواست
+                    </div>
+
+                    <div class="info-value">
+                        ${requestId}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        Provider
+                    </div>
+
+                    <div class="info-value">
+                        ${provider}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        شناسه Provider
+                    </div>
+
+                    <div class="info-value">
+                        ${providerTransferId}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        ایجاد
+                    </div>
+
+                    <div class="info-value">
+                        ${createdAt}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        آخرین بروزرسانی
+                    </div>
+
+                    <div class="info-value">
+                        ${updatedAt}
+                    </div>
+                </div>
+
+
+                <div class="info">
+                    <div class="info-label">
+                        دلیل خطا
+                    </div>
+
+                    <div class="info-value">
+                        ${failureReason}
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                ${renderActions(
+                    id,
+                    status
+                )}
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+function renderActions(
+    id,
+    status
+) {
+
+    let html = "";
+
+
+    if (status === "pending") {
+
+        html += `
+            <button
+                class="success"
+                onclick="approveSettlement(${id})"
+            >
+                تأیید
+            </button>
+
+            <button
+                class="danger"
+                onclick="rejectSettlement(${id})"
+            >
+                رد درخواست
+            </button>
+        `;
+
+    }
+
+
+    if (status === "approved") {
+
+        html += `
+            <button
+                class="warning"
+                onclick="startProcessing(${id})"
+            >
+                شروع پردازش
+            </button>
+
+            <button
+                class="danger"
+                onclick="rejectSettlement(${id})"
+            >
+                رد درخواست
+            </button>
+        `;
+
+    }
+
+
+    if (status === "processing") {
+
+        html += `
+            <button
+                class="success"
+                onclick="completeSettlement(${id})"
+            >
+                تکمیل تسویه
+            </button>
+
+            <button
+                class="danger"
+                onclick="failSettlement(${id})"
+            >
+                ثبت شکست
+            </button>
+        `;
+
+    }
+
+
+    if (
+        status === "completed" ||
+        status === "failed" ||
+        status === "rejected"
+    ) {
+
+        html += `
+            <span
+                style="
+                    color:#64748b;
+                    padding:10px;
+                "
+            >
+                عملیات بیشتری برای این درخواست وجود ندارد.
+            </span>
+        `;
+
+    }
+
+
+    return html;
+}
+
+
+async function approveSettlement(
+    id
+) {
+
+    if (
+        !confirm(
+            "آیا این درخواست را تأیید می‌کنید؟"
+        )
+    ) {
+        return;
+    }
+
+    try {
+
+        await apiRequest(
+            `/api/admin/settlements/${id}/approve`,
+            {
+                method: "POST"
+            }
+        );
+
+        showMessage(
+            "درخواست با موفقیت تأیید شد."
+        );
+
+        await loadSettlements();
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+}
+
+
+async function rejectSettlement(
+    id
+) {
+
+    const reason =
+        prompt(
+            "دلیل رد درخواست را وارد کنید:"
+        );
+
+    if (
+        reason === null ||
+        !reason.trim()
+    ) {
+        return;
+    }
+
+    try {
+
+        await apiRequest(
+            `/api/admin/settlements/${id}/reject`,
+            {
+                method: "POST",
+
+                body: JSON.stringify({
+                    reason:
+                        reason.trim()
+                })
+            }
+        );
+
+        showMessage(
+            "درخواست رد شد."
+        );
+
+        await loadSettlements();
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+}
+
+
+async function startProcessing(
+    id
+) {
+
+    if (
+        !confirm(
+            "پردازش این درخواست شروع شود؟"
+        )
+    ) {
+        return;
+    }
+
+    try {
+
+        await apiRequest(
+            `/api/admin/settlements/${id}/processing`,
+            {
+                method: "POST"
+            }
+        );
+
+        showMessage(
+            "درخواست وارد مرحله پردازش شد."
+        );
+
+        await loadSettlements();
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+}
+
+
+async function completeSettlement(
+    id
+) {
+
+    const providerTransferId =
+        prompt(
+            "شناسه تراکنش Provider را وارد کنید:"
+        );
+
+    if (
+        providerTransferId === null ||
+        !providerTransferId.trim()
+    ) {
+        return;
+    }
+
+    try {
+
+        await apiRequest(
+            `/api/admin/settlements/${id}/complete`,
+            {
+                method: "POST",
+
+                body: JSON.stringify({
+                    provider_transfer_id:
+                        providerTransferId.trim(),
+
+                    provider_status:
+                        "completed"
+                })
+            }
+        );
+
+        showMessage(
+            "تسویه با موفقیت تکمیل شد."
+        );
+
+        await loadSettlements();
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+}
+
+
+async function failSettlement(
+    id
+) {
+
+    const reason =
+        prompt(
+            "دلیل شکست تسویه را وارد کنید:"
+        );
+
+    if (
+        reason === null ||
+        !reason.trim()
+    ) {
+        return;
+    }
+
+    try {
+
+        await apiRequest(
+            `/api/admin/settlements/${id}/fail`,
+            {
+                method: "POST",
+
+                body: JSON.stringify({
+                    reason:
+                        reason.trim()
+                })
+            }
+        );
+
+        showMessage(
+            "تسویه به عنوان ناموفق ثبت شد."
+        );
+
+        await loadSettlements();
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+}
+
+
+document
+    .getElementById("adminKey")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                loadSettlements();
+
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>
