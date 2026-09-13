@@ -1,7 +1,9 @@
 ﻿```html
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -12,19 +14,26 @@
     <title>داشبورد - کیف‌یار</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            font-family: Tahoma, Arial, sans-serif;
+            font-family:
+                Tahoma,
+                Arial,
+                sans-serif;
             background: #f4f6f8;
             color: #222;
         }
 
         .container {
-            width: min(1100px, 94%);
+            width: min(
+                1100px,
+                94%
+            );
             margin: 30px auto;
         }
 
@@ -33,7 +42,14 @@
             border-radius: 20px;
             padding: 24px;
             margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
         }
 
         .header-top {
@@ -44,7 +60,8 @@
         }
 
         .header h1 {
-            margin: 0 0 8px;
+            margin:
+                0 0 8px;
             font-size: 25px;
         }
 
@@ -132,7 +149,8 @@
 
         .cards {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns:
+                repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -141,7 +159,14 @@
             background: white;
             border-radius: 18px;
             padding: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
         }
 
         .card-title {
@@ -177,7 +202,14 @@
             border-radius: 18px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
         }
 
         .section-header {
@@ -279,7 +311,8 @@
 
         .quick-actions {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns:
+                repeat(4, 1fr);
             gap: 12px;
         }
 
@@ -341,16 +374,21 @@
         }
 
         @media (max-width: 900px) {
+
             .cards {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns:
+                    repeat(2, 1fr);
             }
 
             .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns:
+                    repeat(2, 1fr);
             }
+
         }
 
         @media (max-width: 600px) {
+
             .container {
                 width: 94%;
                 margin: 15px auto;
@@ -369,7 +407,8 @@
             }
 
             .quick-actions {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns:
+                    1fr 1fr;
             }
 
             .transaction {
@@ -379,19 +418,29 @@
             .transaction-amount {
                 font-size: 13px;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
 <div class="container">
+
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
 
     <div class="header">
 
         <div class="header-top">
 
             <div>
+
                 <h1 id="welcomeText">
                     داشبورد کیف‌یار
                 </h1>
@@ -399,13 +448,16 @@
                 <p>
                     مدیریت ساده و سریع امور مالی
                 </p>
+
             </div>
+
 
             <a
                 href="notifications.html"
                 class="notification-button"
                 title="اعلان‌ها"
             >
+
                 🔔
 
                 <span
@@ -414,9 +466,11 @@
                 >
                     0
                 </span>
+
             </a>
 
         </div>
+
 
         <div class="actions">
 
@@ -427,12 +481,14 @@
                 ＋ تراکنش جدید
             </a>
 
+
             <a
                 href="wallet.html"
                 class="secondary"
             >
                 💰 کیف پول
             </a>
+
 
             <a
                 href="cards.html"
@@ -441,6 +497,7 @@
                 💳 کارت‌های بانکی
             </a>
 
+
             <a
                 href="reports.html"
                 class="secondary"
@@ -448,12 +505,14 @@
                 📊 گزارش‌ها
             </a>
 
+
             <a
                 href="profile.html"
                 class="secondary"
             >
                 👤 پروفایل
             </a>
+
 
             <a
                 href="settings.html"
@@ -467,7 +526,12 @@
     </div>
 
 
+    <!-- =====================================================
+         SUMMARY CARDS
+         ===================================================== -->
+
     <div class="cards">
+
 
         <div class="card">
 
@@ -535,6 +599,10 @@
     </div>
 
 
+    <!-- =====================================================
+         QUICK ACTIONS
+         ===================================================== -->
+
     <div class="section">
 
         <div class="section-header">
@@ -545,16 +613,21 @@
 
         </div>
 
+
         <div class="quick-actions">
+
 
             <a
                 href="wallet.html"
                 class="quick-action"
             >
+
                 <span class="quick-icon">
                     💰
                 </span>
+
                 کیف پول
+
             </a>
 
 
@@ -562,10 +635,13 @@
                 href="cards.html"
                 class="quick-action"
             >
+
                 <span class="quick-icon">
                     💳
                 </span>
+
                 کارت‌های بانکی
+
             </a>
 
 
@@ -573,10 +649,13 @@
                 href="transactions.html"
                 class="quick-action"
             >
+
                 <span class="quick-icon">
                     🧾
                 </span>
+
                 تراکنش‌ها
+
             </a>
 
 
@@ -584,10 +663,13 @@
                 href="reports.html"
                 class="quick-action"
             >
+
                 <span class="quick-icon">
                     📊
                 </span>
+
                 گزارش‌ها
+
             </a>
 
 
@@ -595,11 +677,13 @@
                 href="notifications.html"
                 class="quick-action"
             >
+
                 <span class="quick-icon">
                     🔔
                 </span>
 
                 اعلان‌ها
+
 
                 <span
                     id="quickNotificationCount"
@@ -621,10 +705,13 @@
                 href="profile.html"
                 class="quick-action"
             >
+
                 <span class="quick-icon">
                     👤
                 </span>
+
                 پروفایل
+
             </a>
 
 
@@ -632,16 +719,23 @@
                 href="settings.html"
                 class="quick-action"
             >
+
                 <span class="quick-icon">
                     ⚙️
                 </span>
+
                 تنظیمات
+
             </a>
 
         </div>
 
     </div>
 
+
+    <!-- =====================================================
+         TRANSACTIONS
+         ===================================================== -->
 
     <div class="section">
 
@@ -650,6 +744,7 @@
             <h2>
                 آخرین تراکنش‌ها
             </h2>
+
 
             <div>
 
@@ -660,6 +755,7 @@
                 >
                     ↻ بروزرسانی
                 </button>
+
 
                 <a
                     href="transactions.html"
@@ -691,17 +787,36 @@
 
 <script>
 
-const API_URL = "https://kifyar-api.onrender.com";
+
+// =========================================================
+// API
+// =========================================================
+
+const API_URL =
+    "https://kifyar-api.onrender.com";
+
+
+// =========================================================
+// AUTH
+// =========================================================
 
 const token =
-    localStorage.getItem("kifyar_token");
+    localStorage.getItem(
+        "kifyar_token"
+    );
+
 
 if (!token) {
 
-    window.location.href = "login.html";
+    window.location.href =
+        "login.html";
 
 }
 
+
+// =========================================================
+// CATEGORY NAMES
+// =========================================================
 
 const categoryNames = {
 
@@ -725,32 +840,69 @@ const categoryNames = {
 
     income: "درآمد",
 
+    deposit: "واریز",
+
+    withdraw: "برداشت",
+
+    transfer: "انتقال",
+
     other: "سایر"
 
 };
 
 
-function formatMoney(value) {
+// =========================================================
+// FORMAT MONEY
+// =========================================================
+
+function formatMoney(
+    value
+) {
 
     return (
-        Number(value || 0).toLocaleString("fa-IR")
-        + " تومان"
+        Number(
+            value || 0
+        ).toLocaleString(
+            "fa-IR"
+        )
+        +
+        " تومان"
     );
 
 }
 
 
-function formatDate(value) {
+// =========================================================
+// FORMAT DATE
+// =========================================================
+
+function formatDate(
+    value
+) {
 
     if (!value) {
+
         return "بدون تاریخ";
+
     }
 
-    const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
-        return String(value);
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return String(
+            value
+        );
+
     }
+
 
     return date.toLocaleString(
         "fa-IR",
@@ -766,45 +918,88 @@ function formatDate(value) {
 }
 
 
-function escapeHtml(value) {
+// =========================================================
+// ESCAPE HTML
+// =========================================================
 
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
 
-function normalizeTransactionType(type) {
+// =========================================================
+// TRANSACTION TYPE
+// =========================================================
+
+function normalizeTransactionType(
+    type
+) {
 
     const value =
-        String(type || "")
+        String(
+            type || ""
+        )
             .toLowerCase()
             .trim();
+
 
     if (
         value === "income" ||
         value === "deposit" ||
         value === "credit"
     ) {
+
         return "income";
+
     }
+
 
     if (
         value === "expense" ||
         value === "withdraw" ||
+        value === "withdrawal" ||
         value === "debit"
     ) {
+
         return "expense";
+
     }
+
 
     return value;
 
 }
 
+
+// =========================================================
+// API REQUEST
+// =========================================================
 
 async function apiRequest(
     endpoint,
@@ -812,10 +1007,14 @@ async function apiRequest(
 ) {
 
     const headers = {
+
         ...(options.headers || {}),
+
         "Authorization":
             `Bearer ${token}`
+
     };
+
 
     const response =
         await fetch(
@@ -826,14 +1025,23 @@ async function apiRequest(
             }
         );
 
-    if (response.status === 401) {
+
+    if (
+        response.status ===
+        401
+    ) {
 
         localStorage.removeItem(
             "kifyar_token"
         );
 
+        localStorage.removeItem(
+            "kifyar_user"
+        );
+
         window.location.href =
             "login.html";
+
 
         throw new Error(
             "جلسه ورود منقضی شده است."
@@ -841,10 +1049,15 @@ async function apiRequest(
 
     }
 
+
     return response;
 
 }
 
+
+// =========================================================
+// PROFILE
+// =========================================================
 
 async function loadProfile() {
 
@@ -855,26 +1068,52 @@ async function loadProfile() {
                 "/api/profile"
             );
 
-        if (!response.ok) {
+
+        if (
+            !response.ok
+        ) {
+
             return;
+
         }
+
 
         const data =
             await response.json();
 
+
         const user =
-            data.user || data;
+            data.user ||
+            data;
 
-        if (user.name) {
 
+        const welcome =
             document.getElementById(
                 "welcomeText"
-            ).textContent =
+            );
+
+
+        if (
+            user &&
+            user.name
+        ) {
+
+            welcome.textContent =
                 `سلام ${user.name} 👋`;
+
+        } else if (
+            user &&
+            user.username
+        ) {
+
+            welcome.textContent =
+                `سلام ${user.username} 👋`;
 
         }
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.error(
             "Profile error:",
@@ -886,14 +1125,27 @@ async function loadProfile() {
 }
 
 
+// =========================================================
+// BALANCE
+// =========================================================
+
 async function loadBalance() {
+
+    /*
+     * مسیر صحیح موجودی در backend/main.py:
+     *
+     * /api/wallet/balance
+     */
 
     const response =
         await apiRequest(
-            "/api/balance"
+            "/api/wallet/balance"
         );
 
-    if (!response.ok) {
+
+    if (
+        !response.ok
+    ) {
 
         throw new Error(
             "دریافت موجودی ناموفق بود."
@@ -901,8 +1153,10 @@ async function loadBalance() {
 
     }
 
+
     const data =
         await response.json();
+
 
     const balance =
         Number(
@@ -911,13 +1165,20 @@ async function loadBalance() {
             0
         );
 
+
     document.getElementById(
         "balance"
     ).textContent =
-        formatMoney(balance);
+        formatMoney(
+            balance
+        );
 
 }
 
+
+// =========================================================
+// TRANSACTIONS
+// =========================================================
 
 async function loadTransactions() {
 
@@ -926,7 +1187,10 @@ async function loadTransactions() {
             "/api/transactions"
         );
 
-    if (!response.ok) {
+
+    if (
+        !response.ok
+    ) {
 
         throw new Error(
             "دریافت تراکنش‌ها ناموفق بود."
@@ -934,17 +1198,30 @@ async function loadTransactions() {
 
     }
 
+
     const data =
         await response.json();
 
+
     let transactions = [];
 
-    if (Array.isArray(data)) {
 
-        transactions = data;
+    if (
+        Array.isArray(
+            data
+        )
+    ) {
 
-    } else if (
-        Array.isArray(data.transactions)
+        transactions =
+            data;
+
+    }
+
+    else if (
+        data &&
+        Array.isArray(
+            data.transactions
+        )
     ) {
 
         transactions =
@@ -952,13 +1229,12 @@ async function loadTransactions() {
 
     }
 
-    /*
-     * جدیدترین تراکنش را اول قرار می‌دهیم.
-     * این باعث می‌شود برداشت تازه کیف پول
-     * در ابتدای لیست نمایش داده شود.
-     */
+
     transactions.sort(
-        (a, b) => {
+        (
+            a,
+            b
+        ) => {
 
             const dateA =
                 new Date(
@@ -968,6 +1244,7 @@ async function loadTransactions() {
                     0
                 ).getTime();
 
+
             const dateB =
                 new Date(
                     b.created_at ||
@@ -976,14 +1253,20 @@ async function loadTransactions() {
                     0
                 ).getTime();
 
-            return dateB - dateA;
+
+            return (
+                dateB -
+                dateA
+            );
 
         }
     );
 
+
     calculateSummary(
         transactions
     );
+
 
     renderLatestTransactions(
         transactions
@@ -992,20 +1275,28 @@ async function loadTransactions() {
 }
 
 
+// =========================================================
+// SUMMARY
+// =========================================================
+
 function calculateSummary(
     transactions
 ) {
 
     let income = 0;
+
     let expense = 0;
+
 
     transactions.forEach(
         transaction => {
 
             const amount =
                 Number(
-                    transaction.amount || 0
+                    transaction.amount ||
+                    0
                 );
+
 
             const type =
                 normalizeTransactionType(
@@ -1013,13 +1304,22 @@ function calculateSummary(
                     transaction.type
                 );
 
-            if (type === "income") {
 
-                income += amount;
+            if (
+                type === "income"
+            ) {
 
-            } else if (type === "expense") {
+                income +=
+                    amount;
 
-                expense += amount;
+            }
+
+            else if (
+                type === "expense"
+            ) {
+
+                expense +=
+                    amount;
 
             }
 
@@ -1030,24 +1330,33 @@ function calculateSummary(
     document.getElementById(
         "totalIncome"
     ).textContent =
-        formatMoney(income);
+        formatMoney(
+            income
+        );
 
 
     document.getElementById(
         "totalExpense"
     ).textContent =
-        formatMoney(expense);
+        formatMoney(
+            expense
+        );
 
 
     document.getElementById(
         "transactionCount"
     ).textContent =
-        transactions.length.toLocaleString(
-            "fa-IR"
-        );
+        transactions.length
+            .toLocaleString(
+                "fa-IR"
+            );
 
 }
 
+
+// =========================================================
+// WALLET WITHDRAWAL
+// =========================================================
 
 function isWalletWithdrawal(
     transaction
@@ -1055,17 +1364,49 @@ function isWalletWithdrawal(
 
     const title =
         String(
-            transaction.title || ""
+            transaction.title ||
+            ""
         ).toLowerCase();
 
+
+    const category =
+        String(
+            transaction.category ||
+            ""
+        ).toLowerCase();
+
+
     return (
-        title.includes("برداشت") ||
-        title.includes("کیف پول") ||
-        title.includes("withdraw")
+
+        title.includes(
+            "برداشت"
+        )
+
+        ||
+
+        title.includes(
+            "کیف پول"
+        )
+
+        ||
+
+        title.includes(
+            "withdraw"
+        )
+
+        ||
+
+        category ===
+            "withdraw"
+
     );
 
 }
 
+
+// =========================================================
+// RENDER TRANSACTIONS
+// =========================================================
 
 function renderLatestTransactions(
     transactions
@@ -1076,12 +1417,14 @@ function renderLatestTransactions(
             "transactions"
         );
 
+
     if (
         !transactions ||
         transactions.length === 0
     ) {
 
         container.innerHTML = `
+
             <div class="empty">
 
                 هنوز تراکنشی ثبت نشده است.
@@ -1103,6 +1446,7 @@ function renderLatestTransactions(
                 </a>
 
             </div>
+
         `;
 
         return;
@@ -1111,10 +1455,14 @@ function renderLatestTransactions(
 
 
     const latest =
-        transactions.slice(0, 5);
+        transactions.slice(
+            0,
+            5
+        );
 
 
     container.innerHTML =
+
         latest.map(
             transaction => {
 
@@ -1124,22 +1472,29 @@ function renderLatestTransactions(
                         transaction.type
                     );
 
+
                 const isIncome =
                     type === "income";
+
 
                 const category =
                     transaction.category ||
                     "other";
 
+
                 const categoryName =
                     categoryNames[
                         category
-                    ] || "سایر";
+                    ] ||
+                    "سایر";
+
 
                 const amount =
                     Number(
-                        transaction.amount || 0
+                        transaction.amount ||
+                        0
                     );
+
 
                 const walletWithdrawal =
                     !isIncome &&
@@ -1149,18 +1504,25 @@ function renderLatestTransactions(
 
 
                 return `
+
                     <div class="transaction">
+
 
                         <div class="transaction-info">
 
+
                             <div class="transaction-title">
+
                                 ${escapeHtml(
                                     transaction.title ||
                                     "بدون عنوان"
                                 )}
+
                             </div>
 
+
                             <div class="transaction-date">
+
                                 ${escapeHtml(
                                     formatDate(
                                         transaction.created_at ||
@@ -1168,9 +1530,12 @@ function renderLatestTransactions(
                                         transaction.date
                                     )
                                 )}
+
                             </div>
 
+
                             <div class="transaction-meta">
+
 
                                 <span
                                     class="badge ${
@@ -1179,30 +1544,42 @@ function renderLatestTransactions(
                                             : "expense-badge"
                                     }"
                                 >
+
                                     ${
                                         isIncome
                                             ? "درآمد"
                                             : "هزینه"
                                     }
+
                                 </span>
 
+
                                 <span class="badge">
+
                                     ${escapeHtml(
                                         categoryName
                                     )}
+
                                 </span>
+
 
                                 ${
                                     walletWithdrawal
                                         ? `
-                                            <span class="badge wallet-badge">
+
+                                            <span
+                                                class="badge wallet-badge"
+                                            >
                                                 برداشت کیف پول
                                             </span>
+
                                           `
                                         : ""
                                 }
 
+
                             </div>
+
 
                         </div>
 
@@ -1214,6 +1591,7 @@ function renderLatestTransactions(
                                     : "expense"
                             }"
                         >
+
                             ${
                                 isIncome
                                     ? "+"
@@ -1223,16 +1601,26 @@ function renderLatestTransactions(
                             ${formatMoney(
                                 amount
                             )}
+
                         </div>
 
+
                     </div>
+
                 `;
 
             }
-        ).join("");
+        )
+        .join(
+            ""
+        );
 
 }
 
+
+// =========================================================
+// NOTIFICATIONS
+// =========================================================
 
 function getUnreadNotificationCount() {
 
@@ -1243,12 +1631,19 @@ function getUnreadNotificationCount() {
                 "kifyar_notifications"
             );
 
+
         if (!saved) {
+
             return 0;
+
         }
 
+
         const notifications =
-            JSON.parse(saved);
+            JSON.parse(
+                saved
+            );
+
 
         if (
             !Array.isArray(
@@ -1257,7 +1652,9 @@ function getUnreadNotificationCount() {
         ) {
 
             return 0;
+
         }
+
 
         return notifications.filter(
             item =>
@@ -1265,7 +1662,10 @@ function getUnreadNotificationCount() {
                 item.read !== true
         ).length;
 
-    } catch (error) {
+
+    } catch (
+        error
+    ) {
 
         console.error(
             "Notification error:",
@@ -1278,6 +1678,10 @@ function getUnreadNotificationCount() {
 
 }
 
+
+// =========================================================
+// UPDATE NOTIFICATION
+// =========================================================
 
 function updateNotificationBadge() {
 
@@ -1297,14 +1701,20 @@ function updateNotificationBadge() {
         );
 
 
-    if (count > 0) {
+    if (
+        count > 0
+    ) {
 
         badge.textContent =
+
             count > 99
+
                 ? "۹۹+"
+
                 : count.toLocaleString(
                     "fa-IR"
                 );
+
 
         badge.classList.remove(
             "hidden"
@@ -1312,20 +1722,27 @@ function updateNotificationBadge() {
 
 
         quickBadge.textContent =
+
             count.toLocaleString(
                 "fa-IR"
-            ) +
+            )
+
+            +
+
             " اعلان خوانده‌نشده";
 
 
         quickBadge.style.display =
             "block";
 
-    } else {
+    }
+
+    else {
 
         badge.classList.add(
             "hidden"
         );
+
 
         quickBadge.style.display =
             "none";
@@ -1334,6 +1751,10 @@ function updateNotificationBadge() {
 
 }
 
+
+// =========================================================
+// LOAD DASHBOARD
+// =========================================================
 
 async function loadDashboard() {
 
@@ -1350,15 +1771,23 @@ async function loadDashboard() {
 
 
     transactionBox.innerHTML = `
+
         <div class="loading">
+
             در حال دریافت اطلاعات...
+
         </div>
+
     `;
 
 
-    if (refreshButton) {
+    if (
+        refreshButton
+    ) {
 
-        refreshButton.disabled = true;
+        refreshButton.disabled =
+            true;
+
         refreshButton.textContent =
             "↻ در حال بروزرسانی...";
 
@@ -1367,28 +1796,29 @@ async function loadDashboard() {
 
     try {
 
-        /*
-         * هر سه اطلاعات مستقیماً از API خوانده می‌شوند.
-         * بنابراین بعد از برداشت یا واریز،
-         * داشبورد مقدار قدیمی را نگه نمی‌دارد.
-         */
-
-        await Promise.all([
-            loadProfile(),
-            loadBalance(),
-            loadTransactions()
-        ]);
+        await Promise.all(
+            [
+                loadProfile(),
+                loadBalance(),
+                loadTransactions()
+            ]
+        );
 
 
         updateNotificationBadge();
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
 
         transactionBox.innerHTML = `
+
             <div class="error-box">
 
                 دریافت اطلاعات داشبورد
@@ -1411,13 +1841,19 @@ async function loadDashboard() {
                 </button>
 
             </div>
+
         `;
 
-    } finally {
+    }
 
-        if (refreshButton) {
+    finally {
 
-            refreshButton.disabled = false;
+        if (
+            refreshButton
+        ) {
+
+            refreshButton.disabled =
+                false;
 
             refreshButton.textContent =
                 "↻ بروزرسانی";
@@ -1429,11 +1865,10 @@ async function loadDashboard() {
 }
 
 
-/*
- * وقتی از wallet.html یا صفحه دیگری
- * به داشبورد برمی‌گردیم، اطلاعات تازه
- * دوباره دریافت می‌شود.
- */
+// =========================================================
+// PAGE SHOW
+// =========================================================
+
 window.addEventListener(
     "pageshow",
     function() {
@@ -1444,10 +1879,10 @@ window.addEventListener(
 );
 
 
-/*
- * اگر اطلاعات اعلان‌ها در تب دیگری
- * تغییر کند، نشان اعلان هم تازه می‌شود.
- */
+// =========================================================
+// STORAGE
+// =========================================================
+
 window.addEventListener(
     "storage",
     function(event) {
@@ -1465,6 +1900,10 @@ window.addEventListener(
 );
 
 
+// =========================================================
+// VISIBILITY
+// =========================================================
+
 document.addEventListener(
     "visibilitychange",
     function() {
@@ -1476,10 +1915,6 @@ document.addEventListener(
 
             updateNotificationBadge();
 
-            /*
-             * با برگشت دوباره به تب،
-             * موجودی و تراکنش‌ها تازه می‌شوند.
-             */
             loadDashboard();
 
         }
@@ -1488,16 +1923,18 @@ document.addEventListener(
 );
 
 
-/*
- * بارگذاری اولیه داشبورد
- */
+// =========================================================
+// INITIAL LOAD
+// =========================================================
+
 loadDashboard();
 
 updateNotificationBadge();
 
+
 </script>
 
 </body>
+
 </html>
 ```
-
