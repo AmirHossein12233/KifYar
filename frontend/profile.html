@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿```html
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 
 <head>
@@ -643,6 +644,7 @@
             .topbar {
                 align-items: flex-start;
             }
+
         }
 
         @media (max-width: 470px) {
@@ -666,29 +668,22 @@
                 grid-template-columns:
                     repeat(2, 1fr);
             }
+
         }
 
     </style>
 
 </head>
 
-
 <body>
 
-
 <div class="page">
-
-
-    <!-- =====================================================
-         TOP BAR
-         ===================================================== -->
 
     <div class="topbar">
 
         <div class="brand">
             KifYar
         </div>
-
 
         <div class="top-actions">
 
@@ -699,7 +694,6 @@
             >
                 بازگشت
             </button>
-
 
             <button
                 class="btn btn-red"
@@ -713,23 +707,12 @@
 
     </div>
 
-
     <div
         id="message"
         class="message"
     ></div>
 
-
-    <!-- =====================================================
-         MAIN LAYOUT
-         ===================================================== -->
-
     <div class="layout">
-
-
-        <!-- =================================================
-             PROFILE
-             ================================================= -->
 
         <section class="card profile-card">
 
@@ -740,14 +723,12 @@
                 ؟
             </div>
 
-
             <h1
                 id="displayName"
                 class="display-name"
             >
                 در حال بارگذاری...
             </h1>
-
 
             <div
                 id="username"
@@ -756,14 +737,12 @@
                 @...
             </div>
 
-
             <div
                 id="status"
                 class="status"
             >
                 در حال دریافت اطلاعات...
             </div>
-
 
             <div class="profile-info">
 
@@ -782,7 +761,6 @@
 
                 </div>
 
-
                 <div class="info-row">
 
                     <span class="info-label">
@@ -800,7 +778,6 @@
 
             </div>
 
-
             <div class="profile-buttons">
 
                 <button
@@ -810,7 +787,6 @@
                 >
                     ویرایش پروفایل
                 </button>
-
 
                 <button
                     class="btn btn-dark"
@@ -824,26 +800,17 @@
 
         </section>
 
-
-        <!-- =================================================
-             WALLET
-             ================================================= -->
-
-        <section
-            class="card wallet-card"
-        >
+        <section class="card wallet-card">
 
             <h2 class="section-title">
                 کیف پول
             </h2>
-
 
             <div class="balance-box">
 
                 <div class="balance-label">
                     موجودی فعلی
                 </div>
-
 
                 <div>
 
@@ -862,7 +829,6 @@
 
             </div>
 
-
             <div class="wallet-actions">
 
                 <button
@@ -873,7 +839,6 @@
                     + افزایش موجودی
                 </button>
 
-
                 <button
                     id="refreshWalletButton"
                     class="btn btn-dark"
@@ -883,9 +848,6 @@
                 </button>
 
             </div>
-
-
-            <!-- TRANSACTIONS -->
 
             <div class="transactions">
 
@@ -898,7 +860,6 @@
                         تراکنش‌ها
                     </h2>
 
-
                     <button
                         id="refreshTransactionsButton"
                         class="refresh"
@@ -908,7 +869,6 @@
                     </button>
 
                 </div>
-
 
                 <div
                     id="transactions"
@@ -929,11 +889,6 @@
 
 </div>
 
-
-<!-- =========================================================
-     WALLET MODAL
-     ========================================================= -->
-
 <div
     id="walletModal"
     class="modal-backdrop"
@@ -947,7 +902,6 @@
                 افزایش موجودی
             </h3>
 
-
             <button
                 id="closeWalletModal"
                 class="close"
@@ -958,19 +912,16 @@
 
         </div>
 
-
         <div
             id="walletModalMessage"
             class="message"
         ></div>
-
 
         <div class="field">
 
             <label for="amount">
                 مبلغ
             </label>
-
 
             <input
                 id="amount"
@@ -980,7 +931,6 @@
                 placeholder="مثلاً 5000"
                 inputmode="numeric"
             >
-
 
             <div class="quick-amounts">
 
@@ -992,7 +942,6 @@
                     ۵٬۰۰۰
                 </button>
 
-
                 <button
                     class="quick-amount"
                     data-amount="10000"
@@ -1001,7 +950,6 @@
                     ۱۰٬۰۰۰
                 </button>
 
-
                 <button
                     class="quick-amount"
                     data-amount="20000"
@@ -1009,7 +957,6 @@
                 >
                     ۲۰٬۰۰۰
                 </button>
-
 
                 <button
                     class="quick-amount"
@@ -1023,13 +970,11 @@
 
         </div>
 
-
         <div class="field">
 
             <label for="description">
                 توضیح تراکنش
             </label>
-
 
             <textarea
                 id="description"
@@ -1040,7 +985,6 @@
 
         </div>
 
-
         <div class="modal-actions">
 
             <button
@@ -1050,7 +994,6 @@
             >
                 انصراف
             </button>
-
 
             <button
                 id="submitWalletButton"
@@ -1066,11 +1009,6 @@
 
 </div>
 
-
-<!-- =========================================================
-     PROFILE MODAL
-     ========================================================= -->
-
 <div
     id="profileModal"
     class="modal-backdrop"
@@ -1084,7 +1022,6 @@
                 ویرایش پروفایل
             </h3>
 
-
             <button
                 id="closeProfileModal"
                 class="close"
@@ -1095,19 +1032,16 @@
 
         </div>
 
-
         <div
             id="profileModalMessage"
             class="message"
         ></div>
-
 
         <div class="field">
 
             <label for="profileDisplayName">
                 نام نمایشی
             </label>
-
 
             <input
                 id="profileDisplayName"
@@ -1116,7 +1050,6 @@
             >
 
         </div>
-
 
         <div class="modal-actions">
 
@@ -1127,7 +1060,6 @@
             >
                 انصراف
             </button>
-
 
             <button
                 id="saveProfileButton"
@@ -1142,7 +1074,6 @@
     </div>
 
 </div>
-
 
 <script>
 
@@ -1316,18 +1247,17 @@ async function api(
 
         }
 
-    }
-
-
-    else {
+    } else {
 
         const text =
             await response.text();
 
         data = {
+
             detail:
                 text ||
                 "پاسخ نامعتبر از سرور."
+
         };
 
     }
@@ -1483,7 +1413,6 @@ function showWalletMessage(
     element.textContent =
         text || "";
 
-
     element.className =
         "message";
 
@@ -1514,7 +1443,6 @@ function showProfileMessage(
 
     element.textContent =
         text || "";
-
 
     element.className =
         "message";
@@ -1701,6 +1629,18 @@ function renderUser(
     user
 ) {
 
+    if (
+        !user ||
+        typeof user !== "object"
+    ) {
+
+        throw new Error(
+            "اطلاعات کاربر نامعتبر است."
+        );
+
+    }
+
+
     currentUser =
         user;
 
@@ -1769,9 +1709,49 @@ async function loadCurrentUser() {
             );
 
 
+        /*
+         * API فعلی KifYar اطلاعات کاربر را
+         * مستقیم برمی‌گرداند:
+         *
+         * {
+         *   id,
+         *   username,
+         *   email,
+         *   name,
+         *   is_admin,
+         *   created_at
+         * }
+         *
+         * بنابراین نباید data.user استفاده شود.
+         */
+
+        let user =
+            data;
+
+
+        /*
+         * برای سازگاری با نسخه‌های قدیمی
+         * اگر سرور data.user برگرداند
+         * آن را هم قبول می‌کنیم.
+         */
+
         if (
-            !data ||
-            !data.user
+            data &&
+            data.user &&
+            typeof data.user === "object"
+        ) {
+
+            user =
+                data.user;
+
+        }
+
+
+        if (
+            !user ||
+            typeof user !== "object" ||
+            user.id === undefined ||
+            user.id === null
         ) {
 
             throw new Error(
@@ -1782,7 +1762,7 @@ async function loadCurrentUser() {
 
 
         renderUser(
-            data.user
+            user
         );
 
 
@@ -1936,7 +1916,6 @@ async function loadTransactions() {
 
         `;
 
-
     }
 
 }
@@ -2026,7 +2005,6 @@ function renderTransactions(
 
                         <div class="transaction">
 
-
                             <div
                                 class="
                                     transaction-icon
@@ -2040,7 +2018,6 @@ function renderTransactions(
                                 ${icon}
                             </div>
 
-
                             <div>
 
                                 <div class="transaction-title">
@@ -2053,7 +2030,6 @@ function renderTransactions(
 
                                 </div>
 
-
                                 <div
                                     class="transaction-description"
                                 >
@@ -2065,7 +2041,6 @@ function renderTransactions(
                                     }
 
                                 </div>
-
 
                                 <div
                                     class="transaction-date"
@@ -2082,7 +2057,6 @@ function renderTransactions(
                                 </div>
 
                             </div>
-
 
                             <div>
 
@@ -2109,7 +2083,6 @@ function renderTransactions(
                                 </div>
 
                             </div>
-
 
                         </div>
 
@@ -2188,7 +2161,9 @@ function openWalletModal() {
 
     setTimeout(
         () => {
+
             amountInput.focus();
+
         },
         100
     );
@@ -2220,13 +2195,6 @@ async function addBalance() {
         Number(
             amountInput.value
         );
-
-
-    const description =
-        String(
-            descriptionInput.value ||
-            "افزایش موجودی"
-        ).trim();
 
 
     if (
@@ -2485,12 +2453,22 @@ async function saveProfile() {
             );
 
 
-        if (
-            data.user
-        ) {
+        /*
+         * API فعلی بعد از PUT ممکن است
+         * فقط success/message برگرداند.
+         *
+         * بنابراین دوباره اطلاعات واقعی
+         * کاربر را از /api/profile می‌گیریم.
+         */
 
-            renderUser(
-                data.user
+        const userLoaded =
+            await loadCurrentUser();
+
+
+        if (!userLoaded) {
+
+            throw new Error(
+                "پروفایل ذخیره شد اما دریافت اطلاعات جدید ناموفق بود."
             );
 
         }
@@ -2500,6 +2478,7 @@ async function saveProfile() {
 
 
         showMessage(
+            data.message ||
             "پروفایل با موفقیت ذخیره شد.",
             "success"
         );
@@ -2850,3 +2829,4 @@ init();
 </body>
 
 </html>
+```
