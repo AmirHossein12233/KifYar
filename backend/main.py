@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import uuid
 from typing import Optional
 
@@ -11,13 +12,17 @@ from backend.database import (
     add_bank_card,
     add_transaction,
     add_wallet_balance_with_transaction,
+    approve_card_transfer,
+    complete_card_transfer,
     delete_bank_card,
     delete_notification,
     delete_user,
     deposit_by_card_once,
+    fail_card_transfer,
     find_user_by_email,
     find_user_by_id,
     find_user_by_username,
+    get_all_card_transfer_requests,
     get_balance,
     get_bank_cards,
     get_card_transfer_request,
@@ -28,6 +33,8 @@ from backend.database import (
     initialize_database,
     mark_all_notifications_as_read,
     mark_notification_as_read,
+    mark_transfer_processing,
+    reject_card_transfer,
     set_default_bank_card,
     subtract_wallet_balance_with_transaction,
     transfer_wallet_to_card_once,
@@ -44,12 +51,20 @@ from backend.auth import (
     remove_token,
 )
 
+from backend.services.settlement import (
+    settlement_service,
+)
+
 
 app = FastAPI(
     title="KifYar API",
     version="1.0.0",
 )
 
+
+# =========================================================
+# CORS
+# =========================================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -76,10 +91,12 @@ class LoginRequest(BaseModel):
 
 class RegisterRequest(BaseModel):
     username: str
+
     password: str = Field(
         min_length=6,
         max_length=200,
     )
+
     email: Optional[str] = None
     name: Optional[str] = None
 
@@ -93,6 +110,7 @@ class ProfileUpdateRequest(BaseModel):
 
 class PasswordChangeRequest(BaseModel):
     current_password: str
+
     new_password: str = Field(
         min_length=6,
         max_length=200,
@@ -133,6 +151,37 @@ class WalletCardTransferRequest(BaseModel):
 
 
 # =========================================================
+# ADMIN SETTLEMENT MODELS
+# =========================================================
+
+
+class SettlementRejectRequest(BaseModel):
+    reason: str = Field(
+        min_length=1,
+        max_length=500,
+    )
+
+
+class SettlementCompleteRequest(BaseModel):
+    provider_transfer_id: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+    provider_status: str = Field(
+        default="completed",
+        max_length=100,
+    )
+
+
+class SettlementFailRequest(BaseModel):
+    reason: str = Field(
+        min_length=1,
+        max_length=500,
+    )
+
+
+# =========================================================
 # HELPERS
 # =========================================================
 
@@ -140,7 +189,9 @@ class WalletCardTransferRequest(BaseModel):
 def normalize_request_id(
     request_id: str | None,
 ) -> str:
+
     if request_id:
+
         value = request_id.strip()
 
         if value:
@@ -152,6 +203,7 @@ def normalize_request_id(
 def validate_amount(
     amount: float,
 ) -> float:
+
     if amount <= 0:
         raise HTTPException(
             status_code=400,
@@ -167,6 +219,29 @@ def validate_amount(
     return float(amount)
 
 
+def require_admin(
+    request: Request,
+) -> None:
+
+    admin_key = request.headers.get(
+        "X-Admin-Key"
+    )
+
+    expected_key = os.getenv(
+        "ADMIN_KEY",
+        "",
+    )
+
+    if (
+        not expected_key
+        or admin_key != expected_key
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="دسترسی مدیریت مجاز نیست.",
+        )
+
+
 # =========================================================
 # BASIC
 # =========================================================
@@ -174,6 +249,7 @@ def validate_amount(
 
 @app.get("/")
 def root():
+
     return {
         "name": "KifYar API",
         "status": "ok",
@@ -183,6 +259,7 @@ def root():
 
 @app.get("/health")
 def health():
+
     return {
         "status": "ok",
     }
@@ -197,10 +274,12 @@ def health():
 def login(
     payload: LoginRequest,
 ):
+
     username = payload.username.strip()
     password = payload.password
 
     if not username or not password:
+
         raise HTTPException(
             status_code=400,
             detail="نام کاربری و رمز عبور را وارد کنید.",
@@ -212,6 +291,7 @@ def login(
     )
 
     if user is None:
+
         raise HTTPException(
             status_code=401,
             detail="نام کاربری یا رمز عبور نادرست است.",
@@ -243,6 +323,7 @@ def login(
 def register(
     payload: RegisterRequest,
 ):
+
     username = payload.username.strip()
     password = payload.password
 
@@ -259,18 +340,21 @@ def register(
     )
 
     if not username:
+
         raise HTTPException(
             status_code=400,
             detail="نام کاربری را وارد کنید.",
         )
 
     if not password:
+
         raise HTTPException(
             status_code=400,
             detail="رمز عبور را وارد کنید.",
         )
 
     if len(password) < 6:
+
         raise HTTPException(
             status_code=400,
             detail="رمز عبور باید حداقل ۶ کاراکتر باشد.",
@@ -281,23 +365,27 @@ def register(
     )
 
     if existing_username:
+
         raise HTTPException(
             status_code=409,
             detail="این نام کاربری قبلاً ثبت شده است.",
         )
 
     if email:
+
         existing_email = find_user_by_email(
             email
         )
 
         if existing_email:
+
             raise HTTPException(
                 status_code=409,
                 detail="این ایمیل قبلاً ثبت شده است.",
             )
 
     try:
+
         user_id = create_user(
             username=username,
             password=password,
@@ -306,6 +394,7 @@ def register(
         )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
@@ -316,6 +405,7 @@ def register(
     )
 
     if not user:
+
         raise HTTPException(
             status_code=500,
             detail="کاربر ساخته شد اما اطلاعات آن پیدا نشد.",
@@ -347,6 +437,7 @@ def register(
 def logout(
     request: Request,
 ):
+
     authorization = request.headers.get(
         "Authorization"
     )
@@ -354,6 +445,7 @@ def logout(
     if authorization and authorization.startswith(
         "Bearer "
     ):
+
         token = authorization[7:].strip()
 
         if token:
@@ -374,6 +466,7 @@ def logout(
 def get_profile(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -383,6 +476,7 @@ def get_profile(
     )
 
     if not user:
+
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
@@ -402,6 +496,7 @@ def update_profile(
     request: Request,
     payload: ProfileUpdateRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -409,6 +504,7 @@ def update_profile(
     name = payload.name.strip()
 
     if not name:
+
         raise HTTPException(
             status_code=400,
             detail="نام نمی‌تواند خالی باشد.",
@@ -420,6 +516,7 @@ def update_profile(
     )
 
     if not ok:
+
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
@@ -441,6 +538,7 @@ def change_password(
     request: Request,
     payload: PasswordChangeRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -450,6 +548,7 @@ def change_password(
     )
 
     if not user:
+
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
@@ -459,12 +558,14 @@ def change_password(
     new_password = payload.new_password
 
     if not current_password:
+
         raise HTTPException(
             status_code=400,
             detail="رمز عبور فعلی را وارد کنید.",
         )
 
     if current_password == new_password:
+
         raise HTTPException(
             status_code=400,
             detail="رمز عبور جدید باید با رمز قبلی متفاوت باشد.",
@@ -476,6 +577,7 @@ def change_password(
     )
 
     if verified_user is None:
+
         raise HTTPException(
             status_code=400,
             detail="رمز عبور فعلی صحیح نیست.",
@@ -487,6 +589,7 @@ def change_password(
     )
 
     if not ok:
+
         raise HTTPException(
             status_code=500,
             detail="تغییر رمز عبور انجام نشد.",
@@ -507,6 +610,7 @@ def change_password(
 def remove_account(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -516,6 +620,7 @@ def remove_account(
     )
 
     if not ok:
+
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
@@ -535,6 +640,7 @@ def remove_account(
 def wallet_balance(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -551,6 +657,7 @@ def wallet_add(
     request: Request,
     payload: WalletAmountRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -575,6 +682,7 @@ def wallet_subtract(
     request: Request,
     payload: WalletAmountRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -584,12 +692,14 @@ def wallet_subtract(
     )
 
     try:
+
         balance = subtract_wallet_balance_with_transaction(
             user_id,
             amount,
         )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
@@ -606,6 +716,7 @@ def wallet_deposit(
     request: Request,
     payload: CardDepositRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -619,6 +730,7 @@ def wallet_deposit(
     )
 
     try:
+
         result = deposit_by_card_once(
             user_id=user_id,
             card_id=payload.card_id,
@@ -627,6 +739,7 @@ def wallet_deposit(
         )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
@@ -640,6 +753,7 @@ def wallet_withdraw(
     request: Request,
     payload: WalletWithdrawRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -649,6 +763,7 @@ def wallet_withdraw(
     )
 
     try:
+
         balance = subtract_wallet_balance_with_transaction(
             user_id,
             amount,
@@ -657,6 +772,7 @@ def wallet_withdraw(
         )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
@@ -668,11 +784,19 @@ def wallet_withdraw(
     }
 
 
-@app.post("/api/wallet/transfer-to-card")
+# =========================================================
+# WALLET -> CARD SETTLEMENT
+# =========================================================
+
+
+@app.post(
+    "/api/wallet/transfer-to-card"
+)
 def wallet_transfer_to_card(
     request: Request,
     payload: WalletCardTransferRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -686,6 +810,7 @@ def wallet_transfer_to_card(
     )
 
     try:
+
         result = transfer_wallet_to_card_once(
             user_id=user_id,
             card_id=payload.card_id,
@@ -694,6 +819,7 @@ def wallet_transfer_to_card(
         )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
@@ -702,10 +828,13 @@ def wallet_transfer_to_card(
     return result
 
 
-@app.get("/api/wallet/card-transfers")
+@app.get(
+    "/api/wallet/card-transfers"
+)
 def wallet_card_transfers(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -722,6 +851,7 @@ def wallet_card_transfer(
     request: Request,
     transfer_id: int,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -732,12 +862,244 @@ def wallet_card_transfer(
     )
 
     if not transfer:
+
         raise HTTPException(
             status_code=404,
             detail="درخواست انتقال پیدا نشد.",
         )
 
     return transfer
+
+
+# =========================================================
+# ADMIN - SETTLEMENT LIST
+# =========================================================
+
+
+@app.get(
+    "/api/admin/settlements"
+)
+def admin_get_settlements(
+    request: Request,
+):
+
+    require_admin(
+        request
+    )
+
+    return {
+        "success": True,
+        "items": get_all_card_transfer_requests(),
+    }
+
+
+# =========================================================
+# ADMIN - APPROVE SETTLEMENT
+# =========================================================
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/approve"
+)
+def admin_approve_settlement(
+    request: Request,
+    transfer_id: int,
+):
+
+    require_admin(
+        request
+    )
+
+    try:
+
+        result = settlement_service.approve(
+            transfer_id
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    return result
+
+
+# =========================================================
+# ADMIN - REJECT SETTLEMENT
+# =========================================================
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/reject"
+)
+def admin_reject_settlement(
+    request: Request,
+    transfer_id: int,
+    payload: SettlementRejectRequest,
+):
+
+    require_admin(
+        request
+    )
+
+    try:
+
+        result = reject_card_transfer(
+            transfer_id=transfer_id,
+            reason=payload.reason,
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    return result
+
+
+# =========================================================
+# ADMIN - START PROCESSING
+# =========================================================
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/processing"
+)
+def admin_processing_settlement(
+    request: Request,
+    transfer_id: int,
+):
+
+    require_admin(
+        request
+    )
+
+    try:
+
+        result = settlement_service.start_processing(
+            transfer_id
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    return result
+
+
+# =========================================================
+# ADMIN - PROCESS WITH PROVIDER
+# =========================================================
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/process"
+)
+def admin_process_settlement(
+    request: Request,
+    transfer_id: int,
+):
+
+    require_admin(
+        request
+    )
+
+    try:
+
+        result = settlement_service.process(
+            transfer_id
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    return result
+
+
+# =========================================================
+# ADMIN - COMPLETE
+# =========================================================
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/complete"
+)
+def admin_complete_settlement(
+    request: Request,
+    transfer_id: int,
+    payload: SettlementCompleteRequest,
+):
+
+    require_admin(
+        request
+    )
+
+    try:
+
+        result = settlement_service.complete(
+            transfer_id=transfer_id,
+            provider_transfer_id=(
+                payload.provider_transfer_id
+            ),
+            provider_status=(
+                payload.provider_status
+            ),
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    return result
+
+
+# =========================================================
+# ADMIN - FAIL
+# =========================================================
+
+
+@app.post(
+    "/api/admin/settlements/{transfer_id}/fail"
+)
+def admin_fail_settlement(
+    request: Request,
+    transfer_id: int,
+    payload: SettlementFailRequest,
+):
+
+    require_admin(
+        request
+    )
+
+    try:
+
+        result = settlement_service.fail(
+            transfer_id=transfer_id,
+            reason=payload.reason,
+        )
+
+    except ValueError as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    return result
 
 
 # =========================================================
@@ -750,6 +1112,7 @@ def notifications(
     request: Request,
     limit: int = 100,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -766,18 +1129,22 @@ def notifications(
     )
 
 
-@app.get("/api/notifications/unread-count")
+@app.get(
+    "/api/notifications/unread-count"
+)
 def notification_unread_count(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
 
     return {
-        "unread_count": get_unread_notification_count(
-            user_id
-        ),
+        "unread_count":
+            get_unread_notification_count(
+                user_id
+            ),
     }
 
 
@@ -788,6 +1155,7 @@ def notification_read(
     request: Request,
     notification_id: int,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -798,13 +1166,15 @@ def notification_read(
     )
 
     if not ok:
+
         raise HTTPException(
             status_code=404,
             detail="اعلان پیدا نشد.",
         )
 
     return {
-        "message": "اعلان به عنوان خوانده‌شده ثبت شد.",
+        "message":
+            "اعلان به عنوان خوانده‌شده ثبت شد.",
     }
 
 
@@ -814,6 +1184,7 @@ def notification_read(
 def notifications_read_all(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -823,7 +1194,8 @@ def notifications_read_all(
     )
 
     return {
-        "message": "همه اعلان‌ها خوانده شدند.",
+        "message":
+            "همه اعلان‌ها خوانده شدند.",
         "updated": count,
     }
 
@@ -835,6 +1207,7 @@ def notification_delete(
     request: Request,
     notification_id: int,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -845,6 +1218,7 @@ def notification_delete(
     )
 
     if not ok:
+
         raise HTTPException(
             status_code=404,
             detail="اعلان پیدا نشد.",
@@ -864,6 +1238,7 @@ def notification_delete(
 def transactions(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -878,11 +1253,13 @@ def create_transaction(
     request: Request,
     payload: TransactionRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
 
     if payload.amount <= 0:
+
         raise HTTPException(
             status_code=400,
             detail="مبلغ نامعتبر است.",
@@ -892,6 +1269,7 @@ def create_transaction(
         "income",
         "expense",
     }:
+
         raise HTTPException(
             status_code=400,
             detail="نوع تراکنش نامعتبر است.",
@@ -920,6 +1298,7 @@ def create_transaction(
 def cards(
     request: Request,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -934,19 +1313,47 @@ def create_card(
     request: Request,
     payload: BankCardRequest,
 ):
+
     user_id = require_session_user_id(
         request
     )
 
+    holder_name = payload.holder_name.strip()
+    bank_name = payload.bank_name.strip()
+    card_number = payload.card_number.strip()
+
+    if not holder_name:
+
+        raise HTTPException(
+            status_code=400,
+            detail="نام صاحب کارت را وارد کنید.",
+        )
+
+    if not bank_name:
+
+        raise HTTPException(
+            status_code=400,
+            detail="نام بانک را وارد کنید.",
+        )
+
+    if not card_number:
+
+        raise HTTPException(
+            status_code=400,
+            detail="شماره کارت را وارد کنید.",
+        )
+
     try:
+
         card_id = add_bank_card(
             user_id=user_id,
-            holder_name=payload.holder_name.strip(),
-            bank_name=payload.bank_name.strip(),
-            card_number=payload.card_number,
+            holder_name=holder_name,
+            bank_name=bank_name,
+            card_number=card_number,
         )
 
     except ValueError as exc:
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
@@ -958,11 +1365,14 @@ def create_card(
     }
 
 
-@app.put("/api/cards/{card_id}/default")
+@app.put(
+    "/api/cards/{card_id}/default"
+)
 def default_card(
     request: Request,
     card_id: int,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -973,6 +1383,7 @@ def default_card(
     )
 
     if not ok:
+
         raise HTTPException(
             status_code=404,
             detail="کارت پیدا نشد.",
@@ -983,11 +1394,14 @@ def default_card(
     }
 
 
-@app.delete("/api/cards/{card_id}")
+@app.delete(
+    "/api/cards/{card_id}"
+)
 def remove_card(
     request: Request,
     card_id: int,
 ):
+
     user_id = require_session_user_id(
         request
     )
@@ -998,6 +1412,7 @@ def remove_card(
     )
 
     if not ok:
+
         raise HTTPException(
             status_code=404,
             detail="کارت پیدا نشد.",
@@ -1015,4 +1430,5 @@ def remove_card(
 
 @app.on_event("startup")
 def startup():
+
     initialize_database()
