@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from backend.database import (
@@ -14,36 +15,74 @@ from backend.database import (
 )
 
 
-router = APIRouter(prefix="/api", tags=["auth"])
+router = APIRouter(
+    prefix="/api",
+    tags=["auth"],
+)
+
+
+# =========================================================
+# TOKEN STORAGE
+# =========================================================
 
 # token -> user_id
 tokens: dict[str, int] = {}
 
 
+# =========================================================
+# PASSWORD
+# =========================================================
+
 def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        password.encode("utf-8")
+    ).hexdigest()
 
 
-def create_token(user_id: int) -> str:
+# =========================================================
+# TOKEN
+# =========================================================
+
+def create_token(
+    user_id: int,
+) -> str:
+
     token = secrets.token_urlsafe(32)
+
     tokens[token] = int(user_id)
+
     return token
 
 
-def remove_token(token: str) -> None:
-    tokens.pop(token, None)
+def remove_token(
+    token: str,
+) -> None:
 
+    tokens.pop(
+        token,
+        None,
+    )
+
+
+# =========================================================
+# AUTHORIZATION
+# =========================================================
 
 def get_bearer_token(
     authorization: str | None,
 ) -> str:
+
     if not authorization:
+
         raise HTTPException(
             status_code=401,
             detail="ورود لازم است.",
         )
 
-    if not authorization.startswith("Bearer "):
+    if not authorization.startswith(
+        "Bearer "
+    ):
+
         raise HTTPException(
             status_code=401,
             detail="توکن نامعتبر است.",
@@ -52,6 +91,7 @@ def get_bearer_token(
     token = authorization[7:].strip()
 
     if not token:
+
         raise HTTPException(
             status_code=401,
             detail="توکن نامعتبر است.",
@@ -63,73 +103,131 @@ def get_bearer_token(
 def require_user_id(
     authorization: str | None,
 ) -> int:
-    token = get_bearer_token(authorization)
 
-    user_id = tokens.get(token)
+    token = get_bearer_token(
+        authorization
+    )
+
+    user_id = tokens.get(
+        token
+    )
 
     if user_id is None:
+
         raise HTTPException(
             status_code=401,
             detail="جلسه ورود معتبر نیست.",
         )
 
-    return int(user_id)
+    return int(
+        user_id
+    )
 
+
+# =========================================================
+# REGISTER
+# =========================================================
 
 class RegisterRequest(BaseModel):
+
     username: str
+
     email: str
+
     password: str
 
+
+# =========================================================
+# LOGIN
+# =========================================================
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
 
+    # همه اختیاری هستند تا به خاطر نام متفاوت فیلدها
+    # خطای "Field required" دریافت نشود.
+    email: str | None = None
+
+    username: str | None = None
+
+    identifier: str | None = None
+
+    password: str | None = None
+
+
+# =========================================================
+# LOGOUT
+# =========================================================
 
 class LogoutRequest(BaseModel):
     pass
 
 
-@router.post("/register")
-def register(data: RegisterRequest):
-    username = data.username.strip()
-    email = data.email.strip().lower()
+# =========================================================
+# REGISTER
+# =========================================================
+
+@router.post(
+    "/register"
+)
+def register(
+    data: RegisterRequest,
+):
+
+    username = (
+        data.username
+        .strip()
+    )
+
+    email = (
+        data.email
+        .strip()
+        .lower()
+    )
+
     password = data.password
 
     if not username:
+
         raise HTTPException(
             status_code=400,
             detail="نام کاربری الزامی است.",
         )
 
     if not email:
+
         raise HTTPException(
             status_code=400,
             detail="ایمیل الزامی است.",
         )
 
     if not password:
+
         raise HTTPException(
             status_code=400,
             detail="رمز عبور الزامی است.",
         )
 
     if len(password) < 6:
+
         raise HTTPException(
             status_code=400,
             detail="رمز عبور باید حداقل ۶ کاراکتر باشد.",
         )
 
-    existing_user = find_user(email)
+    existing_user = find_user(
+        email
+    )
 
     if existing_user is not None:
+
         raise HTTPException(
             status_code=409,
             detail="این ایمیل قبلاً ثبت شده است.",
         )
 
-    password_hash = hash_password(password)
+    password_hash = hash_password(
+        password
+    )
 
     user_id = create_user(
         username=username,
@@ -148,40 +246,169 @@ def register(data: RegisterRequest):
     }
 
 
-@router.post("/login")
-def login(data: LoginRequest):
-    email = data.email.strip().lower()
-    password = data.password
+# =========================================================
+# LOGIN
+# =========================================================
 
-    if not email or not password:
+@router.post(
+    "/login"
+)
+async def login(
+    request: Request,
+):
+
+    # -----------------------------------------------------
+    # Read JSON manually
+    # -----------------------------------------------------
+
+    try:
+
+        body: Any = await request.json()
+
+    except Exception:
+
         raise HTTPException(
             status_code=400,
-            detail="ایمیل و رمز عبور الزامی هستند.",
+            detail="بدنه درخواست ورود نامعتبر است.",
         )
 
-    user = find_user(email)
+    if not isinstance(
+        body,
+        dict,
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail="اطلاعات ورود نامعتبر است.",
+        )
+
+    # -----------------------------------------------------
+    # Accept multiple common field names
+    # -----------------------------------------------------
+
+    email = body.get(
+        "email"
+    )
+
+    username = body.get(
+        "username"
+    )
+
+    identifier = body.get(
+        "identifier"
+    )
+
+    password = body.get(
+        "password"
+    )
+
+    # -----------------------------------------------------
+    # Normalize
+    # -----------------------------------------------------
+
+    email = (
+        str(email).strip().lower()
+        if email is not None
+        else ""
+    )
+
+    username = (
+        str(username).strip()
+        if username is not None
+        else ""
+    )
+
+    identifier = (
+        str(identifier).strip()
+        if identifier is not None
+        else ""
+    )
+
+    password = (
+        str(password)
+        if password is not None
+        else ""
+    )
+
+    # -----------------------------------------------------
+    # Find login identifier
+    # -----------------------------------------------------
+
+    login_identifier = (
+        email
+        or identifier
+        or username
+    )
+
+    if not login_identifier:
+
+        raise HTTPException(
+            status_code=400,
+            detail="ایمیل یا نام کاربری الزامی است.",
+        )
+
+    if not password:
+
+        raise HTTPException(
+            status_code=400,
+            detail="رمز عبور الزامی است.",
+        )
+
+    # -----------------------------------------------------
+    # Database lookup
+    #
+    # Current database function is find_user().
+    # First try the supplied identifier directly.
+    # -----------------------------------------------------
+
+    user = find_user(
+        login_identifier
+    )
 
     if user is None:
+
         raise HTTPException(
             status_code=401,
-            detail="ایمیل یا رمز عبور اشتباه است.",
+            detail="ایمیل یا نام کاربری یا رمز عبور اشتباه است.",
         )
 
-    stored_password = user.get("password_hash")
+    # -----------------------------------------------------
+    # Password
+    # -----------------------------------------------------
+
+    stored_password = user.get(
+        "password_hash"
+    )
 
     if not stored_password:
+
         raise HTTPException(
             status_code=401,
-            detail="ایمیل یا رمز عبور اشتباه است.",
+            detail="اطلاعات رمز عبور این حساب معتبر نیست.",
         )
 
-    if not verify_password(password, stored_password):
+    try:
+
+        valid_password = verify_password(
+            password,
+            stored_password,
+        )
+
+    except Exception:
+
+        valid_password = False
+
+    if not valid_password:
+
         raise HTTPException(
             status_code=401,
-            detail="ایمیل یا رمز عبور اشتباه است.",
+            detail="ایمیل یا نام کاربری یا رمز عبور اشتباه است.",
         )
 
-    # توکن‌های قبلی همین کاربر حذف شوند
+    # -----------------------------------------------------
+    # Remove previous tokens for this user
+    # -----------------------------------------------------
+
     old_tokens = [
         token
         for token, user_id in tokens.items()
@@ -189,9 +416,23 @@ def login(data: LoginRequest):
     ]
 
     for token in old_tokens:
-        tokens.pop(token, None)
 
-    token = create_token(int(user["id"]))
+        tokens.pop(
+            token,
+            None,
+        )
+
+    # -----------------------------------------------------
+    # Create new token
+    # -----------------------------------------------------
+
+    token = create_token(
+        int(user["id"])
+    )
+
+    # -----------------------------------------------------
+    # Response
+    # -----------------------------------------------------
 
     return {
         "success": True,
@@ -206,15 +447,29 @@ def login(data: LoginRequest):
     }
 
 
-@router.get("/me")
-def me(
-    authorization: str | None = Header(default=None),
-):
-    user_id = require_user_id(authorization)
+# =========================================================
+# CURRENT USER
+# =========================================================
 
-    user = get_user_by_id(user_id)
+@router.get(
+    "/me"
+)
+def me(
+    authorization: str | None = Header(
+        default=None
+    ),
+):
+
+    user_id = require_user_id(
+        authorization
+    )
+
+    user = get_user_by_id(
+        user_id
+    )
 
     if user is None:
+
         raise HTTPException(
             status_code=404,
             detail="کاربر پیدا نشد.",
@@ -226,13 +481,26 @@ def me(
     }
 
 
-@router.post("/logout")
-def logout(
-    authorization: str | None = Header(default=None),
-):
-    token = get_bearer_token(authorization)
+# =========================================================
+# LOGOUT
+# =========================================================
 
-    remove_token(token)
+@router.post(
+    "/logout"
+)
+def logout(
+    authorization: str | None = Header(
+        default=None
+    ),
+):
+
+    token = get_bearer_token(
+        authorization
+    )
+
+    remove_token(
+        token
+    )
 
     return {
         "success": True,
