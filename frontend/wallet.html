@@ -1,8 +1,10 @@
-﻿```html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
@@ -14,6 +16,172 @@
         rel="stylesheet"
         href="style.css"
     >
+
+    <style>
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+        }
+
+        .page-header a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow:
+                0 5px 20px
+                rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .balance {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-top: 15px;
+        }
+
+        .balance-label {
+            color: #777;
+            margin-top: 5px;
+        }
+
+        label {
+            display: block;
+            margin:
+                14px 0 7px;
+            font-weight: bold;
+        }
+
+        select,
+        input {
+            width: 100%;
+            height: 48px;
+            border:
+                1px solid
+                #d1d5db;
+            border-radius: 12px;
+            padding:
+                0 12px;
+            font-family: inherit;
+            font-size: 14px;
+            background: white;
+        }
+
+        select:focus,
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.1
+                );
+        }
+
+        .wallet-button {
+            width: 100%;
+            margin-top: 18px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            background: #2563eb;
+            color: white;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .wallet-button:hover {
+            background: #1d4ed8;
+        }
+
+        .wallet-button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        .message {
+            display: none;
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            line-height: 1.7;
+        }
+
+        .message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .transaction-item {
+            border:
+                1px solid
+                #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            line-height: 1.9;
+            background: #fafafa;
+        }
+
+        .transaction-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-pending {
+            color: #b45309;
+        }
+
+        .status-completed {
+            color: #15803d;
+        }
+
+        .status-failed,
+        .status-cancelled {
+            color: #b91c1c;
+        }
+
+        .loading {
+            color: #777;
+            padding: 15px 0;
+        }
+
+    </style>
+
 </head>
 
 <body>
@@ -21,19 +189,27 @@
 <div class="container">
 
     <header class="page-header">
-        <h1>💰 کیف پول</h1>
+
+        <h1>
+            💰 کیف پول
+        </h1>
 
         <a href="index.html">
             بازگشت
         </a>
+
     </header>
 
 
-    <!-- موجودی -->
+    <!-- =====================================================
+         BALANCE
+         ===================================================== -->
 
     <section class="card">
 
-        <h2>موجودی فعلی</h2>
+        <h2>
+            موجودی فعلی
+        </h2>
 
         <div
             id="balance"
@@ -49,15 +225,20 @@
     </section>
 
 
-    <!-- انتقال به کارت -->
+    <!-- =====================================================
+         TRANSFER TO CARD
+         ===================================================== -->
 
     <section class="card">
 
-        <h2>💳 انتقال به کارت بانکی</h2>
+        <h2>
+            💳 انتقال به کارت بانکی
+        </h2>
 
         <p>
             مبلغ موردنظر را از موجودی کیف پول به یکی از کارت‌های ثبت‌شده منتقل کنید.
         </p>
+
 
         <label for="transferCard">
             کارت مقصد
@@ -66,9 +247,11 @@
         <select
             id="transferCard"
         >
+
             <option value="">
                 در حال دریافت کارت‌ها...
             </option>
+
         </select>
 
 
@@ -87,6 +270,7 @@
 
         <button
             id="transferButton"
+            class="wallet-button"
             type="button"
         >
             انتقال به کارت
@@ -101,28 +285,39 @@
     </section>
 
 
-    <!-- وضعیت آخرین انتقال -->
+    <!-- =====================================================
+         TRANSFER LIST
+         ===================================================== -->
 
     <section class="card">
 
-        <h2>📋 آخرین درخواست‌های انتقال</h2>
+        <h2>
+            📋 آخرین درخواست‌های انتقال
+        </h2>
 
         <div id="transferList">
-            در حال دریافت...
+            <div class="loading">
+                در حال دریافت...
+            </div>
         </div>
 
     </section>
 
 
-    <!-- افزایش موجودی -->
+    <!-- =====================================================
+         DEPOSIT
+         ===================================================== -->
 
     <section class="card">
 
-        <h2>➕ افزایش موجودی</h2>
+        <h2>
+            ➕ افزایش موجودی
+        </h2>
 
         <p>
             برای افزایش موجودی از کارت بانکی ثبت‌شده استفاده کنید.
         </p>
+
 
         <label for="depositCard">
             کارت بانکی
@@ -131,9 +326,11 @@
         <select
             id="depositCard"
         >
+
             <option value="">
                 در حال دریافت کارت‌ها...
             </option>
+
         </select>
 
 
@@ -152,6 +349,7 @@
 
         <button
             id="depositButton"
+            class="wallet-button"
             type="button"
         >
             افزایش موجودی
@@ -170,38 +368,149 @@
 
 <script>
 
-const API_URL = "https://kifyar-api.onrender.com";
+// =========================================================
+// API
+// =========================================================
 
+const API_URL =
+    "https://kifyar-api.onrender.com";
+
+
+// =========================================================
+// AUTH STORAGE
+// =========================================================
+
+const TOKEN_KEY =
+    "kifyar_token";
+
+
+// =========================================================
+// TOKEN
+// =========================================================
 
 function getToken() {
 
-    return (
-        localStorage.getItem("token") ||
-        localStorage.getItem("access_token") ||
-        ""
-    );
+    return localStorage.getItem(
+        TOKEN_KEY
+    ) || "";
 
 }
 
 
+// =========================================================
+// AUTH HEADERS
+// =========================================================
+
 function authHeaders() {
 
-    const token = getToken();
+    const token =
+        getToken();
 
     return {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
+        "Content-Type":
+            "application/json",
+
+        "Accept":
+            "application/json",
+
+        "Authorization":
+            "Bearer " + token
     };
 
 }
 
 
-function formatMoney(value) {
+// =========================================================
+// AUTH CHECK
+// =========================================================
 
-    return Number(value || 0).toLocaleString("fa-IR");
+function ensureLoggedIn() {
+
+    const token =
+        getToken();
+
+    if (!token) {
+
+        window.location.href =
+            "login.html";
+
+        return false;
+    }
+
+    return true;
+}
+
+
+// =========================================================
+// API REQUEST
+// =========================================================
+
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+
+    const response =
+        await fetch(
+            API_URL + endpoint,
+            {
+                ...options,
+
+                headers: {
+                    ...authHeaders(),
+                    ...(options.headers || {})
+                }
+            }
+        );
+
+
+    if (
+        response.status === 401
+    ) {
+
+        localStorage.removeItem(
+            TOKEN_KEY
+        );
+
+        localStorage.removeItem(
+            "kifyar_user"
+        );
+
+        window.location.href =
+            "login.html";
+
+        throw new Error(
+            "جلسه ورود معتبر نیست."
+        );
+
+    }
+
+
+    return response;
 
 }
 
+
+// =========================================================
+// MONEY
+// =========================================================
+
+function formatMoney(
+    value
+) {
+
+    return Number(
+        value || 0
+    ).toLocaleString(
+        "fa-IR"
+    );
+
+}
+
+
+// =========================================================
+// MESSAGE
+// =========================================================
 
 function showMessage(
     element,
@@ -209,7 +518,8 @@ function showMessage(
     success = false
 ) {
 
-    element.textContent = message;
+    element.textContent =
+        message;
 
     element.className =
         success
@@ -219,77 +529,109 @@ function showMessage(
 }
 
 
+// =========================================================
+// LOAD BALANCE
+// =========================================================
+
 async function loadBalance() {
 
     const balanceElement =
-        document.getElementById("balance");
+        document.getElementById(
+            "balance"
+        );
+
 
     try {
 
-        const response = await fetch(
-            API_URL + "/api/wallet/balance",
-            {
-                headers: authHeaders()
-            }
-        );
+        const response =
+            await apiRequest(
+                "/api/wallet/balance"
+            );
+
 
         const data =
             await response.json();
 
+
         if (!response.ok) {
+
             throw new Error(
                 data.detail ||
                 "دریافت موجودی انجام نشد."
             );
+
         }
 
-        balanceElement.textContent =
-            formatMoney(data.balance);
 
-    }
-    catch (error) {
+        balanceElement.textContent =
+            formatMoney(
+                data.balance
+            );
+
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Balance error:",
+            error
+        );
+
 
         balanceElement.textContent =
             "خطا";
-
-        console.error(error);
 
     }
 
 }
 
 
+// =========================================================
+// LOAD CARDS
+// =========================================================
+
 async function loadCards() {
 
     const transferCard =
-        document.getElementById("transferCard");
+        document.getElementById(
+            "transferCard"
+        );
+
 
     const depositCard =
-        document.getElementById("depositCard");
+        document.getElementById(
+            "depositCard"
+        );
 
 
     try {
 
-        const response = await fetch(
-            API_URL + "/api/cards",
-            {
-                headers: authHeaders()
-            }
-        );
+        const response =
+            await apiRequest(
+                "/api/cards"
+            );
+
 
         const data =
             await response.json();
 
+
         if (!response.ok) {
+
             throw new Error(
                 data.detail ||
                 "دریافت کارت‌ها انجام نشد."
             );
+
         }
 
 
-        transferCard.innerHTML = "";
-        depositCard.innerHTML = "";
+        transferCard.innerHTML =
+            "";
+
+        depositCard.innerHTML =
+            "";
 
 
         if (
@@ -297,75 +639,110 @@ async function loadCards() {
             data.cards.length === 0
         ) {
 
-            transferCard.innerHTML =
-                `<option value="">
+            transferCard.innerHTML = `
+                <option value="">
                     هنوز کارتی ثبت نشده است
-                </option>`;
+                </option>
+            `;
 
-            depositCard.innerHTML =
-                `<option value="">
+
+            depositCard.innerHTML = `
+                <option value="">
                     هنوز کارتی ثبت نشده است
-                </option>`;
+                </option>
+            `;
+
 
             return;
 
         }
 
 
-        data.cards.forEach(card => {
+        data.cards.forEach(
+            card => {
 
-            const text =
-                `${card.bank_name} - ${card.masked_card_number || "کارت"}`;
-
-
-            const option1 =
-                document.createElement("option");
-
-            option1.value =
-                card.id;
-
-            option1.textContent =
-                text;
-
-            transferCard.appendChild(
-                option1
-            );
+                const text =
+                    `${
+                        card.bank_name ||
+                        "بانک"
+                    } - ${
+                        card.masked_card_number ||
+                        "کارت"
+                    }`;
 
 
-            const option2 =
-                document.createElement("option");
+                const option1 =
+                    document.createElement(
+                        "option"
+                    );
 
-            option2.value =
-                card.id;
 
-            option2.textContent =
-                text;
+                option1.value =
+                    card.id;
 
-            depositCard.appendChild(
-                option2
-            );
 
-        });
+                option1.textContent =
+                    text;
 
-    }
-    catch (error) {
 
-        console.error(error);
+                transferCard.appendChild(
+                    option1
+                );
 
-        transferCard.innerHTML =
-            `<option value="">
+
+                const option2 =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option2.value =
+                    card.id;
+
+
+                option2.textContent =
+                    text;
+
+
+                depositCard.appendChild(
+                    option2
+                );
+
+            }
+        );
+
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Cards error:",
+            error
+        );
+
+
+        transferCard.innerHTML = `
+            <option value="">
                 خطا در دریافت کارت‌ها
-            </option>`;
+            </option>
+        `;
 
-        depositCard.innerHTML =
-            `<option value="">
+
+        depositCard.innerHTML = `
+            <option value="">
                 خطا در دریافت کارت‌ها
-            </option>`;
+            </option>
+        `;
 
     }
 
 }
 
+
+// =========================================================
+// TRANSFER TO CARD
+// =========================================================
 
 async function transferToCard() {
 
@@ -376,6 +753,7 @@ async function transferToCard() {
             ).value
         );
 
+
     const amount =
         Number(
             document.getElementById(
@@ -383,10 +761,12 @@ async function transferToCard() {
             ).value
         );
 
+
     const message =
         document.getElementById(
             "transferMessage"
         );
+
 
     const button =
         document.getElementById(
@@ -421,7 +801,9 @@ async function transferToCard() {
     }
 
 
-    if (amount > 100000000) {
+    if (
+        amount > 100000000
+    ) {
 
         showMessage(
             message,
@@ -433,7 +815,9 @@ async function transferToCard() {
     }
 
 
-    button.disabled = true;
+    button.disabled =
+        true;
+
 
     button.textContent =
         "در حال ثبت...";
@@ -450,21 +834,28 @@ async function transferToCard() {
                 .slice(2);
 
 
-        const response = await fetch(
-            API_URL +
-            "/api/wallet/transfer-to-card",
-            {
-                method: "POST",
+        const response =
+            await apiRequest(
+                "/api/wallet/transfer-to-card",
+                {
+                    method:
+                        "POST",
 
-                headers: authHeaders(),
+                    body:
+                        JSON.stringify(
+                            {
+                                card_id:
+                                    cardId,
 
-                body: JSON.stringify({
-                    card_id: cardId,
-                    amount: amount,
-                    request_id: requestId
-                })
-            }
-        );
+                                amount:
+                                    amount,
+
+                                request_id:
+                                    requestId
+                            }
+                        )
+                }
+            );
 
 
         const data =
@@ -483,22 +874,39 @@ async function transferToCard() {
 
         showMessage(
             message,
-            `درخواست انتقال ${formatMoney(amount)} تومان ثبت شد. وضعیت: ${data.status || "pending"}`,
+
+            `درخواست انتقال ${
+                formatMoney(amount)
+            } تومان ثبت شد. وضعیت: ${
+                data.status ||
+                data.transfer?.status ||
+                "pending"
+            }`,
+
             true
         );
 
 
         document.getElementById(
             "transferAmount"
-        ).value = "";
+        ).value =
+            "";
 
 
         await loadBalance();
 
         await loadTransfers();
 
-    }
-    catch (error) {
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Transfer error:",
+            error
+        );
+
 
         showMessage(
             message,
@@ -506,10 +914,10 @@ async function transferToCard() {
             "خطایی رخ داد."
         );
 
-    }
-    finally {
+    } finally {
 
-        button.disabled = false;
+        button.disabled =
+            false;
 
         button.textContent =
             "انتقال به کارت";
@@ -518,6 +926,10 @@ async function transferToCard() {
 
 }
 
+
+// =========================================================
+// LOAD TRANSFERS
+// =========================================================
 
 async function loadTransfers() {
 
@@ -529,13 +941,10 @@ async function loadTransfers() {
 
     try {
 
-        const response = await fetch(
-            API_URL +
-            "/api/wallet/card-transfers",
-            {
-                headers: authHeaders()
-            }
-        );
+        const response =
+            await apiRequest(
+                "/api/wallet/card-transfers"
+            );
 
 
         const data =
@@ -565,7 +974,8 @@ async function loadTransfers() {
         }
 
 
-        list.innerHTML = "";
+        list.innerHTML =
+            "";
 
 
         data.transfers.forEach(
@@ -575,6 +985,7 @@ async function loadTransfers() {
                     document.createElement(
                         "div"
                     );
+
 
                 item.className =
                     "transaction-item";
@@ -589,52 +1000,88 @@ async function loadTransfers() {
                     "در انتظار پردازش";
 
 
-                if (status === "completed") {
+                let statusClass =
+                    "status-pending";
+
+
+                if (
+                    status ===
+                    "completed"
+                ) {
+
                     statusText =
                         "تکمیل شده";
+
+                    statusClass =
+                        "status-completed";
+
                 }
 
                 else if (
-                    status === "failed"
+                    status ===
+                    "failed"
                 ) {
+
                     statusText =
                         "ناموفق";
+
+                    statusClass =
+                        "status-failed";
+
                 }
 
                 else if (
-                    status === "cancelled"
+                    status ===
+                    "cancelled"
                 ) {
+
                     statusText =
                         "لغو شده";
+
+                    statusClass =
+                        "status-cancelled";
+
                 }
 
 
                 item.innerHTML = `
+
                     <strong>
                         انتقال به کارت
                     </strong>
 
                     <div>
                         مبلغ:
-                        ${formatMoney(
-                            transfer.amount
-                        )}
+                        ${
+                            formatMoney(
+                                transfer.amount
+                            )
+                        }
                         تومان
                     </div>
 
                     <div>
                         کارت:
-                        ${transfer.masked_card_number || "-"}
+                        ${
+                            transfer.masked_card_number ||
+                            "-"
+                        }
                     </div>
 
                     <div>
                         وضعیت:
-                        ${statusText}
+                        <span class="${statusClass}">
+                            ${statusText}
+                        </span>
                     </div>
 
                     <small>
-                        ${transfer.created_at || ""}
+                        ${
+                            transfer.created_at ||
+                            ""
+                        }
                     </small>
+
                 `;
 
 
@@ -645,18 +1092,28 @@ async function loadTransfers() {
             }
         );
 
-    }
-    catch (error) {
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Transfer list error:",
+            error
+        );
+
 
         list.innerHTML =
             "<p>خطا در دریافت درخواست‌ها.</p>";
-
-        console.error(error);
 
     }
 
 }
 
+
+// =========================================================
+// DEPOSIT
+// =========================================================
 
 async function depositByCard() {
 
@@ -667,6 +1124,7 @@ async function depositByCard() {
             ).value
         );
 
+
     const amount =
         Number(
             document.getElementById(
@@ -674,10 +1132,12 @@ async function depositByCard() {
             ).value
         );
 
+
     const message =
         document.getElementById(
             "depositMessage"
         );
+
 
     const button =
         document.getElementById(
@@ -712,7 +1172,23 @@ async function depositByCard() {
     }
 
 
-    button.disabled = true;
+    if (
+        amount > 100000000
+    ) {
+
+        showMessage(
+            message,
+            "مبلغ بیشتر از حد مجاز است."
+        );
+
+        return;
+
+    }
+
+
+    button.disabled =
+        true;
+
 
     button.textContent =
         "در حال ثبت...";
@@ -729,21 +1205,28 @@ async function depositByCard() {
                 .slice(2);
 
 
-        const response = await fetch(
-            API_URL +
-            "/api/wallet/deposit",
-            {
-                method: "POST",
+        const response =
+            await apiRequest(
+                "/api/wallet/deposit",
+                {
+                    method:
+                        "POST",
 
-                headers: authHeaders(),
+                    body:
+                        JSON.stringify(
+                            {
+                                card_id:
+                                    cardId,
 
-                body: JSON.stringify({
-                    card_id: cardId,
-                    amount: amount,
-                    request_id: requestId
-                })
-            }
-        );
+                                amount:
+                                    amount,
+
+                                request_id:
+                                    requestId
+                            }
+                        )
+                }
+            );
 
 
         const data =
@@ -762,20 +1245,33 @@ async function depositByCard() {
 
         showMessage(
             message,
-            `مبلغ ${formatMoney(amount)} تومان به کیف پول اضافه شد.`,
+
+            `مبلغ ${
+                formatMoney(amount)
+            } تومان به کیف پول اضافه شد.`,
+
             true
         );
 
 
         document.getElementById(
             "depositAmount"
-        ).value = "";
+        ).value =
+            "";
 
 
         await loadBalance();
 
-    }
-    catch (error) {
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Deposit error:",
+            error
+        );
+
 
         showMessage(
             message,
@@ -783,10 +1279,10 @@ async function depositByCard() {
             "خطایی رخ داد."
         );
 
-    }
-    finally {
+    } finally {
 
-        button.disabled = false;
+        button.disabled =
+            false;
 
         button.textContent =
             "افزایش موجودی";
@@ -795,6 +1291,10 @@ async function depositByCard() {
 
 }
 
+
+// =========================================================
+// EVENTS
+// =========================================================
 
 document
     .getElementById(
@@ -816,23 +1316,26 @@ document
     );
 
 
+// =========================================================
+// INITIALIZE
+// =========================================================
+
 async function init() {
 
-    if (!getToken()) {
-
-        window.location.href =
-            "login.html";
+    if (
+        !ensureLoggedIn()
+    ) {
 
         return;
 
     }
 
 
-    await loadBalance();
-
-    await loadCards();
-
-    await loadTransfers();
+    await Promise.all([
+        loadBalance(),
+        loadCards(),
+        loadTransfers()
+    ]);
 
 }
 
@@ -842,6 +1345,5 @@ init();
 </script>
 
 </body>
-</html>
-```
 
+</html>
