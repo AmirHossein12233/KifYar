@@ -1,8 +1,13 @@
 ﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>کیف پول | KifYar</title>
 
@@ -13,385 +18,289 @@
 
         body {
             margin: 0;
-            padding: 20px;
+            min-height: 100vh;
+            background: #f4f7fb;
+            color: #172033;
             font-family: Tahoma, Arial, sans-serif;
-            background: #f4f6f8;
-            color: #222;
         }
 
         .container {
-            max-width: 900px;
-            margin: auto;
+            width: min(100% - 30px, 900px);
+            margin: 0 auto;
+            padding: 25px 0 50px;
         }
 
         .topbar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 22px;
         }
 
-        .topbar h1 {
+        .title {
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
         }
 
-        .btn {
-            border: 0;
-            border-radius: 10px;
-            padding: 11px 16px;
-            cursor: pointer;
+        .back {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .balance-card {
+            background: linear-gradient(
+                135deg,
+                #2563eb,
+                #1d4ed8
+            );
+            color: white;
+            border-radius: 22px;
+            padding: 28px;
+            box-shadow:
+                0 12px 35px rgba(
+                    37,
+                    99,
+                    235,
+                    0.25
+                );
+            margin-bottom: 20px;
+        }
+
+        .balance-title {
+            opacity: 0.9;
+            font-size: 15px;
+        }
+
+        .balance {
+            font-size: 34px;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        .currency {
+            font-size: 16px;
+            margin-right: 5px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow:
+                0 7px 25px rgba(
+                    0,
+                    0,
+                    0,
+                    0.06
+                );
+        }
+
+        .card-title {
+            margin: 0 0 17px;
+            font-size: 19px;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+            gap: 12px;
+        }
+
+        .action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 52px;
+            border-radius: 13px;
+            padding: 12px;
+            text-decoration: none;
+            font-weight: bold;
             font-family: inherit;
-            font-size: 14px;
-            background: #222;
+            border: 0;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .primary {
+            background: #2563eb;
             color: white;
         }
 
-        .btn-light {
-            background: white;
-            color: #222;
-            border: 1px solid #ddd;
+        .secondary {
+            background: #eff6ff;
+            color: #1d4ed8;
         }
 
-        .simulation {
-            background: #fff3cd;
-            border: 1px solid #ffe08a;
-            color: #7a5a00;
-            padding: 12px 15px;
-            border-radius: 12px;
-            margin-bottom: 18px;
+        .danger {
+            background: #fef2f2;
+            color: #b42318;
+        }
+
+        .neutral {
+            background: #f2f4f7;
+            color: #344054;
+        }
+
+        .actions-single {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+            gap: 12px;
+        }
+
+        .info {
+            background: #f8fafc;
+            border-radius: 13px;
+            padding: 15px;
+        }
+
+        .info-label {
+            color: #667085;
             font-size: 13px;
+            margin-bottom: 7px;
         }
 
-        .notification-area {
-            display: none;
-            margin-bottom: 18px;
+        .info-value {
+            font-weight: bold;
+            word-break: break-word;
         }
 
-        .notification {
+        .transactions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .transaction {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
             padding: 15px;
             border-radius: 13px;
-            background: white;
-            border-right: 5px solid #555;
-            box-shadow: 0 5px 18px rgba(0,0,0,.06);
+            background: #f8fafc;
         }
 
-        .notification.show {
-            display: block;
+        .transaction-info {
+            min-width: 0;
         }
 
-        .notification-title {
+        .transaction-title {
             font-weight: bold;
             margin-bottom: 6px;
         }
 
-        .notification-text {
-            font-size: 13px;
-            color: #666;
+        .transaction-meta {
+            color: #667085;
+            font-size: 12px;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .income {
+            color: #087443;
+        }
+
+        .expense {
+            color: #b42318;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 25px 10px;
+            color: #667085;
+            line-height: 2;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667085;
+            padding: 20px;
+        }
+
+        .message {
+            display: none;
+            padding: 13px 15px;
+            border-radius: 12px;
+            margin-bottom: 18px;
             line-height: 1.8;
         }
 
-        .notification-close {
-            float: left;
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font-size: 18px;
+        .message.success {
+            display: block;
+            background: #ecfdf3;
+            border: 1px solid #a7f3d0;
+            color: #087443;
         }
 
-        .notification.completed {
-            border-right-color: #28a745;
+        .message.error {
+            display: block;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b42318;
         }
 
-        .notification.failed,
-        .notification.cancelled {
-            border-right-color: #dc3545;
-        }
-
-        .notification.pending {
-            border-right-color: #ffc107;
-        }
-
-        .balance-card {
-            background: white;
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.06);
-            margin-bottom: 20px;
-        }
-
-        .balance-label {
-            color: #777;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .balance {
-            font-size: 32px;
-            font-weight: bold;
-        }
-
-        .unit {
-            font-size: 16px;
-            color: #666;
-            margin-right: 5px;
-        }
-
-        .section {
-            background: white;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.05);
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-size: 19px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .loading,
-        .empty,
-        .error {
-            padding: 20px;
-            text-align: center;
-            border-radius: 12px;
-            background: #f7f7f7;
-            color: #777;
-        }
-
-        .error {
-            background: #fff0f0;
-            color: #b00020;
-        }
-
-        .transfer-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .transfer {
-            background: #fafafa;
-            border: 1px solid #e7e7e7;
-            border-radius: 14px;
-            padding: 16px;
-            cursor: pointer;
-            transition: .2s;
-        }
-
-        .transfer:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,.07);
-            border-color: #ccc;
-        }
-
-        .transfer.changed {
-            animation: changedAnimation 1.2s ease;
-        }
-
-        @keyframes changedAnimation {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.015);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .transfer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .transfer-title {
-            font-weight: bold;
-        }
-
-        .transfer-amount {
-            font-weight: bold;
-        }
-
-        .transfer-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 7px;
-            color: #666;
-            font-size: 13px;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 5px 9px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-completed {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-failed,
-        .status-cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .refund-note {
-            margin-top: 10px;
-            padding: 9px;
-            border-radius: 8px;
-            background: #e8f5e9;
-            color: #256029;
-            font-size: 12px;
-        }
-
-        .click-hint {
-            margin-top: 8px;
-            color: #888;
-            font-size: 11px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.55);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            z-index: 9999;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal {
+        .refresh {
             width: 100%;
-            max-width: 550px;
-            max-height: 90vh;
-            overflow-y: auto;
-            background: white;
-            border-radius: 20px;
-            padding: 22px;
-            box-shadow: 0 20px 60px rgba(0,0,0,.25);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .close-btn {
-            width: 38px;
-            height: 38px;
-            border: 0;
-            border-radius: 10px;
-            background: #f1f1f1;
-            cursor: pointer;
-            font-size: 20px;
-        }
-
-        .detail-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 15px;
-            padding: 12px;
-            background: #f8f8f8;
-            border-radius: 10px;
-        }
-
-        .detail-label {
-            color: #777;
-            font-size: 13px;
-        }
-
-        .detail-value {
-            font-weight: bold;
-            text-align: left;
-            direction: ltr;
-            word-break: break-word;
-        }
-
-        .modal-loading {
-            text-align: center;
-            padding: 30px 10px;
-            color: #777;
-        }
-
-        .modal-error {
-            background: #fff0f0;
-            color: #b00020;
-            padding: 14px;
-            border-radius: 10px;
-            text-align: center;
+            margin-top: 12px;
         }
 
         @media (max-width: 600px) {
-            body {
-                padding: 12px;
+
+            .container {
+                width: min(
+                    100% - 20px,
+                    900px
+                );
+                padding-top: 18px;
+            }
+
+            .title {
+                font-size: 22px;
+            }
+
+            .balance-card {
+                padding: 22px;
             }
 
             .balance {
-                font-size: 26px;
+                font-size: 28px;
             }
 
-            .transfer-info {
+            .actions {
                 grid-template-columns: 1fr;
             }
 
-            .transfer-header {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction {
                 align-items: flex-start;
                 flex-direction: column;
             }
 
-            .modal {
-                padding: 17px;
-                border-radius: 16px;
-            }
-
-            .detail-row {
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .detail-value {
-                text-align: right;
-                direction: rtl;
+            .transaction-amount {
+                white-space: normal;
             }
         }
     </style>
@@ -403,104 +312,239 @@
 
     <div class="topbar">
 
-        <h1>کیف پول من</h1>
+        <h1 class="title">
+            کیف پول
+        </h1>
 
-        <div>
-            <button class="btn btn-light" onclick="refreshWallet()">
-                بروزرسانی
-            </button>
-
-            <button class="btn" onclick="goProfile()">
-                پروفایل
-            </button>
-        </div>
-
-    </div>
-
-    <div class="simulation">
-        ⚠️ این سیستم فعلاً شبیه‌سازی است. انتقال به کارت بانکی واقعی انجام نمی‌شود.
-    </div>
-
-    <div id="notificationArea" class="notification-area">
-
-        <div id="notification" class="notification">
-
-            <button
-                class="notification-close"
-                onclick="hideNotification()"
-            >
-                ×
-            </button>
-
-            <div id="notificationTitle" class="notification-title"></div>
-
-            <div id="notificationText" class="notification-text"></div>
-
-        </div>
+        <a
+            href="settings.html"
+            class="back"
+        >
+            تنظیمات
+        </a>
 
     </div>
+
+
+    <div
+        id="message"
+        class="message"
+    ></div>
+
+
+    <!-- BALANCE -->
 
     <div class="balance-card">
 
-        <div class="balance-label">
+        <div class="balance-title">
             موجودی فعلی
         </div>
 
-        <div>
-            <span id="balance" class="balance">
-                در حال بارگذاری...
+        <div class="balance">
+
+            <span id="balance">
+                در حال دریافت...
             </span>
 
-            <span class="unit">
+            <span class="currency">
                 تومان
             </span>
-        </div>
-
-    </div>
-
-    <div class="section">
-
-        <div class="section-title">
-            درخواست‌های انتقال به کارت
-        </div>
-
-        <div id="transferList" class="transfer-list">
-
-            <div class="loading">
-                در حال دریافت اطلاعات...
-            </div>
 
         </div>
 
     </div>
 
-</div>
 
+    <!-- MAIN ACTIONS -->
 
-<div id="modalOverlay" class="modal-overlay">
+    <div class="card">
 
-    <div class="modal">
+        <h2 class="card-title">
+            عملیات کیف پول
+        </h2>
 
-        <div class="modal-header">
+        <div class="actions">
 
-            <h2>
-                جزئیات انتقال
-            </h2>
-
-            <button
-                class="close-btn"
-                onclick="closeTransferModal()"
+            <a
+                href="wallet-deposit.html"
+                class="action primary"
             >
-                ×
-            </button>
+                افزایش موجودی
+            </a>
+
+
+            <a
+                href="wallet-withdraw.html"
+                class="action secondary"
+            >
+                برداشت از کیف پول
+            </a>
+
+
+            <a
+                href="wallet-transfer.html"
+                class="action secondary"
+            >
+                انتقال به کارت
+            </a>
+
+
+            <a
+                href="transactions.html"
+                class="action neutral"
+            >
+                مشاهده تراکنش‌ها
+            </a>
 
         </div>
 
-        <div id="modalContent">
+    </div>
 
-            <div class="modal-loading">
-                در حال دریافت جزئیات انتقال...
+
+    <!-- ACCOUNT INFO -->
+
+    <div class="card">
+
+        <h2 class="card-title">
+            اطلاعات کیف پول
+        </h2>
+
+        <div class="info-grid">
+
+            <div class="info">
+
+                <div class="info-label">
+                    وضعیت
+                </div>
+
+                <div
+                    id="walletStatus"
+                    class="info-value"
+                >
+                    فعال
+                </div>
+
             </div>
+
+
+            <div class="info">
+
+                <div class="info-label">
+                    موجودی
+                </div>
+
+                <div
+                    id="infoBalance"
+                    class="info-value"
+                >
+                    -
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CARD TRANSFERS -->
+
+    <div class="card">
+
+        <h2 class="card-title">
+            انتقال‌های کارت
+        </h2>
+
+        <div
+            id="transfersLoading"
+            class="loading"
+        >
+            در حال دریافت درخواست‌ها...
+        </div>
+
+        <div
+            id="transfers"
+            class="transactions"
+        ></div>
+
+        <div
+            id="transfersEmpty"
+            class="empty"
+            style="display:none;"
+        >
+            هنوز درخواست انتقالی ثبت نشده است.
+        </div>
+
+    </div>
+
+
+    <!-- TRANSACTIONS -->
+
+    <div class="card">
+
+        <h2 class="card-title">
+            آخرین تراکنش‌ها
+        </h2>
+
+        <div
+            id="transactionsLoading"
+            class="loading"
+        >
+            در حال دریافت تراکنش‌ها...
+        </div>
+
+        <div
+            id="transactions"
+            class="transactions"
+        ></div>
+
+        <div
+            id="transactionsEmpty"
+            class="empty"
+            style="display:none;"
+        >
+            هنوز تراکنشی ثبت نشده است.
+        </div>
+
+        <button
+            id="refreshButton"
+            class="action neutral refresh"
+            type="button"
+        >
+            بروزرسانی
+        </button>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <div class="card">
+
+        <div class="actions-single">
+
+            <a
+                href="cards.html"
+                class="action secondary"
+            >
+                کارت‌های بانکی
+            </a>
+
+
+            <a
+                href="notifications.html"
+                class="action neutral"
+            >
+                اعلان‌ها
+            </a>
+
+
+            <a
+                href="profile.html"
+                class="action neutral"
+            >
+                پروفایل
+            </a>
 
         </div>
 
@@ -511,794 +555,727 @@
 
 <script>
 
-const API_URL = "https://kifyar-api.onrender.com";
+const API_URL =
+    "https://kifyar-api.onrender.com";
 
-const TOKEN_KEY = "kifyar_token";
+const TOKEN_KEY =
+    "kifyar_token";
 
-let token = localStorage.getItem(TOKEN_KEY);
 
-let previousTransfers = {};
-
-let firstTransferLoad = true;
-
-let notificationTimer = null;
+const token =
+    localStorage.getItem(
+        TOKEN_KEY
+    );
 
 
 if (!token) {
-    window.location.href = "login.html";
-}
 
-
-/* -----------------------------
-   Helpers
------------------------------ */
-
-function authHeaders() {
-
-    return {
-        "Authorization": "Bearer " + token,
-        "Content-Type": "application/json"
-    };
+    window.location.href =
+        "login.html";
 
 }
 
 
-function formatAmount(amount) {
+const balanceElement =
+    document.getElementById(
+        "balance"
+    );
 
-    return Number(amount || 0).toLocaleString("fa-IR");
+const infoBalance =
+    document.getElementById(
+        "infoBalance"
+    );
 
-}
+const message =
+    document.getElementById(
+        "message"
+    );
 
+const transactionsElement =
+    document.getElementById(
+        "transactions"
+    );
 
-function formatDate(value) {
+const transactionsLoading =
+    document.getElementById(
+        "transactionsLoading"
+    );
 
-    if (!value) {
-        return "-";
-    }
+const transactionsEmpty =
+    document.getElementById(
+        "transactionsEmpty"
+    );
 
-    const date = new Date(value);
+const transfersElement =
+    document.getElementById(
+        "transfers"
+    );
 
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
+const transfersLoading =
+    document.getElementById(
+        "transfersLoading"
+    );
 
-    return date.toLocaleString("fa-IR", {
-        dateStyle: "medium",
-        timeStyle: "short"
-    });
+const transfersEmpty =
+    document.getElementById(
+        "transfersEmpty"
+    );
 
-}
-
-
-function statusText(status) {
-
-    switch (status) {
-
-        case "pending":
-            return "در انتظار پردازش";
-
-        case "completed":
-            return "تکمیل شده";
-
-        case "failed":
-            return "ناموفق";
-
-        case "cancelled":
-            return "لغو شده";
-
-        default:
-            return status || "نامشخص";
-    }
-
-}
-
-
-function statusClass(status) {
-
-    switch (status) {
-
-        case "completed":
-            return "status-completed";
-
-        case "failed":
-            return "status-failed";
-
-        case "cancelled":
-            return "status-cancelled";
-
-        default:
-            return "status-pending";
-    }
-
-}
+const refreshButton =
+    document.getElementById(
+        "refreshButton"
+    );
 
 
-function escapeHtml(value) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
-
-
-/* -----------------------------
-   Notification
------------------------------ */
-
-function showNotification(
-    status,
-    title,
-    text
+function showMessage(
+    text,
+    type
 ) {
 
-    const area =
-        document.getElementById("notificationArea");
+    message.textContent =
+        text;
 
-    const notification =
-        document.getElementById("notification");
-
-    document.getElementById(
-        "notificationTitle"
-    ).textContent = title;
-
-    document.getElementById(
-        "notificationText"
-    ).textContent = text;
-
-    notification.className =
-        "notification " + status + " show";
-
-    area.style.display = "block";
-
-    if (notificationTimer) {
-        clearTimeout(notificationTimer);
-    }
-
-    notificationTimer = setTimeout(() => {
-        hideNotification();
-    }, 10000);
+    message.className =
+        "message " + type;
 
 }
 
 
-function hideNotification() {
+function clearMessage() {
 
-    const area =
-        document.getElementById("notificationArea");
+    message.textContent =
+        "";
 
-    area.style.display = "none";
+    message.className =
+        "message";
 
 }
 
 
-/* -----------------------------
-   Status Change Notification
------------------------------ */
+function formatNumber(
+    value
+) {
 
-function checkStatusChanges(transfers) {
+    const number =
+        Number(value);
 
-    if (firstTransferLoad) {
-
-        previousTransfers = {};
-
-        transfers.forEach(transfer => {
-
-            previousTransfers[
-                String(transfer.id)
-            ] = transfer.status;
-
-        });
-
-        firstTransferLoad = false;
-
-        return;
+    if (
+        !Number.isFinite(number)
+    ) {
+        return "۰";
     }
 
+    return number.toLocaleString(
+        "fa-IR"
+    );
 
-    transfers.forEach(transfer => {
+}
 
-        const id = String(transfer.id);
 
-        const oldStatus =
-            previousTransfers[id];
+function formatAmount(
+    value
+) {
 
-        const newStatus =
-            transfer.status;
+    return (
+        formatNumber(value) +
+        " تومان"
+    );
 
+}
+
+
+function formatDate(
+    value
+) {
+
+    if (!value) {
+        return "";
+    }
+
+    try {
+
+        const date =
+            new Date(value);
 
         if (
-            oldStatus &&
-            newStatus &&
-            oldStatus !== newStatus
+            Number.isNaN(
+                date.getTime()
+            )
         ) {
-
-            const amount =
-                formatAmount(transfer.amount);
-
-            if (newStatus === "completed") {
-
-                showNotification(
-                    "completed",
-                    "انتقال تکمیل شد ✅",
-                    `انتقال ${amount} تومان با موفقیت تکمیل شد.`
-                );
-
-            } else if (newStatus === "failed") {
-
-                showNotification(
-                    "failed",
-                    "انتقال ناموفق شد",
-                    `انتقال ${amount} تومان ناموفق شد و مبلغ طبق سیستم بازگردانده شده است.`
-                );
-
-            } else if (newStatus === "cancelled") {
-
-                showNotification(
-                    "cancelled",
-                    "انتقال لغو شد",
-                    `انتقال ${amount} تومان لغو شد و مبلغ طبق سیستم بازگردانده شده است.`
-                );
-
-            } else if (newStatus === "pending") {
-
-                showNotification(
-                    "pending",
-                    "وضعیت انتقال تغییر کرد",
-                    `انتقال ${amount} تومان اکنون در انتظار پردازش است.`
-                );
-            }
-
+            return String(value);
         }
 
+        return date.toLocaleString(
+            "fa-IR"
+        );
 
-        previousTransfers[id] = newStatus;
+    } catch {
 
-    });
+        return String(value);
+
+    }
 
 }
 
 
-/* -----------------------------
-   Balance
------------------------------ */
+function escapeHtml(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+async function apiFetch(
+    path,
+    options = {}
+) {
+
+    const headers =
+        options.headers || {};
+
+
+    headers[
+        "Authorization"
+    ] =
+        "Bearer " + token;
+
+
+    headers[
+        "Accept"
+    ] =
+        "application/json";
+
+
+    const response =
+        await fetch(
+            API_URL + path,
+            {
+                ...options,
+                headers: headers
+            }
+        );
+
+
+    if (
+        response.status === 401
+    ) {
+
+        localStorage.removeItem(
+            TOKEN_KEY
+        );
+
+        window.location.href =
+            "login.html";
+
+        throw new Error(
+            "جلسه ورود شما منقضی شده است."
+        );
+
+    }
+
+
+    let data = null;
+
+    try {
+
+        data =
+            await response.json();
+
+    } catch {
+
+        data = null;
+
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data &&
+            data.detail
+                ? data.detail
+                : "خطا در ارتباط با سرور."
+        );
+
+    }
+
+
+    return data;
+
+}
+
 
 async function loadBalance() {
 
-    const balanceElement =
-        document.getElementById("balance");
-
     try {
 
-        const response = await fetch(
-            API_URL + "/api/wallet/balance",
-            {
-                headers: authHeaders()
-            }
-        );
-
-        if (response.status === 401) {
-
-            localStorage.removeItem(TOKEN_KEY);
-
-            window.location.href =
-                "login.html";
-
-            return;
-        }
-
-        if (!response.ok) {
-            throw new Error();
-        }
-
         const data =
-            await response.json();
+            await apiFetch(
+                "/api/wallet/balance"
+            );
+
 
         const balance =
-            data.balance ??
-            data.amount ??
-            0;
+            Number(
+                data.balance || 0
+            );
+
 
         balanceElement.textContent =
-            formatAmount(balance);
+            formatNumber(
+                balance
+            );
+
+
+        infoBalance.textContent =
+            formatAmount(
+                balance
+            );
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Balance error:",
+            error
+        );
 
         balanceElement.textContent =
             "خطا";
+
+        infoBalance.textContent =
+            "نامشخص";
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
     }
 
 }
 
 
-/* -----------------------------
-   Transfers
------------------------------ */
+function getTransactionType(
+    transaction
+) {
 
-async function loadTransfers() {
+    return (
+        transaction.transaction_type ||
+        transaction.type ||
+        ""
+    ).toLowerCase();
 
-    const list =
-        document.getElementById("transferList");
+}
 
-    try {
 
-        const response = await fetch(
-            API_URL + "/api/wallet/card-transfers",
-            {
-                headers: authHeaders()
+function renderTransactions(
+    items
+) {
+
+    transactionsElement.innerHTML =
+        "";
+
+
+    if (
+        !Array.isArray(items) ||
+        items.length === 0
+    ) {
+
+        transactionsEmpty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    transactionsEmpty.style.display =
+        "none";
+
+
+    items
+        .slice(0, 10)
+        .forEach(
+            function(transaction) {
+
+                const type =
+                    getTransactionType(
+                        transaction
+                    );
+
+
+                const isIncome =
+                    type === "income" ||
+                    type === "deposit" ||
+                    type === "credit";
+
+
+                const amountClass =
+                    isIncome
+                        ? "income"
+                        : "expense";
+
+
+                const sign =
+                    isIncome
+                        ? "+"
+                        : "-";
+
+
+                const title =
+                    transaction.title ||
+                    transaction.description ||
+                    "تراکنش";
+
+
+                const amount =
+                    Math.abs(
+                        Number(
+                            transaction.amount || 0
+                        )
+                    );
+
+
+                const date =
+                    transaction.created_at ||
+                    transaction.date ||
+                    "";
+
+
+                const element =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                element.className =
+                    "transaction";
+
+
+                element.innerHTML = `
+
+                    <div class="transaction-info">
+
+                        <div class="transaction-title">
+                            ${escapeHtml(title)}
+                        </div>
+
+                        <div class="transaction-meta">
+                            ${escapeHtml(formatDate(date))}
+                        </div>
+
+                    </div>
+
+                    <div class="transaction-amount ${amountClass}">
+                        ${sign} ${escapeHtml(formatAmount(amount))}
+                    </div>
+
+                `;
+
+
+                transactionsElement.appendChild(
+                    element
+                );
+
             }
         );
 
-        if (response.status === 401) {
+}
 
-            localStorage.removeItem(TOKEN_KEY);
 
-            window.location.href =
-                "login.html";
+async function loadTransactions() {
 
-            return;
-        }
+    transactionsLoading.style.display =
+        "block";
 
-        if (!response.ok) {
-            throw new Error();
-        }
+
+    try {
 
         const data =
-            await response.json();
+            await apiFetch(
+                "/api/transactions"
+            );
 
-        let transfers = [];
 
-        if (Array.isArray(data)) {
-
-            transfers = data;
-
-        } else if (Array.isArray(data.transfers)) {
-
-            transfers = data.transfers;
-
-        } else if (Array.isArray(data.items)) {
-
-            transfers = data.items;
-
-        }
-
-
-        checkStatusChanges(transfers);
-
-
-        if (transfers.length === 0) {
-
-            list.innerHTML = `
-                <div class="empty">
-                    هنوز درخواست انتقالی ثبت نشده است.
-                </div>
-            `;
-
-            return;
-        }
-
-
-        list.innerHTML = "";
-
-
-        transfers.forEach(transfer => {
-
-            const card =
-                document.createElement("div");
-
-            card.className = "transfer";
-
-            card.onclick = () => {
-                openTransferDetails(transfer.id);
-            };
-
-
-            const status =
-                transfer.status || "pending";
-
-            const amount =
-                formatAmount(transfer.amount);
-
-            const cardNumber =
-                transfer.card_number ||
-                transfer.card ||
-                "نامشخص";
-
-            const requestId =
-                transfer.request_id || "-";
-
-
-            let refund = "";
-
-            if (
-                status === "failed" ||
-                status === "cancelled"
-            ) {
-
-                refund = `
-                    <div class="refund-note">
-                        مبلغ این انتقال طبق وضعیت سیستم
-                        به موجودی کیف پول بازگردانده شده است.
-                    </div>
-                `;
-            }
-
-
-            card.innerHTML = `
-
-                <div class="transfer-header">
-
-                    <div class="transfer-title">
-                        انتقال به کارت
-                    </div>
-
-                    <div class="transfer-amount">
-                        ${amount} تومان
-                    </div>
-
-                </div>
-
-                <div class="transfer-info">
-
-                    <div>
-                        کارت:
-                        ${escapeHtml(cardNumber)}
-                    </div>
-
-                    <div>
-                        وضعیت:
-
-                        <span class="status ${statusClass(status)}">
-                            ${statusText(status)}
-                        </span>
-                    </div>
-
-                    <div>
-                        شناسه انتقال:
-                        ${escapeHtml(String(transfer.id ?? "-"))}
-                    </div>
-
-                    <div>
-                        تاریخ:
-                        ${formatDate(transfer.created_at)}
-                    </div>
-
-                </div>
-
-                ${refund}
-
-                <div class="click-hint">
-                    برای مشاهده جزئیات کامل کلیک کنید
-                </div>
-            `;
-
-
-            const oldStatus =
-                previousTransfers[
-                    String(transfer.id)
-                ];
-
-
-            if (
-                oldStatus &&
-                oldStatus !== status
-            ) {
-
-                card.classList.add("changed");
-
-            }
-
-
-            list.appendChild(card);
-
-        });
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        list.innerHTML = `
-            <div class="error">
-                دریافت درخواست‌های انتقال ناموفق بود.
-                <br>
-                لطفاً دوباره بروزرسانی کنید.
-            </div>
-        `;
-    }
-
-}
-
-
-/* -----------------------------
-   Transfer Details
------------------------------ */
-
-async function openTransferDetails(transferId) {
-
-    const overlay =
-        document.getElementById("modalOverlay");
-
-    const content =
-        document.getElementById("modalContent");
-
-    overlay.classList.add("show");
-
-    content.innerHTML = `
-        <div class="modal-loading">
-            در حال دریافت جزئیات انتقال...
-        </div>
-    `;
-
-
-    try {
-
-        const response = await fetch(
-            API_URL +
-            "/api/wallet/card-transfers/" +
-            encodeURIComponent(transferId),
-            {
-                headers: authHeaders()
-            }
+        renderTransactions(
+            data
         );
 
 
-        if (response.status === 401) {
-
-            localStorage.removeItem(TOKEN_KEY);
-
-            window.location.href =
-                "login.html";
-
-            return;
-        }
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                "دریافت جزئیات انتقال ناموفق بود."
-            );
-        }
-
-
-        const transfer =
-            await response.json();
-
-        renderTransferDetails(transfer);
-
     } catch (error) {
 
-        content.innerHTML = `
-            <div class="modal-error">
-                ${escapeHtml(error.message)}
-            </div>
-        `;
+        console.error(
+            "Transactions error:",
+            error
+        );
+
+        transactionsElement.innerHTML =
+            "";
+
+        transactionsEmpty.style.display =
+            "block";
+
+        transactionsEmpty.textContent =
+            error.message ||
+            "دریافت تراکنش‌ها انجام نشد.";
+
+    } finally {
+
+        transactionsLoading.style.display =
+            "none";
+
     }
 
 }
 
 
-/* -----------------------------
-   Render Details
------------------------------ */
+function transferStatusText(
+    status
+) {
 
-function renderTransferDetails(transfer) {
+    const values = {
 
-    const content =
-        document.getElementById("modalContent");
+        pending:
+            "در انتظار بررسی",
 
-    const status =
-        transfer.status || "pending";
+        completed:
+            "تکمیل شده",
 
-    const cardNumber =
-        transfer.card_number ||
-        transfer.card ||
-        "نامشخص";
+        failed:
+            "رد شده",
+
+        cancelled:
+            "لغو شده"
+
+    };
 
 
-    let refundNote = "";
+    return (
+        values[status] ||
+        status ||
+        "نامشخص"
+    );
+
+}
+
+
+function transferStatusClass(
+    status
+) {
+
+    if (
+        status === "completed"
+    ) {
+        return "income";
+    }
 
     if (
         status === "failed" ||
         status === "cancelled"
     ) {
-
-        refundNote = `
-            <div class="refund-note">
-                این انتقال نهایی نشده و مبلغ آن
-                طبق وضعیت سیستم بازگردانده شده است.
-            </div>
-        `;
+        return "expense";
     }
 
-
-    content.innerHTML = `
-
-        <div class="detail-list">
-
-            <div class="detail-row">
-
-                <div class="detail-label">
-                    وضعیت
-                </div>
-
-                <div class="detail-value">
-
-                    <span class="status ${statusClass(status)}">
-                        ${statusText(status)}
-                    </span>
-
-                </div>
-
-            </div>
-
-            <div class="detail-row">
-
-                <div class="detail-label">
-                    مبلغ انتقال
-                </div>
-
-                <div class="detail-value">
-                    ${formatAmount(transfer.amount)} تومان
-                </div>
-
-            </div>
-
-            <div class="detail-row">
-
-                <div class="detail-label">
-                    کارت مقصد
-                </div>
-
-                <div class="detail-value">
-                    ${escapeHtml(cardNumber)}
-                </div>
-
-            </div>
-
-            <div class="detail-row">
-
-                <div class="detail-label">
-                    شناسه انتقال
-                </div>
-
-                <div class="detail-value">
-                    ${escapeHtml(String(transfer.id ?? "-"))}
-                </div>
-
-            </div>
-
-            <div class="detail-row">
-
-                <div class="detail-label">
-                    شناسه درخواست
-                </div>
-
-                <div class="detail-value">
-                    ${escapeHtml(String(transfer.request_id ?? "-"))}
-                </div>
-
-            </div>
-
-            <div class="detail-row">
-
-                <div class="detail-label">
-                    زمان ثبت
-                </div>
-
-                <div class="detail-value">
-                    ${formatDate(transfer.created_at)}
-                </div>
-
-            </div>
-
-            <div class="detail-row">
-
-                <div class="detail-label">
-                    آخرین بروزرسانی
-                </div>
-
-                <div class="detail-value">
-                    ${formatDate(transfer.updated_at)}
-                </div>
-
-            </div>
-
-        </div>
-
-        ${refundNote}
-    `;
+    return "";
 
 }
 
 
-/* -----------------------------
-   Close Modal
------------------------------ */
+function renderTransfers(
+    items
+) {
 
-function closeTransferModal() {
+    transfersElement.innerHTML =
+        "";
 
-    document
-        .getElementById("modalOverlay")
-        .classList.remove("show");
+
+    if (
+        !Array.isArray(items) ||
+        items.length === 0
+    ) {
+
+        transfersEmpty.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    transfersEmpty.style.display =
+        "none";
+
+
+    items
+        .slice(0, 10)
+        .forEach(
+            function(transfer) {
+
+                const amount =
+                    Number(
+                        transfer.amount || 0
+                    );
+
+
+                const status =
+                    transfer.status ||
+                    "pending";
+
+
+                const date =
+                    transfer.created_at ||
+                    transfer.updated_at ||
+                    "";
+
+
+                const element =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                element.className =
+                    "transaction";
+
+
+                element.innerHTML = `
+
+                    <div class="transaction-info">
+
+                        <div class="transaction-title">
+                            انتقال به کارت
+                        </div>
+
+                        <div class="transaction-meta">
+                            ${escapeHtml(formatDate(date))}
+                        </div>
+
+                    </div>
+
+                    <div class="transaction-amount ${transferStatusClass(status)}">
+
+                        ${escapeHtml(formatAmount(amount))}
+
+                        <br>
+
+                        <small>
+                            ${escapeHtml(transferStatusText(status))}
+                        </small>
+
+                    </div>
+
+                `;
+
+
+                transfersElement.appendChild(
+                    element
+                );
+
+            }
+        );
 
 }
 
 
-document
-    .getElementById("modalOverlay")
-    .addEventListener("click", function(event) {
+async function loadTransfers() {
 
-        if (event.target === this) {
-            closeTransferModal();
-        }
-
-    });
+    transfersLoading.style.display =
+        "block";
 
 
-document.addEventListener("keydown", function(event) {
+    try {
 
-    if (event.key === "Escape") {
-        closeTransferModal();
+        const data =
+            await apiFetch(
+                "/api/wallet/card-transfers"
+            );
+
+
+        renderTransfers(
+            data
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Transfers error:",
+            error
+        );
+
+        transfersElement.innerHTML =
+            "";
+
+        transfersEmpty.style.display =
+            "block";
+
+        transfersEmpty.textContent =
+            error.message ||
+            "دریافت انتقال‌ها انجام نشد.";
+
+    } finally {
+
+        transfersLoading.style.display =
+            "none";
+
     }
 
-});
+}
 
 
-/* -----------------------------
-   Refresh
------------------------------ */
+async function loadAll() {
 
-async function refreshWallet() {
+    clearMessage();
 
     await Promise.all([
         loadBalance(),
+        loadTransactions(),
         loadTransfers()
     ]);
 
 }
 
 
-/* -----------------------------
-   Profile
------------------------------ */
-
-function goProfile() {
-
-    window.location.href =
-        "profile.html";
-
-}
+refreshButton.addEventListener(
+    "click",
+    loadAll
+);
 
 
-/* -----------------------------
-   Start
------------------------------ */
-
-refreshWallet();
-
-
-/*
-   هر ۱۵ ثانیه:
-   - موجودی بررسی می‌شود
-   - وضعیت انتقال‌ها بررسی می‌شود
-   - اگر وضعیت عوض شده باشد، اعلان نمایش داده می‌شود
-*/
-
-setInterval(() => {
-
-    loadBalance();
-    loadTransfers();
-
-}, 15000);
+loadAll();
 
 </script>
 
 </body>
+
 </html>

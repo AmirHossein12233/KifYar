@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>افزایش موجودی | KifYar</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+        }
+
+        .container {
+            width: min(100% - 30px, 600px);
+            margin: 0 auto;
+            padding: 30px 0 50px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .back {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+            margin-bottom: 18px;
+        }
+
+        .description {
+            color: #667085;
+            line-height: 1.9;
+            margin-top: 8px;
+        }
+
+        .field {
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        select,
+        input {
+            width: 100%;
+            height: 50px;
+            border: 1px solid #d7dce5;
+            border-radius: 12px;
+            padding: 0 14px;
+            font-size: 16px;
+            font-family: inherit;
+            background: white;
+            outline: none;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: #2563eb;
+        }
+
+        .amount-hint {
+            color: #667085;
+            font-size: 13px;
+            margin-top: 7px;
+        }
+
+        .button {
+            width: 100%;
+            height: 52px;
+            border: 0;
+            border-radius: 13px;
+            margin-top: 24px;
+            background: #2563eb;
+            color: white;
+            font-size: 17px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            opacity: 0.93;
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 18px;
+            line-height: 1.8;
+        }
+
+        .message.success {
+            display: block;
+            background: #ecfdf3;
+            color: #087443;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.error {
+            display: block;
+            background: #fef2f2;
+            color: #b42318;
+            border: 1px solid #fecaca;
+        }
+
+        .loading {
+            color: #667085;
+            text-align: center;
+            padding: 15px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 15px;
+            color: #667085;
+            line-height: 2;
+        }
+
+        .add-card {
+            display: inline-block;
+            margin-top: 8px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .result-box {
+            display: none;
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .result-row:last-child {
+            border-bottom: 0;
+        }
+
+        .result-label {
+            color: #667085;
+        }
+
+        .result-value {
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .links a {
+            text-decoration: none;
+            color: #2563eb;
+            background: #eff6ff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                width: min(100% - 20px, 600px);
+                padding-top: 20px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .title {
+                font-size: 21px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="topbar">
+        <h1 class="title">افزایش موجودی</h1>
+
+        <a
+            class="back"
+            href="wallet.html"
+        >
+            بازگشت
+        </a>
+    </div>
+
+
+    <div class="card">
+
+        <div class="description">
+            کارت بانکی خود را انتخاب کنید و مبلغ موردنظر
+            برای افزایش موجودی کیف پول را وارد کنید.
+        </div>
+
+
+        <div
+            id="loading"
+            class="loading"
+        >
+            در حال دریافت کارت‌ها...
+        </div>
+
+
+        <div id="formArea">
+
+            <div class="field">
+
+                <label for="card">
+                    کارت بانکی
+                </label>
+
+                <select id="card">
+
+                    <option value="">
+                        انتخاب کارت
+                    </option>
+
+                </select>
+
+                <div
+                    id="emptyCards"
+                    class="empty"
+                    style="display:none;"
+                >
+                    هنوز کارت بانکی ثبت نکرده‌اید.
+
+                    <br>
+
+                    <a
+                        class="add-card"
+                        href="cards.html"
+                    >
+                        افزودن کارت بانکی
+                    </a>
+                </div>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="amount">
+                    مبلغ واریز
+                </label>
+
+                <input
+                    id="amount"
+                    type="number"
+                    min="1"
+                    max="100000000"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="مثلاً 50000"
+                >
+
+                <div class="amount-hint">
+                    حداقل مبلغ بیشتر از صفر و حداکثر
+                    ۱۰۰٬۰۰۰٬۰۰۰ تومان است.
+                </div>
+
+            </div>
+
+
+            <button
+                id="submitButton"
+                class="button"
+                type="button"
+            >
+                ثبت درخواست واریز
+            </button>
+
+
+            <div
+                id="message"
+                class="message"
+            ></div>
+
+
+            <div
+                id="resultBox"
+                class="result-box"
+            >
+
+                <div class="result-row">
+
+                    <span class="result-label">
+                        وضعیت
+                    </span>
+
+                    <span
+                        id="resultStatus"
+                        class="result-value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="result-row">
+
+                    <span class="result-label">
+                        مبلغ
+                    </span>
+
+                    <span
+                        id="resultAmount"
+                        class="result-value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="result-row">
+
+                    <span class="result-label">
+                        شناسه درخواست
+                    </span>
+
+                    <span
+                        id="resultRequestId"
+                        class="result-value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="result-row">
+
+                    <span class="result-label">
+                        موجودی جدید
+                    </span>
+
+                    <span
+                        id="resultBalance"
+                        class="result-value"
+                    >
+                        -
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="links">
+
+                <a href="wallet.html">
+                    مشاهده کیف پول
+                </a>
+
+                <a href="transactions.html">
+                    مشاهده تراکنش‌ها
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL =
+    "https://kifyar-api.onrender.com";
+
+const TOKEN_KEY =
+    "kifyar_token";
+
+
+const token =
+    localStorage.getItem(
+        TOKEN_KEY
+    );
+
+
+if (!token) {
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+const cardSelect =
+    document.getElementById(
+        "card"
+    );
+
+const amountInput =
+    document.getElementById(
+        "amount"
+    );
+
+const submitButton =
+    document.getElementById(
+        "submitButton"
+    );
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+const loading =
+    document.getElementById(
+        "loading"
+    );
+
+const formArea =
+    document.getElementById(
+        "formArea"
+    );
+
+const emptyCards =
+    document.getElementById(
+        "emptyCards"
+    );
+
+const resultBox =
+    document.getElementById(
+        "resultBox"
+    );
+
+const resultStatus =
+    document.getElementById(
+        "resultStatus"
+    );
+
+const resultAmount =
+    document.getElementById(
+        "resultAmount"
+    );
+
+const resultRequestId =
+    document.getElementById(
+        "resultRequestId"
+    );
+
+const resultBalance =
+    document.getElementById(
+        "resultBalance"
+    );
+
+
+function showMessage(
+    text,
+    type
+) {
+
+    message.textContent =
+        text;
+
+    message.className =
+        "message " + type;
+
+}
+
+
+function clearMessage() {
+
+    message.textContent =
+        "";
+
+    message.className =
+        "message";
+
+}
+
+
+function formatAmount(
+    amount
+) {
+
+    const number =
+        Number(amount);
+
+    if (
+        Number.isNaN(number)
+    ) {
+        return "-";
+    }
+
+    return number.toLocaleString(
+        "fa-IR"
+    ) + " تومان";
+
+}
+
+
+function createRequestId() {
+
+    if (
+        window.crypto &&
+        typeof crypto.randomUUID ===
+            "function"
+    ) {
+
+        return crypto.randomUUID();
+
+    }
+
+    return (
+        "deposit-" +
+        Date.now() +
+        "-" +
+        Math.random()
+            .toString(36)
+            .substring(2, 10)
+    );
+
+}
+
+
+async function loadCards() {
+
+    loading.style.display =
+        "block";
+
+    formArea.style.opacity =
+        "0.7";
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/cards",
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Authorization":
+                            "Bearer " + token,
+
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        if (
+            response.status === 401
+        ) {
+
+            localStorage.removeItem(
+                TOKEN_KEY
+            );
+
+            window.location.href =
+                "login.html";
+
+            return;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "دریافت کارت‌ها انجام نشد."
+            );
+
+        }
+
+
+        const cards =
+            Array.isArray(data)
+                ? data
+                : [];
+
+
+        cardSelect.innerHTML =
+            '<option value="">انتخاب کارت</option>';
+
+
+        if (
+            cards.length === 0
+        ) {
+
+            emptyCards.style.display =
+                "block";
+
+            cardSelect.style.display =
+                "none";
+
+            submitButton.disabled =
+                true;
+
+            return;
+
+        }
+
+
+        emptyCards.style.display =
+            "none";
+
+        cardSelect.style.display =
+            "block";
+
+        submitButton.disabled =
+            false;
+
+
+        cards.forEach(
+            function(card) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    card.id;
+
+
+                let cardText =
+                    "کارت";
+
+                if (
+                    card.bank_name
+                ) {
+
+                    cardText =
+                        card.bank_name;
+
+                }
+
+
+                if (
+                    card.card_number
+                ) {
+
+                    cardText +=
+                        " - " +
+                        card.card_number;
+
+                }
+
+
+                option.textContent =
+                    cardText;
+
+
+                cardSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        const defaultCard =
+            cards.find(
+                function(card) {
+
+                    return (
+                        card.is_default === true ||
+                        card.is_default === 1
+                    );
+
+                }
+            );
+
+
+        if (defaultCard) {
+
+            cardSelect.value =
+                String(
+                    defaultCard.id
+                );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Load cards error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "خطا در دریافت کارت‌ها.",
+            "error"
+        );
+
+    } finally {
+
+        loading.style.display =
+            "none";
+
+        formArea.style.opacity =
+            "1";
+
+    }
+
+}
+
+
+async function submitDeposit() {
+
+    clearMessage();
+
+    resultBox.classList.remove(
+        "show"
+    );
+
+
+    const cardId =
+        cardSelect.value;
+
+    const amount =
+        Number(
+            amountInput.value
+        );
+
+
+    if (!cardId) {
+
+        showMessage(
+            "لطفاً یک کارت بانکی انتخاب کنید.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showMessage(
+            "مبلغ باید بیشتر از صفر باشد.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        amount > 100000000
+    ) {
+
+        showMessage(
+            "حداکثر مبلغ ۱۰۰٬۰۰۰٬۰۰۰ تومان است.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    submitButton.disabled =
+        true;
+
+    submitButton.textContent =
+        "در حال ثبت درخواست...";
+
+
+    const requestId =
+        createRequestId();
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL +
+                "/api/wallet/deposit",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            "Bearer " + token,
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            {
+                                card_id:
+                                    Number(cardId),
+
+                                amount:
+                                    amount,
+
+                                request_id:
+                                    requestId
+                            }
+                        )
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            localStorage.removeItem(
+                TOKEN_KEY
+            );
+
+            window.location.href =
+                "login.html";
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "ثبت درخواست واریز انجام نشد."
+            );
+
+        }
+
+
+        showMessage(
+            data.message ||
+            "درخواست واریز با موفقیت ثبت شد.",
+            "success"
+        );
+
+
+        resultStatus.textContent =
+            data.status ||
+            "ثبت شد";
+
+
+        resultAmount.textContent =
+            formatAmount(
+                data.amount !== undefined
+                    ? data.amount
+                    : amount
+            );
+
+
+        resultRequestId.textContent =
+            data.request_id ||
+            requestId;
+
+
+        if (
+            data.balance !== undefined &&
+            data.balance !== null
+        ) {
+
+            resultBalance.textContent =
+                formatAmount(
+                    data.balance
+                );
+
+        } else {
+
+            resultBalance.textContent =
+                "در انتظار تأیید";
+
+        }
+
+
+        resultBox.classList.add(
+            "show"
+        );
+
+
+        amountInput.value =
+            "";
+
+
+    } catch (error) {
+
+        console.error(
+            "Deposit error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "خطا در ثبت درخواست واریز.",
+            "error"
+        );
+
+    } finally {
+
+        submitButton.disabled =
+            false;
+
+        submitButton.textContent =
+            "ثبت درخواست واریز";
+
+    }
+
+}
+
+
+submitButton.addEventListener(
+    "click",
+    submitDeposit
+);
+
+
+amountInput.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            submitDeposit();
+
+        }
+
+    }
+);
+
+
+loadCards();
+
+</script>
+
+</body>
+
+</html>
