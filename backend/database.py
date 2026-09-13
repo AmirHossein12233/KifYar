@@ -20,6 +20,7 @@ DATABASE_PATH = BASE_DIR / "kifyar.db"
 # =========================================================
 
 def get_connection() -> sqlite3.Connection:
+
     connection = sqlite3.connect(
         DATABASE_PATH,
         timeout=30,
@@ -27,13 +28,19 @@ def get_connection() -> sqlite3.Connection:
 
     connection.row_factory = sqlite3.Row
 
-    connection.execute("PRAGMA foreign_keys = ON")
-    connection.execute("PRAGMA journal_mode = WAL")
+    connection.execute(
+        "PRAGMA foreign_keys = ON"
+    )
+
+    connection.execute(
+        "PRAGMA journal_mode = WAL"
+    )
 
     return connection
 
 
 def now_iso() -> str:
+
     return datetime.now(
         timezone.utc
     ).isoformat()
@@ -57,14 +64,36 @@ def verify_password(
     password_hash: str,
 ) -> bool:
 
-    return (
-        hash_password(password)
-        == password_hash
+    password = str(
+        password
     )
+
+    password_hash = str(
+        password_hash
+    )
+
+    # رمز یک بار هش شده
+    single_hash = hash_password(
+        password
+    )
+
+    if single_hash == password_hash:
+        return True
+
+    # سازگاری با حساب‌های قدیمی که
+    # رمز عبور آنها دوبار هش شده است
+    double_hash = hash_password(
+        single_hash
+    )
+
+    if double_hash == password_hash:
+        return True
+
+    return False
 
 
 # =========================================================
-# INITIALIZE
+# INITIALIZE DATABASE
 # =========================================================
 
 def initialize_database() -> None:
@@ -182,7 +211,9 @@ def migrate_database(
         "created_at": "TEXT",
     }
 
-    for column, definition in required_user_columns.items():
+    for column, definition in (
+        required_user_columns.items()
+    ):
 
         if column not in user_columns:
 
@@ -196,6 +227,7 @@ def migrate_database(
                 )
 
             except sqlite3.OperationalError:
+
                 pass
 
     # -----------------------------------------------------
@@ -218,7 +250,9 @@ def migrate_database(
         "created_at": "TEXT",
     }
 
-    for column, definition in required_transaction_columns.items():
+    for column, definition in (
+        required_transaction_columns.items()
+    ):
 
         if column not in transaction_columns:
 
@@ -232,6 +266,7 @@ def migrate_database(
                 )
 
             except sqlite3.OperationalError:
+
                 pass
 
     # -----------------------------------------------------
@@ -254,7 +289,9 @@ def migrate_database(
         "created_at": "TEXT",
     }
 
-    for column, definition in required_card_columns.items():
+    for column, definition in (
+        required_card_columns.items()
+    ):
 
         if column not in card_columns:
 
@@ -268,6 +305,7 @@ def migrate_database(
                 )
 
             except sqlite3.OperationalError:
+
                 pass
 
     # -----------------------------------------------------
@@ -289,7 +327,9 @@ def migrate_database(
         "created_at": "TEXT",
     }
 
-    for column, definition in required_deposit_columns.items():
+    for column, definition in (
+        required_deposit_columns.items()
+    ):
 
         if column not in deposit_columns:
 
@@ -303,6 +343,7 @@ def migrate_database(
                 )
 
             except sqlite3.OperationalError:
+
                 pass
 
     # -----------------------------------------------------
@@ -325,7 +366,9 @@ def migrate_database(
         "updated_at": "TEXT",
     }
 
-    for column, definition in required_transfer_columns.items():
+    for column, definition in (
+        required_transfer_columns.items()
+    ):
 
         if column not in transfer_columns:
 
@@ -339,6 +382,7 @@ def migrate_database(
                 )
 
             except sqlite3.OperationalError:
+
                 pass
 
 
@@ -351,6 +395,18 @@ def create_user(
     email: str,
     password: str,
 ) -> dict[str, Any]:
+
+    username = str(
+        username
+    ).strip()
+
+    email = str(
+        email
+    ).strip().lower()
+
+    password = str(
+        password
+    )
 
     connection = get_connection()
 
@@ -371,9 +427,9 @@ def create_user(
             VALUES (?, ?, ?, ?, ?)
             """,
             (
-                username.strip(),
-                username.strip(),
-                email.strip().lower(),
+                username,
+                username,
+                email,
                 hash_password(password),
                 created_at,
             ),
@@ -383,9 +439,9 @@ def create_user(
 
         return {
             "id": cursor.lastrowid,
-            "username": username.strip(),
-            "name": username.strip(),
-            "email": email.strip().lower(),
+            "username": username,
+            "name": username,
+            "email": email,
             "created_at": created_at,
         }
 
@@ -395,8 +451,16 @@ def create_user(
 
 
 def find_user(
-    email: str,
+    identifier: str,
 ) -> Optional[dict[str, Any]]:
+
+    value = str(
+        identifier
+    ).strip()
+
+    if not value:
+
+        return None
 
     connection = get_connection()
 
@@ -406,15 +470,19 @@ def find_user(
             """
             SELECT *
             FROM users
-            WHERE LOWER(email) = LOWER(?)
+            WHERE
+                LOWER(email) = LOWER(?)
+                OR LOWER(username) = LOWER(?)
             LIMIT 1
             """,
             (
-                email.strip(),
+                value,
+                value,
             ),
         ).fetchone()
 
         if row is None:
+
             return None
 
         return dict(row)
@@ -445,6 +513,7 @@ def find_user_by_id(
         ).fetchone()
 
         if row is None:
+
             return None
 
         return dict(row)
@@ -472,6 +541,10 @@ def update_user_name(
     name: str,
 ) -> bool:
 
+    name = str(
+        name
+    ).strip()
+
     connection = get_connection()
 
     try:
@@ -484,8 +557,8 @@ def update_user_name(
             WHERE id = ?
             """,
             (
-                name.strip(),
-                name.strip(),
+                name,
+                name,
                 int(user_id),
             ),
         )
@@ -532,6 +605,12 @@ def update_user_password(
             )
 
         current_hash = row["password_hash"]
+
+        if not current_hash:
+
+            raise ValueError(
+                "رمز عبور کاربر ثبت نشده است."
+            )
 
         if not verify_password(
             current_password,
@@ -648,6 +727,7 @@ def add_transaction(
         )
 
         if own_connection:
+
             connection.commit()
 
         return int(
@@ -657,6 +737,7 @@ def add_transaction(
     finally:
 
         if own_connection:
+
             connection.close()
 
 
@@ -732,35 +813,9 @@ def get_balance(
 
     try:
 
-        row = connection.execute(
-            """
-            SELECT
-                COALESCE(
-                    SUM(
-                        CASE
-                            WHEN transaction_type
-                                IN ('income', 'deposit')
-                            THEN amount
-
-                            WHEN transaction_type
-                                IN ('expense', 'withdrawal')
-                            THEN -amount
-
-                            ELSE 0
-                        END
-                    ),
-                    0
-                ) AS balance
-            FROM transactions
-            WHERE user_id = ?
-            """,
-            (
-                int(user_id),
-            ),
-        ).fetchone()
-
-        return float(
-            row["balance"] or 0
+        return get_balance_from_connection(
+            connection,
+            user_id,
         )
 
     finally:
@@ -775,125 +830,6 @@ def get_wallet_balance(
     return get_balance(
         user_id
     )
-
-
-# =========================================================
-# WALLET ADD
-# =========================================================
-
-def add_wallet_balance_with_transaction(
-    user_id: int,
-    amount: float,
-    title: str = "افزایش موجودی",
-    category: str = "deposit",
-) -> dict[str, Any]:
-
-    amount = float(amount)
-
-    if amount <= 0:
-
-        raise ValueError(
-            "مبلغ باید بیشتر از صفر باشد."
-        )
-
-    connection = get_connection()
-
-    try:
-
-        transaction_id = add_transaction(
-            user_id=user_id,
-            title=title,
-            amount=amount,
-            transaction_type="income",
-            category=category,
-            connection=connection,
-        )
-
-        connection.commit()
-
-        return {
-            "success": True,
-            "transaction_id": transaction_id,
-            "amount": amount,
-            "balance": get_balance_from_connection(
-                connection,
-                user_id,
-            ),
-        }
-
-    except Exception:
-
-        connection.rollback()
-        raise
-
-    finally:
-
-        connection.close()
-
-
-# =========================================================
-# WALLET SUBTRACT
-# =========================================================
-
-def subtract_wallet_balance_with_transaction(
-    user_id: int,
-    amount: float,
-    title: str = "کاهش موجودی",
-    category: str = "expense",
-) -> dict[str, Any]:
-
-    amount = float(amount)
-
-    if amount <= 0:
-
-        raise ValueError(
-            "مبلغ باید بیشتر از صفر باشد."
-        )
-
-    connection = get_connection()
-
-    try:
-
-        balance = get_balance_from_connection(
-            connection,
-            user_id,
-        )
-
-        if balance < amount:
-
-            raise ValueError(
-                "موجودی کافی نیست."
-            )
-
-        transaction_id = add_transaction(
-            user_id=user_id,
-            title=title,
-            amount=amount,
-            transaction_type="expense",
-            category=category,
-            connection=connection,
-        )
-
-        connection.commit()
-
-        return {
-            "success": True,
-            "transaction_id": transaction_id,
-            "amount": amount,
-            "balance": get_balance_from_connection(
-                connection,
-                user_id,
-            ),
-        }
-
-    except Exception:
-
-        connection.rollback()
-        raise
-
-    finally:
-
-        connection.close()
 
 
 def get_balance_from_connection(
@@ -934,6 +870,133 @@ def get_balance_from_connection(
 
 
 # =========================================================
+# WALLET ADD
+# =========================================================
+
+def add_wallet_balance_with_transaction(
+    user_id: int,
+    amount: float,
+    title: str = "افزایش موجودی",
+    category: str = "deposit",
+) -> dict[str, Any]:
+
+    amount = float(
+        amount
+    )
+
+    if amount <= 0:
+
+        raise ValueError(
+            "مبلغ باید بیشتر از صفر باشد."
+        )
+
+    connection = get_connection()
+
+    try:
+
+        transaction_id = add_transaction(
+            user_id=user_id,
+            title=title,
+            amount=amount,
+            transaction_type="income",
+            category=category,
+            connection=connection,
+        )
+
+        connection.commit()
+
+        return {
+            "success": True,
+            "transaction_id": transaction_id,
+            "amount": amount,
+            "balance":
+                get_balance_from_connection(
+                    connection,
+                    user_id,
+                ),
+        }
+
+    except Exception:
+
+        connection.rollback()
+
+        raise
+
+    finally:
+
+        connection.close()
+
+
+# =========================================================
+# WALLET SUBTRACT
+# =========================================================
+
+def subtract_wallet_balance_with_transaction(
+    user_id: int,
+    amount: float,
+    title: str = "کاهش موجودی",
+    category: str = "expense",
+) -> dict[str, Any]:
+
+    amount = float(
+        amount
+    )
+
+    if amount <= 0:
+
+        raise ValueError(
+            "مبلغ باید بیشتر از صفر باشد."
+        )
+
+    connection = get_connection()
+
+    try:
+
+        balance = get_balance_from_connection(
+            connection,
+            user_id,
+        )
+
+        if balance < amount:
+
+            raise ValueError(
+                "موجودی کافی نیست."
+            )
+
+        transaction_id = add_transaction(
+            user_id=user_id,
+            title=title,
+            amount=amount,
+            transaction_type="expense",
+            category=category,
+            connection=connection,
+        )
+
+        connection.commit()
+
+        return {
+            "success": True,
+            "transaction_id": transaction_id,
+            "amount": amount,
+            "balance":
+                get_balance_from_connection(
+                    connection,
+                    user_id,
+                ),
+        }
+
+    except Exception:
+
+        connection.rollback()
+
+        raise
+
+    finally:
+
+        connection.close()
+
+
+# =========================================================
 # BANK CARDS
 # =========================================================
 
@@ -948,6 +1011,7 @@ def mask_card_number(
     )
 
     if len(digits) <= 4:
+
         return "****"
 
     return (
@@ -1011,8 +1075,7 @@ def add_bank_card(
         ).fetchone()
 
         is_first = (
-            int(count_row["count"])
-            == 0
+            int(count_row["count"]) == 0
         )
 
         cursor = connection.execute(
@@ -1031,10 +1094,10 @@ def add_bank_card(
             """,
             (
                 int(user_id),
-                holder_name.strip(),
-                bank_name.strip(),
+                str(holder_name).strip(),
+                str(bank_name).strip(),
                 digits,
-                bank_name.strip(),
+                str(bank_name).strip(),
                 1 if is_first else 0,
                 now_iso(),
             ),
@@ -1093,7 +1156,9 @@ def get_bank_cards(
                 None,
             )
 
-            result.append(item)
+            result.append(
+                item
+            )
 
         return result
 
@@ -1126,6 +1191,7 @@ def get_bank_card(
         ).fetchone()
 
         if row is None:
+
             return None
 
         item = dict(row)
@@ -1175,6 +1241,7 @@ def set_default_bank_card(
         ).fetchone()
 
         if card is None:
+
             return False
 
         connection.execute(
@@ -1251,7 +1318,9 @@ def deposit_by_card_once(
     request_id: str,
 ) -> dict[str, Any]:
 
-    amount = float(amount)
+    amount = float(
+        amount
+    )
 
     if amount <= 0:
 
@@ -1355,6 +1424,7 @@ def deposit_by_card_once(
     except Exception:
 
         connection.rollback()
+
         raise
 
     finally:
@@ -1373,7 +1443,9 @@ def transfer_wallet_to_card_once(
     request_id: str,
 ) -> dict[str, Any]:
 
-    amount = float(amount)
+    amount = float(
+        amount
+    )
 
     if amount <= 0:
 
@@ -1496,6 +1568,7 @@ def transfer_wallet_to_card_once(
     except Exception:
 
         connection.rollback()
+
         raise
 
     finally:
@@ -1556,7 +1629,9 @@ def get_card_transfer_requests(
                 None,
             )
 
-            result.append(item)
+            result.append(
+                item
+            )
 
         return result
 
@@ -1595,6 +1670,7 @@ def get_card_transfer_request(
         ).fetchone()
 
         if row is None:
+
             return None
 
         item = dict(row)
@@ -1632,7 +1708,9 @@ def update_card_transfer_status(
         "cancelled",
     }
 
-    status = status.strip().lower()
+    status = str(
+        status
+    ).strip().lower()
 
     if status not in allowed:
 

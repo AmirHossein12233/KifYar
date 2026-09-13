@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-import hashlib
 import secrets
-from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import (
+    APIRouter,
+    Header,
+    HTTPException,
+    Request,
+)
 from pydantic import BaseModel
 
 from backend.database import (
@@ -15,6 +18,10 @@ from backend.database import (
 )
 
 
+# =========================================================
+# ROUTER
+# =========================================================
+
 router = APIRouter(
     prefix="/api",
     tags=["auth"],
@@ -22,7 +29,7 @@ router = APIRouter(
 
 
 # =========================================================
-# TOKEN STORAGE
+# TOKENS
 # =========================================================
 
 # token -> user_id
@@ -30,26 +37,20 @@ tokens: dict[str, int] = {}
 
 
 # =========================================================
-# PASSWORD
-# =========================================================
-
-def hash_password(password: str) -> str:
-    return hashlib.sha256(
-        password.encode("utf-8")
-    ).hexdigest()
-
-
-# =========================================================
-# TOKEN
+# TOKEN FUNCTIONS
 # =========================================================
 
 def create_token(
     user_id: int,
 ) -> str:
 
-    token = secrets.token_urlsafe(32)
+    token = secrets.token_urlsafe(
+        32
+    )
 
-    tokens[token] = int(user_id)
+    tokens[token] = int(
+        user_id
+    )
 
     return token
 
@@ -63,10 +64,6 @@ def remove_token(
         None,
     )
 
-
-# =========================================================
-# AUTHORIZATION
-# =========================================================
 
 def get_bearer_token(
     authorization: str | None,
@@ -88,7 +85,9 @@ def get_bearer_token(
             detail="توکن نامعتبر است.",
         )
 
-    token = authorization[7:].strip()
+    token = authorization[
+        7:
+    ].strip()
 
     if not token:
 
@@ -125,10 +124,12 @@ def require_user_id(
 
 
 # =========================================================
-# REGISTER
+# REGISTER MODEL
 # =========================================================
 
-class RegisterRequest(BaseModel):
+class RegisterRequest(
+    BaseModel
+):
 
     username: str
 
@@ -138,13 +139,13 @@ class RegisterRequest(BaseModel):
 
 
 # =========================================================
-# LOGIN
+# LOGIN MODEL
 # =========================================================
 
-class LoginRequest(BaseModel):
+class LoginRequest(
+    BaseModel
+):
 
-    # همه اختیاری هستند تا به خاطر نام متفاوت فیلدها
-    # خطای "Field required" دریافت نشود.
     email: str | None = None
 
     username: str | None = None
@@ -155,10 +156,12 @@ class LoginRequest(BaseModel):
 
 
 # =========================================================
-# LOGOUT
+# LOGOUT MODEL
 # =========================================================
 
-class LogoutRequest(BaseModel):
+class LogoutRequest(
+    BaseModel
+):
     pass
 
 
@@ -222,26 +225,37 @@ def register(
 
         raise HTTPException(
             status_code=409,
-            detail="این ایمیل قبلاً ثبت شده است.",
+            detail="این ایمیل یا نام کاربری قبلاً ثبت شده است.",
         )
 
-    password_hash = hash_password(
-        password
-    )
-
-    user_id = create_user(
+    # مهم:
+    # رمز را اینجا هش نمی‌کنیم.
+    # create_user خودش هش می‌کند.
+    user = create_user(
         username=username,
         email=email,
-        password_hash=password_hash,
+        password=password,
     )
 
     return {
         "success": True,
         "message": "ثبت‌نام با موفقیت انجام شد.",
         "user": {
-            "id": user_id,
-            "username": username,
-            "email": email,
+            "id": int(
+                user["id"]
+            ),
+            "username": user.get(
+                "username"
+            ),
+            "name": user.get(
+                "name"
+            ),
+            "email": user.get(
+                "email"
+            ),
+            "created_at": user.get(
+                "created_at"
+            ),
         },
     }
 
@@ -258,12 +272,12 @@ async def login(
 ):
 
     # -----------------------------------------------------
-    # Read JSON manually
+    # Read JSON
     # -----------------------------------------------------
 
     try:
 
-        body: Any = await request.json()
+        body = await request.json()
 
     except Exception:
 
@@ -283,7 +297,7 @@ async def login(
         )
 
     # -----------------------------------------------------
-    # Accept multiple common field names
+    # Read possible field names
     # -----------------------------------------------------
 
     email = body.get(
@@ -331,7 +345,7 @@ async def login(
     )
 
     # -----------------------------------------------------
-    # Find login identifier
+    # Determine identifier
     # -----------------------------------------------------
 
     login_identifier = (
@@ -355,10 +369,7 @@ async def login(
         )
 
     # -----------------------------------------------------
-    # Database lookup
-    #
-    # Current database function is find_user().
-    # First try the supplied identifier directly.
+    # Find user
     # -----------------------------------------------------
 
     user = find_user(
@@ -373,7 +384,7 @@ async def login(
         )
 
     # -----------------------------------------------------
-    # Password
+    # Stored password
     # -----------------------------------------------------
 
     stored_password = user.get(
@@ -384,8 +395,12 @@ async def login(
 
         raise HTTPException(
             status_code=401,
-            detail="اطلاعات رمز عبور این حساب معتبر نیست.",
+            detail="رمز عبور این حساب ثبت نشده است.",
         )
+
+    # -----------------------------------------------------
+    # Verify
+    # -----------------------------------------------------
 
     try:
 
@@ -406,13 +421,18 @@ async def login(
         )
 
     # -----------------------------------------------------
-    # Remove previous tokens for this user
+    # Remove old tokens
     # -----------------------------------------------------
 
     old_tokens = [
         token
-        for token, user_id in tokens.items()
-        if int(user_id) == int(user["id"])
+        for token, stored_user_id
+        in tokens.items()
+        if int(
+            stored_user_id
+        ) == int(
+            user["id"]
+        )
     ]
 
     for token in old_tokens:
@@ -423,11 +443,13 @@ async def login(
         )
 
     # -----------------------------------------------------
-    # Create new token
+    # New token
     # -----------------------------------------------------
 
     token = create_token(
-        int(user["id"])
+        int(
+            user["id"]
+        )
     )
 
     # -----------------------------------------------------
@@ -440,9 +462,18 @@ async def login(
         "token": token,
         "access_token": token,
         "user": {
-            "id": int(user["id"]),
-            "username": user.get("username"),
-            "email": user.get("email"),
+            "id": int(
+                user["id"]
+            ),
+            "username": user.get(
+                "username"
+            ),
+            "name": user.get(
+                "name"
+            ),
+            "email": user.get(
+                "email"
+            ),
         },
     }
 
