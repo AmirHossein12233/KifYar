@@ -14,6 +14,7 @@ from backend.database import (
     add_transaction,
     add_wallet_balance_with_transaction,
     delete_bank_card,
+    delete_notification,
     delete_transactions,
     delete_user,
     deposit_by_card_once,
@@ -26,8 +27,12 @@ from backend.database import (
     get_card_transfer_request_by_id,
     get_card_transfer_requests,
     get_all_card_transfer_requests,
+    get_notifications,
+    get_unread_notification_count,
     get_transactions,
     initialize_database,
+    mark_all_notifications_read,
+    mark_notification_read,
     set_default_bank_card,
     subtract_wallet_balance_with_transaction,
     transfer_wallet_to_card_once,
@@ -207,6 +212,7 @@ def get_action_name(
 
 @app.get("/")
 def root():
+
     return {
         "name": "KifYar API",
         "status": "ok",
@@ -215,6 +221,7 @@ def root():
 
 @app.get("/health")
 def health():
+
     return {
         "status": "ok",
     }
@@ -524,6 +531,103 @@ def wallet_card_transfer(
 
 
 # =========================================================
+# NOTIFICATIONS
+# =========================================================
+
+@app.get("/api/notifications")
+def notifications(
+    limit: int = 100,
+):
+
+    user_id = require_session_user_id()
+
+    if limit < 1:
+        limit = 1
+
+    if limit > 200:
+        limit = 200
+
+    return get_notifications(
+        user_id=user_id,
+        limit=limit,
+    )
+
+
+@app.get("/api/notifications/unread-count")
+def notification_unread_count():
+
+    user_id = require_session_user_id()
+
+    return {
+        "unread_count":
+            get_unread_notification_count(
+                user_id
+            ),
+    }
+
+
+@app.patch("/api/notifications/{notification_id}/read")
+def notification_read(
+    notification_id: int,
+):
+
+    user_id = require_session_user_id()
+
+    ok = mark_notification_read(
+        user_id=user_id,
+        notification_id=notification_id,
+    )
+
+    if not ok:
+        raise HTTPException(
+            status_code=404,
+            detail="اعلان پیدا نشد.",
+        )
+
+    return {
+        "message": "اعلان به عنوان خوانده‌شده ثبت شد.",
+    }
+
+
+@app.patch("/api/notifications/read-all")
+def notifications_read_all():
+
+    user_id = require_session_user_id()
+
+    count = mark_all_notifications_read(
+        user_id
+    )
+
+    return {
+        "message": "همه اعلان‌ها خوانده شدند.",
+        "updated": count,
+    }
+
+
+@app.delete("/api/notifications/{notification_id}")
+def notification_delete(
+    notification_id: int,
+):
+
+    user_id = require_session_user_id()
+
+    ok = delete_notification(
+        user_id=user_id,
+        notification_id=notification_id,
+    )
+
+    if not ok:
+        raise HTTPException(
+            status_code=404,
+            detail="اعلان پیدا نشد.",
+        )
+
+    return {
+        "message": "اعلان حذف شد.",
+    }
+
+
+# =========================================================
 # TRANSACTIONS
 # =========================================================
 
@@ -732,7 +836,6 @@ def admin_update_transfer_status(
     old_status = transfer["status"]
 
     if old_status == new_status:
-
         return transfer
 
     try:
@@ -785,6 +888,12 @@ def admin_logs(
 ):
 
     require_admin()
+
+    if limit < 1:
+        limit = 1
+
+    if limit > 1000:
+        limit = 1000
 
     return get_admin_action_logs(
         limit
