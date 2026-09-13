@@ -31,8 +31,8 @@ from backend.database import (
     get_unread_notification_count,
     get_transactions,
     initialize_database,
-    mark_all_notifications_read,
-    mark_notification_read,
+    mark_all_notifications_as_read,
+    mark_notification_as_read,
     set_default_bank_card,
     subtract_wallet_balance_with_transaction,
     transfer_wallet_to_card_once,
@@ -52,6 +52,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
+# =========================================================
+# CORS
+# =========================================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -79,6 +83,7 @@ class ProfileUpdateRequest(BaseModel):
 
 class PasswordChangeRequest(BaseModel):
     current_password: str
+
     new_password: str = Field(
         min_length=6,
         max_length=200,
@@ -236,7 +241,9 @@ def get_profile():
 
     user_id = require_session_user_id()
 
-    user = find_user_by_id(user_id)
+    user = find_user_by_id(
+        user_id
+    )
 
     if not user:
         raise HTTPException(
@@ -286,7 +293,9 @@ def change_password(
 
     user_id = require_session_user_id()
 
-    user = find_user_by_id(user_id)
+    user = find_user_by_id(
+        user_id
+    )
 
     if not user:
         raise HTTPException(
@@ -318,7 +327,9 @@ def remove_account():
 
     user_id = require_session_user_id()
 
-    ok = delete_user(user_id)
+    ok = delete_user(
+        user_id
+    )
 
     if not ok:
         raise HTTPException(
@@ -341,7 +352,9 @@ def wallet_balance():
     user_id = require_session_user_id()
 
     return {
-        "balance": get_balance(user_id),
+        "balance": get_balance(
+            user_id
+        ),
     }
 
 
@@ -559,21 +572,22 @@ def notification_unread_count():
     user_id = require_session_user_id()
 
     return {
-        "unread_count":
-            get_unread_notification_count(
-                user_id
-            ),
+        "unread_count": get_unread_notification_count(
+            user_id
+        ),
     }
 
 
-@app.patch("/api/notifications/{notification_id}/read")
+@app.patch(
+    "/api/notifications/{notification_id}/read"
+)
 def notification_read(
     notification_id: int,
 ):
 
     user_id = require_session_user_id()
 
-    ok = mark_notification_read(
+    ok = mark_notification_as_read(
         user_id=user_id,
         notification_id=notification_id,
     )
@@ -589,12 +603,14 @@ def notification_read(
     }
 
 
-@app.patch("/api/notifications/read-all")
+@app.patch(
+    "/api/notifications/read-all"
+)
 def notifications_read_all():
 
     user_id = require_session_user_id()
 
-    count = mark_all_notifications_read(
+    count = mark_all_notifications_as_read(
         user_id
     )
 
@@ -604,7 +620,9 @@ def notifications_read_all():
     }
 
 
-@app.delete("/api/notifications/{notification_id}")
+@app.delete(
+    "/api/notifications/{notification_id}"
+)
 def notification_delete(
     notification_id: int,
 ):
